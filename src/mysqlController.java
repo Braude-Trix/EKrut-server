@@ -4,6 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -23,9 +25,9 @@ public class mysqlController {
 	    try 
 	    {
 //		    Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/test/flights?serverTimezone=IST","root","Aa123456");
-        conn = DriverManager.getConnection("jdbc:mysql://localhost/test?serverTimezone=IST","root","1234");
+        conn = DriverManager.getConnection("jdbc:mysql://localhost/world?serverTimezone=IST","root","1234");
         System.out.println("SQL connection succeed");
-        printUsers(conn);
+        //printUsers(conn);
 //	        conn.close();
 	  } catch (SQLException ex) {/* handle any errors*/
 	    System.out.println("SQLException: " + ex.getMessage());
@@ -34,38 +36,111 @@ public class mysqlController {
 	    } 
 	  }
 	  
-	public void saveUserToDB(Map<String, String> userData) {
-		System.out.println("Inserting User to DB");
-		String query = "INSERT into users VALUES (?, ?, ?, ?)";
+	public void saveSubscriberToDB(Subscriber subscriber) {
 		PreparedStatement stmt;
+		System.out.println("Inserting Subscriber to DB");
+		String query = "INSERT into Subscriber VALUES (?, ?, ?, ?, ?, ?, ?)";
 		try {
 			stmt = conn.prepareStatement(query);
-			stmt.setString(1, userData.get("UserName"));
-			stmt.setString(2, userData.get("ID"));
-			stmt.setString(3, userData.get("Department"));
-			stmt.setString(4, userData.get("Tel."));
+			stmt.setString(1, subscriber.getFirstName());
+			stmt.setString(2, subscriber.getLastName());
+			stmt.setString(3, subscriber.getId());
+			stmt.setString(4, subscriber.getPhoneNumber());
+			stmt.setString(5, subscriber.getEmailAddress());
+			stmt.setString(6, subscriber.getCreditCardNumber());
+			stmt.setString(7, subscriber.getSubscriberNumber());
 			stmt.executeUpdate();
-			System.out.println("User update done sucssesfuly");
+			System.out.println("Subscriber update done sucssesfuly");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 		
 	}
-	  
-  public static void printUsers(Connection con) {
-  	Statement stmt;
-  	try 
-  	{
-  		stmt = con.createStatement();
-  		ResultSet rs = stmt.executeQuery("SELECT * FROM users;");
-   		while(rs.next())
-   		{
-  			 // Print out the values
-  			 System.out.println(rs.getString(1) + "  " + rs.getString(2));
-  		} 
-  		rs.close();
-  		//stmt.executeUpdate("UPDATE course SET semestr=\"W08\" WHERE num=61309");
-  	} catch (SQLException e) {e.printStackTrace();}
-  }
- }
+	
+	public void updateSubscriberCreditCardNumber(String id, String newCreditCardNumber) {
+		PreparedStatement stmt;
+		String query = "UPDATE Subscriber SET creditCardNumber= ? WHERE id= ?";
+		try {
+			stmt = conn.prepareStatement(query);
+			stmt.setString(1, newCreditCardNumber);
+			stmt.setString(2, id);
+			stmt.executeUpdate();
+			System.out.println("Subscriber update done sucssesfuly");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 		
+	}
+	
+	public void updateSubscriberNumber(String id, String newSubscriberNumber) {
+		PreparedStatement stmt;
+		String query = "UPDATE Subscriber SET SubscriberNumber= ? WHERE id= ?";
+		try {
+			stmt = conn.prepareStatement(query);
+			stmt.setString(1, newSubscriberNumber);
+			stmt.setString(2, id);
+			stmt.executeUpdate();
+			System.out.println("Subscriber update done sucssesfuly");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 		
+	}
+	
+	public Subscriber getSubscriberDetails(String id) {
+		//return null if Subscriber id does not exists
+		List<String> detailsList = new ArrayList<>();
+		PreparedStatement stmt;
+		ResultSet rs;
+		String query = "SELECT * FROM Subscriber WHERE id = ?";
+	  	try 
+	  	{
+			stmt = conn.prepareStatement(query);
+			stmt.setString(1, id);
+			rs = stmt.executeQuery();
+	   		if(rs.next()) {
+	   			return new Subscriber(rs.getString("firstName"),rs.getString("lastName"),rs.getString("id")
+	   					,rs.getString("phoneNumber"),rs.getString("emailAddress"), rs.getString("creditCardNumber"), rs.getString("subscriberNumber"));
+	   		}
+	  		rs.close();
+	  	} catch (SQLException e) {e.printStackTrace();}
+		return null; //Subscriber id does not exists
+	}
+
+
+	public boolean isSubscriberExistInDB(String id) {
+		PreparedStatement stmt;
+		ResultSet rs;
+		String query = "SELECT * FROM Subscriber WHERE id = ?";
+	  	try 
+	  	{
+			stmt = conn.prepareStatement(query);
+			stmt.setString(1, id);
+			rs = stmt.executeQuery();
+	   		if(rs.next()) {
+	   			return true;
+	   		}
+	  		rs.close();
+	  	} catch (SQLException e) {e.printStackTrace();}
+		return false; 
+	}
+	}
+
+
+	
+//	  
+//  public static void printUsers(Connection con) {
+//  	Statement stmt;
+//  	try 
+//  	{
+//  		stmt = con.createStatement();
+//  		ResultSet rs = stmt.executeQuery("SELECT * FROM Subscriber;");
+//   		while(rs.next())
+//   		{
+//  			 // Print out the values
+//  			 System.out.println(rs.getString(1) + "  " + rs.getString(2));
+//  		} 
+//  		rs.close();
+//  		//stmt.executeUpdate("UPDATE course SET semestr=\"W08\" WHERE num=61309");
+//  	} catch (SQLException e) {e.printStackTrace();}
+//  }
+
 
 
