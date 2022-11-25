@@ -96,9 +96,9 @@ public class EchoServer extends AbstractServer
 	//    System.out.println(subscriber2.getSubscriberNumber());
 	//    Subscriber subscriber3 = s.getSubscriberDetails("notexistid");
 	//    System.out.println(subscriber3);
-    System.out.println(s.isSubscriberExistInDB("notexistid"));
-    System.out.println(s.isSubscriberExistInDB("444"));
-    System.out.println(s.isSubscriberExistInDB("0"));
+	//    System.out.println(s.isSubscriberExistInDB("notexistid"));
+	//    System.out.println(s.isSubscriberExistInDB("444"));
+	//    System.out.println(s.isSubscriberExistInDB("0"));
 
 
 
