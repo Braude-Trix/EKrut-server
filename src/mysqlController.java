@@ -36,7 +36,12 @@ public class mysqlController {
 	    } 
 	  }
 	  
-	public void saveSubscriberToDB(Subscriber subscriber) {
+
+	  public void saveSubscriberToDB(Subscriber subscriber) {
+		  /**
+		   * this method get an Subscriber object and save his details to DB.
+		   * NOTE: Existing ID Subscriber OR null value except from subscriberNumber will raise an exception !
+		   */
 		PreparedStatement stmt;
 		System.out.println("Inserting Subscriber to DB");
 		String query = "INSERT into Subscriber VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -57,6 +62,9 @@ public class mysqlController {
 	}
 	
 	public void updateSubscriberCreditCardNumber(String id, String newCreditCardNumber) {
+		/**
+		 * this method get id of subscriber and update his creditCardNumber to 'newCreditCardNumber' in DB.
+		 */
 		PreparedStatement stmt;
 		String query = "UPDATE Subscriber SET creditCardNumber= ? WHERE id= ?";
 		try {
@@ -71,6 +79,9 @@ public class mysqlController {
 	}
 	
 	public void updateSubscriberNumber(String id, String newSubscriberNumber) {
+		/**
+		 * this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
+		 */
 		PreparedStatement stmt;
 		String query = "UPDATE Subscriber SET SubscriberNumber= ? WHERE id= ?";
 		try {
@@ -85,6 +96,10 @@ public class mysqlController {
 	}
 	
 	public Subscriber getSubscriberDetails(String id) {
+		/**
+		 * this method get a subscriber id and return Subscriber object with all his details from the DB.
+		 * NOTE: method will return null if subscriber ID isn't exists in DB.
+		 */
 		//return null if Subscriber id does not exists
 		List<String> detailsList = new ArrayList<>();
 		PreparedStatement stmt;
@@ -106,6 +121,9 @@ public class mysqlController {
 
 
 	public boolean isSubscriberExistInDB(String id) {
+		/**
+		 * this method get a subscriber id and return true/false if he is exists in DB or not
+		 */
 		PreparedStatement stmt;
 		ResultSet rs;
 		String query = "SELECT * FROM Subscriber WHERE id = ?";
