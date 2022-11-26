@@ -56,9 +56,9 @@ public class EchoServer extends AbstractServer
    */
   public void handleMessageFromClient(Object msg, ConnectionToClient client)
   {
-	  System.out.println("Message received: " + msg + " from " + client);
-	  Map<String, String> userData = srialize((String) msg);
-	  s.saveUserToDB(userData);
+	  //System.out.println("Message received: " + msg + " from " + client);
+	  //Map<String, String> userData = srialize((String) msg);
+	  //s.saveUserToDB(userData);
 	  //this.sendToAllClients(msg);
 	  }
 
@@ -73,6 +73,39 @@ public class EchoServer extends AbstractServer
       ("Server listening for connections on port " + getPort());
     s = new mysqlController();
     s.connectToDB();
+    //Subscriber subscriber = new Subscriber("242", "55","2222","333","5","6",null);
+    //s.saveSubscriberToDB(subscriber);
+	//    s.updateSubscriberNumber("111", "123456789");
+	//    s.updateSubscriberNumber("3", null);
+	//    s.updateSubscriberNumber("6", "yuval");
+	//    Subscriber subscriber = s.getSubscriberDetails("111");
+	//    System.out.println(subscriber.getFirstName());
+	//    System.out.println(subscriber.getLastName());
+	//    System.out.println(subscriber.getId());
+	//    System.out.println(subscriber.getPhoneNumber());
+	//    System.out.println(subscriber.getEmailAddress());
+	//    System.out.println(subscriber.getCreditCardNumber());
+	//    System.out.println(subscriber.getSubscriberNumber());
+	//    Subscriber subscriber2 = s.getSubscriberDetails("123");
+	//    System.out.println(subscriber2.getFirstName());
+	//    System.out.println(subscriber2.getLastName());
+	//    System.out.println(subscriber2.getId());
+	//    System.out.println(subscriber2.getPhoneNumber());
+	//    System.out.println(subscriber2.getEmailAddress());
+	//    System.out.println(subscriber2.getCreditCardNumber());
+	//    System.out.println(subscriber2.getSubscriberNumber());
+	//    Subscriber subscriber3 = s.getSubscriberDetails("notexistid");
+	//    System.out.println(subscriber3);
+	//    System.out.println(s.isSubscriberExistInDB("notexistid"));
+	//    System.out.println(s.isSubscriberExistInDB("444"));
+	//    System.out.println(s.isSubscriberExistInDB("0"));
+
+
+
+
+
+
+    
   }
   
   /**
@@ -85,18 +118,7 @@ public class EchoServer extends AbstractServer
       ("Server has stopped listening for connections.");
   }
   
-  private static Map<String, String> srialize(String msg) {
-	  System.out.println("Start srializing");
-	  Map<String, String> map = new HashMap<String, String>();
-	  String[] splittedArr = msg.split("\n");
-	  for (String word : splittedArr) {
-		  String[] splittedWord = word.split(" \\(");
-		  splittedWord[1] = splittedWord[1].replace(")", "");
-		  map.put(splittedWord[0], splittedWord[1]);
-	  }
-	  
-	  return map;
-  }
+
   
   //Class methods ***************************************************
   
@@ -131,13 +153,5 @@ public class EchoServer extends AbstractServer
       System.out.println("ERROR - Could not listen for clients!");
     }
   }
-  
-//  public static void main(String[] args) {
-//	  mysqlController s = new mysqlController();
-//	  s.connectToDB();
-//	  String msg = "UserName (Bob), ID (123456), Department (VIF project), Tel. (7654321)";
-//	  Map<String, String> userData = srialize((String) msg);
-//	  s.saveUserToDB(userData);
-//  }
 }
 //End of EchoServer class
