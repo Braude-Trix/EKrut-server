@@ -1,48 +1,20 @@
-// This file contains material supporting section 3.7 of the textbook:
-// "Object Oriented Software Engineering" and is issued under the open-source
-// license found at www.lloseng.com 
-
-import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import ocsf.server.*;
 
 /**
  * This class overrides some of the methods in the abstract 
  * superclass in order to give more functionality to the server.
- *
- * @author Dr Timothy C. Lethbridge
- * @author Dr Robert Lagani&egrave;re
- * @author Fran&ccedil;ois B&eacute;langer
- * @author Paul Holden
- * @version July 2000
  */
-public class EchoServer extends AbstractServer 
-{
-  //Class variables *************************************************
-  
-  /**
-   * The default port to listen on.
-   */
+public class EchoServer extends AbstractServer {  
+  // The default port to listen on.
   final public static int DEFAULT_PORT = 5555;
   mysqlController s;
-  
-  //Constructors ****************************************************
   
   /**
    * Constructs an instance of the echo server.
    *
    * @param port The port number to connect on.
    */
-  public EchoServer(int port) 
-  {
+  public EchoServer(int port) {
     super(port);
   }
   
@@ -54,23 +26,20 @@ public class EchoServer extends AbstractServer
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient(Object msg, ConnectionToClient client)
-  {
+  public void handleMessageFromClient(Object msg, ConnectionToClient client) {
 	  //System.out.println("Message received: " + msg + " from " + client);
 	  //Map<String, String> userData = srialize((String) msg);
 	  //s.saveUserToDB(userData);
 	  //this.sendToAllClients(msg);
-	  }
+  }
 
     
   /**
-   * This method overrides the one in the superclass.  Called
-   * when the server starts listening for connections.
+   * This method overrides the one in the superclass.
+   * Called when the server starts listening for connections.
    */
-  protected void serverStarted()
-  {
-    System.out.println
-      ("Server listening for connections on port " + getPort());
+  protected void serverStarted() {
+    System.out.println("Server listening for connections on port " + getPort());
     s = new mysqlController();
     s.connectToDB();
     //Subscriber subscriber = new Subscriber("242", "55","2222","333","5","6",null);
@@ -98,60 +67,37 @@ public class EchoServer extends AbstractServer
 	//    System.out.println(subscriber3);
 	//    System.out.println(s.isSubscriberExistInDB("notexistid"));
 	//    System.out.println(s.isSubscriberExistInDB("444"));
-	//    System.out.println(s.isSubscriberExistInDB("0"));
-
-
-
-
-
-
-    
+	//    System.out.println(s.isSubscriberExistInDB("0"));    
   }
   
   /**
    * This method overrides the one in the superclass.  Called
    * when the server stops listening for connections.
    */
-  protected void serverStopped()
-  {
-    System.out.println
-      ("Server has stopped listening for connections.");
-  }
-  
-
-  
-  //Class methods ***************************************************
+  protected void serverStopped() {
+    System.out.println("Server has stopped listening for connections.");
+  }  
   
   /**
-   * This method is responsible for the creation of 
-   * the server instance (there is no UI in this phase).
+   * This method is responsible for the creation of the server instance.
    *
-   * @param args[0] The port number to listen on.  Defaults to 5555 
-   *          if no argument is entered.
+   * @param args[0] The port number to listen on.
+   * 		Defaults to 5555 if no argument is entered.
    */ 
-  public static void main(String[] args)
-  {
-    int port = 0; //Port to listen on
+  public static void main(String[] args) {
+    int port = DEFAULT_PORT; // Port to listen on (default 5555)
 
-    try
-    {
+    try {
       port = Integer.parseInt(args[0]); //Get port from command line
     }
-    catch(Throwable t)
-    {
-      port = DEFAULT_PORT; //Set port to 5555
-    }
-	
+    catch(Throwable t){}
     EchoServer sv = new EchoServer(port);
     
-    try 
-    {
+    try {
       sv.listen(); //Start listening for connections
     } 
-    catch (Exception ex) 
-    {
+    catch (Exception ex) {
       System.out.println("ERROR - Could not listen for clients!");
     }
   }
 }
-//End of EchoServer class
