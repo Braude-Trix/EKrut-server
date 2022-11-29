@@ -3,11 +3,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 
 public class mysqlController {
 	public Connection conn;
@@ -24,7 +19,6 @@ public class mysqlController {
 	    
 	    try 
 	    {
-//		    Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/test/flights?serverTimezone=IST","root","Aa123456");
         conn = DriverManager.getConnection("jdbc:mysql://localhost/world?serverTimezone=IST","root","1234");
         System.out.println("SQL connection succeed");
         //printUsers(conn);
@@ -35,12 +29,11 @@ public class mysqlController {
 	    System.out.println("VendorError: " + ex.getErrorCode());
 	    } 
 	  }
-	  
 
 	  public void saveSubscriberToDB(Subscriber subscriber) {
 		  /**
 		   * this method get an Subscriber object and save his details to DB.
-		   * NOTE: Existing ID Subscriber OR null value except from subscriberNumber will raise an exception !
+		   * NOTE: Existing ID Subscriber OR null value except from subscriberNumber will raise an exception!
 		   */
 		PreparedStatement stmt;
 		System.out.println("Inserting Subscriber to DB");
@@ -101,7 +94,6 @@ public class mysqlController {
 		 * NOTE: method will return null if subscriber ID isn't exists in DB.
 		 */
 		//return null if Subscriber id does not exists
-		List<String> detailsList = new ArrayList<>();
 		PreparedStatement stmt;
 		ResultSet rs;
 		String query = "SELECT * FROM Subscriber WHERE id = ?";
@@ -139,26 +131,4 @@ public class mysqlController {
 	  	} catch (SQLException e) {e.printStackTrace();}
 		return false; 
 	}
-	}
-
-
-	
-//	  
-//  public static void printUsers(Connection con) {
-//  	Statement stmt;
-//  	try 
-//  	{
-//  		stmt = con.createStatement();
-//  		ResultSet rs = stmt.executeQuery("SELECT * FROM Subscriber;");
-//   		while(rs.next())
-//   		{
-//  			 // Print out the values
-//  			 System.out.println(rs.getString(1) + "  " + rs.getString(2));
-//  		} 
-//  		rs.close();
-//  		//stmt.executeUpdate("UPDATE course SET semestr=\"W08\" WHERE num=61309");
-//  	} catch (SQLException e) {e.printStackTrace();}
-//  }
-
-
-
+}

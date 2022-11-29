@@ -61,7 +61,4 @@ public class Subscriber implements Serializable{
 	public void setSubscriberNumber(String subscriberNumber) {
 		this.subscriberNumber = subscriberNumber;
 	}
-
-	
-
 }
