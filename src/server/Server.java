@@ -1,11 +1,16 @@
 package server;
 
+import models.IRequest;
+import models.Method;
+import models.Request;
+import models.Subscriber;
 import ocsf.server.*;
 import serverModels.ServerConf;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * This class overrides some of the methods in the abstract 
@@ -13,7 +18,7 @@ import java.net.UnknownHostException;
  */
 public class Server extends AbstractServer {
   // The default port to listen on.
-  mysqlController s;
+  mysqlController mysqlController;
   
   /**
    * Constructs an instance of the server.
@@ -31,16 +36,34 @@ public class Server extends AbstractServer {
    * @param client The connection from which the message originated.
    */
   public void handleMessageFromClient(Object msg, ConnectionToClient client) {
-	  System.out.println(this.getClientConnections()); // all clients
-	  System.out.println("ip: " + client.getInetAddress().getHostAddress()); // this is ip
-	  System.out.println("host: " + client.getInetAddress().getHostAddress());
-	  System.out.println("status: " + client.isAlive()); // true if status is alive
-	  System.out.println(client);
+      IRequest request = (Request)msg;
+      parseClientRequest(request);
+//	  System.out.println(this.getClientConnections()); // all clients
+//	  System.out.println("ip: " + client.getInetAddress().getHostAddress()); // this is ip
+//	  System.out.println("host: " + client.getInetAddress().getHostAddress());
+//	  System.out.println("status: " + client.isAlive()); // true if status is alive
+//	  System.out.println(client);
 	  //System.out.println("Message received: " + msg + " from " + client);
 	  //Map<String, String> userData = srialize((String) msg);
 	  //s.saveUserToDB(userData);
 	  //this.sendToAllClients(msg);
   }
+
+  public void parseClientRequest(IRequest request){
+    String requestPath = request.getPath();
+    Method requestMethod = request.getMethod();
+    List<Object> requestBody = request.getBody();
+
+    switch (requestPath){
+      case "/subscriberCreditCard":
+        Subscriber subscriber = (Subscriber)requestBody.get(0);
+        if(requestMethod == Method.PUT)
+          mysqlController.updateSubscriberCreditCardNumber(subscriber.getId(), subscriber.getCreditCardNumber());
+        else if(requestMethod == Method.GET)
+          System.out.println(mysqlController.getSubscriberDetails((String)requestBody.get(0)));
+    }
+  }
+
 
     
   /**
@@ -49,8 +72,8 @@ public class Server extends AbstractServer {
    */
   protected void serverStarted() {
     System.out.println("Server listening for connections on port " + getPort());
-    s = new mysqlController();
-    s.connectToDB();
+    mysqlController = new mysqlController();
+    mysqlController.connectToDB();
     //models.Subscriber subscriber = new models.Subscriber("242", "55","2222","333","5","6",null);
     //s.saveSubscriberToDB(subscriber);
 	//    s.updateSubscriberNumber("111", "123456789");

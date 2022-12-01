@@ -2,8 +2,8 @@ package models;
 
 import java.util.List;
 
-public interface IRequest<E> {
+public interface IRequest {
     public String getPath();
-    public String getMethod();
-    public List<E> getBody();
+    public Method getMethod();
+    public List<Object> getBody();
 }

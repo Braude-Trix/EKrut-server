@@ -3,11 +3,11 @@ package models;
 import java.io.Serializable;
 import java.util.List;
 
-public class Request<E> implements Serializable, IRequest<E> {
+public class Request implements Serializable, IRequest {
     private static final long serialVersionUID = 1L;
     private String path;
-    private String method;
-    private List<E> body;
+    private Method method;
+    private List<Object> body;
 
     @Override
     public String getPath() {
@@ -17,17 +17,17 @@ public class Request<E> implements Serializable, IRequest<E> {
         this.path = path;
     }
     @Override
-    public String getMethod() {
+    public Method getMethod() {
         return method;
     }
-    public void setMethod(String method) {
+    public void setMethod(Method method) {
         this.method = method;
     }
     @Override
-    public List<E> getBody() {
+    public List<Object> getBody() {
         return body;
     }
-    public void setBody(List<E> body) {
+    public void setBody(List<Object> body) {
         this.body = body;
     }
 }
