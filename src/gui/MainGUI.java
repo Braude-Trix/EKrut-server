@@ -4,10 +4,11 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class MainGUI extends Application {
+	public static ServerGUIController serverGui;
 
 	@Override
 	public void start(Stage primaryStage) {
-		ServerGUIController serverGui = new ServerGUIController();
+		serverGui = new ServerGUIController();
 		serverGui.start(primaryStage);
 	}
 

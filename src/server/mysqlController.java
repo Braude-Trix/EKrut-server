@@ -1,6 +1,7 @@
 package server;
 
 import models.Subscriber;
+import serverModels.ServerConf;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,29 +11,30 @@ import java.sql.SQLException;
 
 public class mysqlController {
 	public Connection conn;
+	public mysqlController(ServerConf serverConf) {
+		String dbScheme = serverConf.getDbScheme();
+		String dbUserName = serverConf.getDbUserName();
+		String dbPassword = serverConf.getDbPassword();
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+			System.out.println("Driver definition succeed");
+		} catch (Exception ex) { // handle the error
+			System.out.println("Driver definition failed");
+		}
 
-	public void connectToDB() {
-	  try 
-	  {
-	    Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-	    System.out.println("Driver definition succeed");
-	    } catch (Exception ex) {
-	    	/* handle the error*/
-	   System.out.println("Driver definition failed");
-	   }
-	    
-	    try 
-	    {
-        conn = DriverManager.getConnection("jdbc:mysql://localhost/world?serverTimezone=IST","root","1234");
-        System.out.println("SQL connection succeed");
-        //printUsers(conn);
+		try {
+			conn = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?serverTimezone=IST", dbScheme),
+											   dbUserName,
+											   dbPassword);
+			System.out.println("SQL connection succeed");
+			//printUsers(conn);
 //	        conn.close();
-	  } catch (SQLException ex) {/* handle any errors*/
-	    System.out.println("SQLException: " + ex.getMessage());
-	    System.out.println("SQLState: " + ex.getSQLState());
-	    System.out.println("VendorError: " + ex.getErrorCode());
-	    } 
-	  }
+		} catch (SQLException ex) { // handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		}
+	}
 
 	 /**
 	 * this method get an models.Subscriber object and save his details to DB.

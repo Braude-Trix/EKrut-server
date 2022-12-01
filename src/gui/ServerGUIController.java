@@ -19,6 +19,7 @@ import server.Server;
 import serverModels.ServerConf;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class ServerGUIController {
     private ServerGUIController controller;
@@ -128,6 +129,12 @@ public class ServerGUIController {
             isConnected = true;
         } else {
             server_instance.closeServer();
+            try {
+                server_instance.mysqlController.conn.close();
+            } catch (SQLException e) {
+                printToConsole("Couldn't close DB connection");
+                e.printStackTrace();
+            }
             ConnectorDisBTN.textProperty().setValue("Connect");
             isConnected = false;
         }
@@ -136,6 +143,10 @@ public class ServerGUIController {
     @FXML
     void ToggleImport(ActionEvent event) {
     
+    }
+
+    public void printToConsole(String error) {
+        error = String.format("Error: %s", error);
     }
 
     public void start(Stage primaryStage) {
