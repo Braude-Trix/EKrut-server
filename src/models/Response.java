@@ -3,11 +3,11 @@ package models;
 import java.io.Serializable;
 import java.util.List;
 
-public class Response<E> implements Serializable, IResponse<E>{
+public class Response implements Serializable, IResponse{
 	private static final long serialVersionUID = 1L;
 	private Integer code;
 	private String description;
-	private List<E> body;
+	private List<Object> body;
 
 	@Override
 	public Integer getCode() {
@@ -27,11 +27,11 @@ public class Response<E> implements Serializable, IResponse<E>{
 	}
 	
 	@Override
-	public List<E> getBody() {
+	public List<Object> getBody() {
 		return body;
 	}
 
-	public void setBody(List<E> body) {
+	public void setBody(List<Object> body) {
 		this.body = body;
 	}
 }
