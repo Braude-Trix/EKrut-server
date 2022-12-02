@@ -5,15 +5,15 @@ import java.util.List;
 
 public class Response implements Serializable, IResponse{
 	private static final long serialVersionUID = 1L;
-	private Integer code;
+	private ResponseCode code;
 	private String description;
 	private List<Object> body;
 
 	@Override
-	public Integer getCode() {
+	public ResponseCode getCode() {
 		return code;
 	}
-	public void setCode(Integer code) {
+	public void setCode(ResponseCode code) {
 		this.code = code;
 	}
 

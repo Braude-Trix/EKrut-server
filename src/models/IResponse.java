@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface IResponse {
 	public List<Object> getBody();
-	public Integer getCode();
+	public ResponseCode getCode();
 	public String getDescription();
 }
