@@ -19,6 +19,7 @@ import server.Server;
 import serverModels.ServerConf;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class ServerGUIController {
     private ServerGUIController controller;
@@ -26,35 +27,22 @@ public class ServerGUIController {
     private Server server_instance;
     private boolean isConnected = false;
 
-    @FXML
-    private VBox BoxForClientAConsole;
 
     @FXML
     private Button ConnectorDisBTN;
 
-    @FXML
-    private VBox ConsolemsgVBox;
 
     @FXML
     private TextField DBField;
 
-    @FXML
-    private Label DBLabel;
 
     @FXML
     private TextField DBPasswordField;
 
-    @FXML
-    private Label DBPasswordLabel;
 
     @FXML
     private TextField DBUserField;
 
-    @FXML
-    private Label DBUserLabel;
-
-    @FXML
-    private HBox HBoxDisplay;
 
     @FXML
     private TableColumn<?, ?> HostCol;
@@ -65,17 +53,10 @@ public class ServerGUIController {
     @FXML
     private TextField IPField;
 
-    @FXML
-    private Label IPLabel;
-
-    @FXML
-    private VBox InputVBox;
 
     @FXML
     private TextField PortField;
 
-    @FXML
-    private Label PortLabel;
 
     @FXML
     private TableView<?> ServerConnectionTable;
@@ -83,35 +64,14 @@ public class ServerGUIController {
     @FXML
     private TableColumn<?, ?> StatusCol;
 
-    @FXML
-    private VBox VboxForConnection;
-
-    @FXML
-    private HBox boxForBTN;
-
-    @FXML
-    private HBox boxFortxt;
 
     @FXML
     private Button importBTN;
 
-    @FXML
-    private Text mainTitle;
-
-    @FXML
-    private VBox mainVBox;
 
     @FXML
     private TextArea msgBox;
 
-    @FXML
-    private Text titleForClients;
-
-    @FXML
-    private Text titleForConfig;
-
-    @FXML
-    private Text titleForConfig11;
 
     @FXML
     void ToggleConnect(ActionEvent event) {
@@ -128,6 +88,12 @@ public class ServerGUIController {
             isConnected = true;
         } else {
             server_instance.closeServer();
+//            try {
+//                server_instance.mysqlController.conn.close();
+//            } catch (SQLException e) {
+//                printToConsole("Couldn't close DB connection");
+//                e.printStackTrace();
+//            }
             ConnectorDisBTN.textProperty().setValue("Connect");
             isConnected = false;
         }
@@ -136,6 +102,10 @@ public class ServerGUIController {
     @FXML
     void ToggleImport(ActionEvent event) {
     
+    }
+
+    public void printToConsole(String msg) {
+        controller.msgBox.appendText(msg + "\n");
     }
 
     public void start(Stage primaryStage) {

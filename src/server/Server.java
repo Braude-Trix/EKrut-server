@@ -1,5 +1,6 @@
 package server;
 
+import gui.MainGUI;
 import models.IRequest;
 import models.Method;
 import models.Request;
@@ -18,7 +19,8 @@ import java.util.List;
  */
 public class Server extends AbstractServer {
   // The default port to listen on.
-  mysqlController mysqlController;
+  public mysqlController mysqlController;
+  private ServerConf currentConf;
   
   /**
    * Constructs an instance of the server.
@@ -55,16 +57,16 @@ public class Server extends AbstractServer {
     List<Object> requestBody = request.getBody();
 
     switch (requestPath){
-      case "/subscriberCreditCard":
+      case "/UpdateSubscriber":
         Subscriber subscriber = (Subscriber)requestBody.get(0);
-        if(requestMethod == Method.PUT)
+        if(requestMethod == Method.PUT) {
           mysqlController.updateSubscriberCreditCardNumber(subscriber.getId(), subscriber.getCreditCardNumber());
+          mysqlController.updateSubscriberNumber(subscriber.getId(), subscriber.getSubscriberNumber());
+        }
         else if(requestMethod == Method.GET)
           System.out.println(mysqlController.getSubscriberDetails((String)requestBody.get(0)));
     }
   }
-
-
     
   /**
    * This method overrides the one in the superclass.
@@ -72,8 +74,8 @@ public class Server extends AbstractServer {
    */
   protected void serverStarted() {
     System.out.println("Server listening for connections on port " + getPort());
-    mysqlController = new mysqlController();
-    mysqlController.connectToDB();
+    MainGUI.serverGui.printToConsole("Server listening for connections on port " + getPort());
+    mysqlController = new mysqlController(currentConf);
     //models.Subscriber subscriber = new models.Subscriber("242", "55","2222","333","5","6",null);
     //s.saveSubscriberToDB(subscriber);
 	//    s.updateSubscriberNumber("111", "123456789");
@@ -128,9 +130,10 @@ public class Server extends AbstractServer {
 
   public static Server initServer(ServerConf serverConf) {
     Server sv = new Server(serverConf.getPort());
+    sv.currentConf = serverConf;
 
     try {
-      sv.listen(); //Start listening for connections
+      sv.listen(); // Start listening for connections
     }
     catch (Exception ex) {
       System.out.println("ERROR - Could not listen for clients!");
