@@ -2,6 +2,7 @@ package server;
 
 import models.IResponse;
 import models.Response;
+import models.ResponseCode;
 import models.Subscriber;
 import serverModels.ServerConf;
 
@@ -79,9 +80,9 @@ public class mysqlController {
             stmt.setString(3, id);
             stmt.executeUpdate();
             System.out.println("Subscriber update done successfully");
-            editResponse(response, 200, "Successfully updated subscriber credentials", null);
+            editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
         } catch (SQLException e) {
-            editResponse(response, 404, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
         }
     }
@@ -148,17 +149,17 @@ public class mysqlController {
                 subscriber = new Subscriber(rs.getString("firstName"), rs.getString("lastName"), rs.getString("id")
                         , rs.getString("phoneNumber"), rs.getString("emailAddress"), rs.getString("creditCardNumber"), rs.getString("subscriberNumber"));
                 subscribersList.add(subscriber);
-                editResponse(response, 200, "Successfully sent all subscribers", subscribersList);
+                editResponse(response, ResponseCode.OK, "Successfully sent all subscribers", subscribersList);
             }
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, 404, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
         }
         return subscribersList;
     }
 
-    void editResponse(Response response, int code, String description, List<Object> body) {
+    void editResponse(Response response, ResponseCode code, String description, List<Object> body) {
         response.setBody(body);
         response.setCode(code);
         response.setDescription(description);
