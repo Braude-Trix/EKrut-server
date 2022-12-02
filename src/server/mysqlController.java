@@ -145,12 +145,12 @@ public class mysqlController {
         try {
             stmt = conn.prepareStatement(query);
             rs = stmt.executeQuery();
-            if (rs.next()) {
+            while (rs.next()) {
                 subscriber = new Subscriber(rs.getString("firstName"), rs.getString("lastName"), rs.getString("id")
                         , rs.getString("phoneNumber"), rs.getString("emailAddress"), rs.getString("creditCardNumber"), rs.getString("subscriberNumber"));
                 subscribersList.add(subscriber);
-                editResponse(response, ResponseCode.OK, "Successfully sent all subscribers", subscribersList);
             }
+            editResponse(response, ResponseCode.OK, "Successfully sent all subscribers", subscribersList);
             rs.close();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
