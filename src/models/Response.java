@@ -16,7 +16,7 @@ public class Response implements Serializable, IResponse{
 	public void setCode(Integer code) {
 		this.code = code;
 	}
-	
+
 	@Override
 	public String getDescription() {
 		return description;
@@ -25,7 +25,7 @@ public class Response implements Serializable, IResponse{
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
 	@Override
 	public List<Object> getBody() {
 		return body;

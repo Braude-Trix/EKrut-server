@@ -129,12 +129,12 @@ public class ServerGUIController {
             isConnected = true;
         } else {
             server_instance.closeServer();
-            try {
-                server_instance.mysqlController.conn.close();
-            } catch (SQLException e) {
-                printToConsole("Couldn't close DB connection");
-                e.printStackTrace();
-            }
+//            try {
+//                server_instance.mysqlController.conn.close();
+//            } catch (SQLException e) {
+//                printToConsole("Couldn't close DB connection");
+//                e.printStackTrace();
+//            }
             ConnectorDisBTN.textProperty().setValue("Connect");
             isConnected = false;
         }
@@ -145,8 +145,8 @@ public class ServerGUIController {
     
     }
 
-    public void printToConsole(String error) {
-        error = String.format("Error: %s", error);
+    public void printToConsole(String msg) {
+        controller.msgBox.appendText(msg + "\n");
     }
 
     public void start(Stage primaryStage) {

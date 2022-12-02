@@ -37,12 +37,12 @@ public class mysqlController {
 	}
 
 	 /**
-	 * this method get an models.Subscriber object and save his details to DB.
-	 * NOTE: Existing ID models.Subscriber OR null value except from subscriberNumber will raise an exception!
+	 * this method get an Subscriber object and save his details to DB.
+	 * NOTE: Existing ID Subscriber OR null value except from subscriberNumber will raise an exception!
 	 */
 	  public void saveSubscriberToDB(Subscriber subscriber) {
 		PreparedStatement stmt;
-		System.out.println("Inserting models.Subscriber to DB");
+		System.out.println("Inserting Subscriber to DB");
 		String query = "INSERT into Subscriber VALUES (?, ?, ?, ?, ?, ?, ?)";
 		try {
 			stmt = conn.prepareStatement(query);
@@ -54,7 +54,7 @@ public class mysqlController {
 			stmt.setString(6, subscriber.getCreditCardNumber());
 			stmt.setString(7, subscriber.getSubscriberNumber());
 			stmt.executeUpdate();
-			System.out.println("models.Subscriber update done sucssesfuly");
+			System.out.println("Subscriber update done successfully");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 		
@@ -71,7 +71,7 @@ public class mysqlController {
 			stmt.setString(1, newCreditCardNumber);
 			stmt.setString(2, id);
 			stmt.executeUpdate();
-			System.out.println("models.Subscriber update done sucssesfuly");
+			System.out.println("Subscriber update done successfully");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 		
@@ -88,7 +88,7 @@ public class mysqlController {
 			stmt.setString(1, newSubscriberNumber);
 			stmt.setString(2, id);
 			stmt.executeUpdate();
-			System.out.println("models.Subscriber update done sucssesfuly");
+			System.out.println("Subscriber update done successfully");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 		
@@ -96,10 +96,10 @@ public class mysqlController {
 	
 	public Subscriber getSubscriberDetails(String id) {
 		/**
-		 * this method get a subscriber id and return models.Subscriber object with all his details from the DB.
+		 * this method get a subscriber id and return Subscriber object with all his details from the DB.
 		 * NOTE: method will return null if subscriber ID isn't exists in DB.
 		 */
-		//return null if models.Subscriber id does not exists
+		//return null if Subscriber id does not exists
 		PreparedStatement stmt;
 		ResultSet rs;
 		String query = "SELECT * FROM Subscriber WHERE id = ?";
@@ -114,7 +114,7 @@ public class mysqlController {
 	   		}
 	  		rs.close();
 	  	} catch (SQLException e) {e.printStackTrace();}
-		return null; //models.Subscriber id does not exists
+		return null; //Subscriber id does not exists
 	}
 
 

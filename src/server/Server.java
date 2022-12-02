@@ -1,5 +1,6 @@
 package server;
 
+import gui.MainGUI;
 import models.IRequest;
 import models.Method;
 import models.Request;
@@ -56,16 +57,16 @@ public class Server extends AbstractServer {
     List<Object> requestBody = request.getBody();
 
     switch (requestPath){
-      case "/subscriberCreditCard":
+      case "/UpdateSubscriber":
         Subscriber subscriber = (Subscriber)requestBody.get(0);
-        if(requestMethod == Method.PUT)
+        if(requestMethod == Method.PUT) {
           mysqlController.updateSubscriberCreditCardNumber(subscriber.getId(), subscriber.getCreditCardNumber());
+          mysqlController.updateSubscriberNumber(subscriber.getId(), subscriber.getSubscriberNumber());
+        }
         else if(requestMethod == Method.GET)
           System.out.println(mysqlController.getSubscriberDetails((String)requestBody.get(0)));
     }
   }
-
-
     
   /**
    * This method overrides the one in the superclass.
@@ -73,6 +74,7 @@ public class Server extends AbstractServer {
    */
   protected void serverStarted() {
     System.out.println("Server listening for connections on port " + getPort());
+    MainGUI.serverGui.printToConsole("Server listening for connections on port " + getPort());
     mysqlController = new mysqlController(currentConf);
     //models.Subscriber subscriber = new models.Subscriber("242", "55","2222","333","5","6",null);
     //s.saveSubscriberToDB(subscriber);
