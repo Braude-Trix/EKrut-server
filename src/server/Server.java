@@ -68,10 +68,12 @@ public class Server extends AbstractServer {
                 Subscriber subscriber = (Subscriber) requestBody.get(0);
                 if (requestMethod == Method.PUT) {
                     mysqlController.updateSubscriberNumberAndCreditCard(subscriber.getId(), subscriber.getSubscriberNumber(), subscriber.getCreditCardNumber(), response);
+                    response.setPath("/UpdateSubscriber");
                 }
             case "/AllSubscribers":
                 if (requestMethod == Method.GET) {
                     mysqlController.getAllSubscribersFromDB(response);
+                    response.setPath("/AllSubscribers");
                 }
         }
         return response;
