@@ -11,11 +11,11 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 /**
- * This class overrides some of the methods in the abstract
+ * This class overrides some methods in the abstract
  * superclass in order to give more functionality to the server.
  */
 public class Server extends AbstractServer {
-    // The default port to listen on.
+    public static Server server_instance;
     public mysqlController mysqlController;
     private ServerConf currentConf;
 
@@ -29,12 +29,33 @@ public class Server extends AbstractServer {
     }
 
     /**
+     * Hook method - called when new client is connected
+     *
+     * @param client the connection connected to the client.
+     */
+    protected void clientConnected(ConnectionToClient client) {
+        MainGUI.serverGui.printToConsole("New client has been connected -> see table");
+        MainGUI.serverGui.checkConnectedClients();
+    }
+
+    /**
+     * Hook method - called when new client was disconnected
+     *
+     * @param client the connection with the client.
+     */
+    protected void clientDisconnected(ConnectionToClient client) {
+        MainGUI.serverGui.printToConsole("Client has been disconnected -> see table");
+        MainGUI.serverGui.checkConnectedClients();
+    }
+
+    /**
      * This method handles any messages received from the client.
      *
      * @param msg    The message received from the client.
      * @param client The connection from which the message originated.
      */
     public void handleMessageFromClient(Object msg, ConnectionToClient client) {
+        MainGUI.serverGui.checkConnectedClients();
         IRequest request = (Request) msg;
         Response response = parseClientRequest(request);
         try {
@@ -43,18 +64,6 @@ public class Server extends AbstractServer {
             //handle exception
             throw new RuntimeException(e);
         }
-        {
-
-        }
-//	  System.out.println(this.getClientConnections()); // all clients
-//	  System.out.println("ip: " + client.getInetAddress().getHostAddress()); // this is ip
-//	  System.out.println("host: " + client.getInetAddress().getHostAddress());
-//	  System.out.println("status: " + client.isAlive()); // true if status is alive
-//	  System.out.println(client);
-        //System.out.println("Message received: " + msg + " from " + client);
-        //Map<String, String> userData = srialize((String) msg);
-        //s.saveUserToDB(userData);
-        //this.sendToAllClients(msg);
     }
 
     public Response parseClientRequest(IRequest request) {
@@ -67,7 +76,9 @@ public class Server extends AbstractServer {
             case "/UpdateSubscriber":
                 Subscriber subscriber = (Subscriber) requestBody.get(0);
                 if (requestMethod == Method.PUT) {
-                    mysqlController.updateSubscriberNumberAndCreditCard(subscriber.getId(), subscriber.getSubscriberNumber(), subscriber.getCreditCardNumber(), response);
+                    mysqlController.updateSubscriberNumberAndCreditCard(
+                            subscriber.getId(), subscriber.getSubscriberNumber(),
+                            subscriber.getCreditCardNumber(), response);
                     response.setPath("/UpdateSubscriber");
                 }
             case "/AllSubscribers":
@@ -85,9 +96,9 @@ public class Server extends AbstractServer {
      * Called when the server starts listening for connections.
      */
     protected void serverStarted() {
-        System.out.println("Server listening for connections on port " + getPort());
         MainGUI.serverGui.printToConsole("Server listening for connections on port " + getPort());
         mysqlController = new mysqlController(currentConf);
+        // todo: delete all below
         //mysqlController.updateSubscriberNumberAndSubscriberCreditCard("111", "0", "0");
         //models.Subscriber subscriber = new models.Subscriber("242", "55","2222","333","5","6",null);
         //s.saveSubscriberToDB(subscriber);
@@ -122,35 +133,42 @@ public class Server extends AbstractServer {
      * when the server stops listening for connections.
      */
     protected void serverStopped() {
-        System.out.println("Server has stopped listening for connections.");
+        MainGUI.serverGui.printToConsole("Server has stopped listening for connections.");
     }
 
-//  /**
-//   * This method is responsible for the creation of the server instance.
-//   *
-//   * @param args[0] The port number to listen on.
-//   * 		Defaults to 5555 if no argument is entered.
-//   */
 
-    public void closeServer() {
-        try {
-            this.close();
-        } catch (IOException e) {
-            System.out.println("Could not close server, because of:");
-            e.printStackTrace();
+    public boolean closeServer() {
+        if (isListening()) {
+            try {
+                this.close();
+            } catch (IOException e) {
+                MainGUI.serverGui.printToConsole("Could not close server, because of an error", true);
+                e.printStackTrace();
+                return false;
+            }
         }
+        return true;
     }
 
-    public static Server initServer(ServerConf serverConf) {
-        Server sv = new Server(serverConf.getPort());
-        sv.currentConf = serverConf;
+    /**
+     * This method is responsible for the creation of the server instance.
+     *
+     * @param serverConf The Server configuration.
+     */
+    public static void initServer(ServerConf serverConf) {
+        if (Server.server_instance == null)
+            Server.server_instance = new Server(serverConf.getPort());
+        else
+            Server.server_instance.setPort(serverConf.getPort());
+
+        Server.server_instance.currentConf = serverConf;
 
         try {
-            sv.listen(); // Start listening for connections
+            Server.server_instance.listen(); // Start listening for connections
         } catch (Exception ex) {
-            System.out.println("ERROR - Could not listen for clients!");
+            MainGUI.serverGui.printToConsole("Server stopped listening for clients!", true);
+            MainGUI.serverGui.setConnected(false);
         }
-        return sv;
     }
 
     public static ServerConf getDefaultServerConf() {

@@ -1,6 +1,6 @@
 package server;
 
-import models.IResponse;
+import gui.MainGUI;
 import models.Response;
 import models.ResponseCode;
 import models.Subscriber;
@@ -16,6 +16,8 @@ import java.util.List;
 
 public class mysqlController {
     public Connection conn;
+    private final String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
+            "please check your sql connection configuration in server panel";
 
     public mysqlController(ServerConf serverConf) {
         String dbScheme = serverConf.getDbScheme();
@@ -23,23 +25,37 @@ public class mysqlController {
         String dbPassword = serverConf.getDbPassword();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-            System.out.println("Driver definition succeed");
+            MainGUI.serverGui.printToConsole("Driver definition succeed");
         } catch (Exception ex) { // handle the error
-            System.out.println("Driver definition failed");
+            MainGUI.serverGui.printToConsole("Driver definition failed", true);
         }
 
         try {
-            conn = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?serverTimezone=IST", dbScheme),
+            conn = DriverManager.getConnection(
+                    String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", dbScheme),
                     dbUserName,
                     dbPassword);
-            System.out.println("SQL connection succeed");
-            //printUsers(conn);
-//	        conn.close();
+            MainGUI.serverGui.printToConsole("SQL connection succeed");
+            MainGUI.serverGui.setConnected(true);
         } catch (SQLException ex) { // handle any errors
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+            MainGUI.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
+            MainGUI.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
+            MainGUI.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
+            MainGUI.serverGui.setConnected(false);
         }
+    }
+
+    public boolean closeConnection() {
+        if (conn != null) {
+            try {
+                conn.close();
+                MainGUI.serverGui.printToConsole("SQL connection was closed");
+            } catch (SQLException e) {
+                MainGUI.serverGui.printToConsole("Couldn't close SQL connection", true);
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -48,7 +64,7 @@ public class mysqlController {
      */
     public void saveSubscriberToDB(Subscriber subscriber) {
         PreparedStatement stmt;
-        System.out.println("Inserting Subscriber to DB");
+        MainGUI.serverGui.printToConsole("Inserting Subscriber to DB");
         String query = "INSERT into Subscriber VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             stmt = conn.prepareStatement(query);
@@ -60,16 +76,18 @@ public class mysqlController {
             stmt.setString(6, subscriber.getCreditCardNumber());
             stmt.setString(7, subscriber.getSubscriberNumber());
             stmt.executeUpdate();
-            System.out.println("Subscriber update done successfully");
+            MainGUI.serverGui.printToConsole("Subscriber update done successfully");
         } catch (SQLException e) {
             e.printStackTrace();
+            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
 
 
-    public void updateSubscriberNumberAndCreditCard(String id, String newSubscriberNumber, String newCreditCardNumber, Response response) {
-        /**
-         * this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
+    public void updateSubscriberNumberAndCreditCard(String id, String newSubscriberNumber,
+                                                    String newCreditCardNumber, Response response) {
+        /*
+          this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
          */
         PreparedStatement stmt;
         String query = "UPDATE Subscriber SET creditCardNumber= ?, SubscriberNumber= ? WHERE id= ?";
@@ -79,11 +97,12 @@ public class mysqlController {
             stmt.setString(2, newSubscriberNumber);
             stmt.setString(3, id);
             stmt.executeUpdate();
-            System.out.println("Subscriber update done successfully");
+            MainGUI.serverGui.printToConsole("Subscriber update done successfully");
             editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
+            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
 
@@ -101,12 +120,16 @@ public class mysqlController {
             stmt.setString(1, id);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                return new Subscriber(rs.getString("firstName"), rs.getString("lastName"), rs.getString("id")
-                        , rs.getString("phoneNumber"), rs.getString("emailAddress"), rs.getString("creditCardNumber"), rs.getString("subscriberNumber"));
+                return new Subscriber(
+                        rs.getString("firstName"), rs.getString("lastName"),
+                        rs.getString("id"), rs.getString("phoneNumber"),
+                        rs.getString("emailAddress"), rs.getString("creditCardNumber"),
+                        rs.getString("subscriberNumber"));
             }
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return null; //Subscriber id does not exists
     }
@@ -129,6 +152,7 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return false;
     }
@@ -146,8 +170,11 @@ public class mysqlController {
             stmt = conn.prepareStatement(query);
             rs = stmt.executeQuery();
             while (rs.next()) {
-                subscriber = new Subscriber(rs.getString("firstName"), rs.getString("lastName"), rs.getString("id")
-                        , rs.getString("phoneNumber"), rs.getString("emailAddress"), rs.getString("creditCardNumber"), rs.getString("subscriberNumber"));
+                subscriber = new Subscriber(
+                        rs.getString("firstName"), rs.getString("lastName"),
+                        rs.getString("id"), rs.getString("phoneNumber"),
+                        rs.getString("emailAddress"), rs.getString("creditCardNumber"),
+                        rs.getString("subscriberNumber"));
                 subscribersList.add(subscriber);
             }
             editResponse(response, ResponseCode.OK, "Successfully sent all subscribers", subscribersList);
@@ -155,6 +182,7 @@ public class mysqlController {
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
+            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return subscribersList;
     }
