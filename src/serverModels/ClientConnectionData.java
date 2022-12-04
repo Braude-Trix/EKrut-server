@@ -6,6 +6,8 @@ import ocsf.server.ConnectionToClient;
 import java.util.Objects;
 
 public class ClientConnectionData {
+    private final String ALIVE = "Alive";
+    private final String DOWN = "Down";
     private String ip;
     private String host;
     public String status;
@@ -15,7 +17,7 @@ public class ClientConnectionData {
     public ClientConnectionData(ConnectionToClient connectionToClient) {
         ip = Objects.requireNonNull(connectionToClient.getInetAddress()).getHostAddress();
         host = connectionToClient.getInetAddress().getHostName();
-        status = connectionToClient.isAlive() ? "Alive" : "Down";
+        status = connectionToClient.isAlive() ? ALIVE : DOWN;
     }
 
     public ClientConnectionData(String ip, String host, String status) {
@@ -48,6 +50,17 @@ public class ClientConnectionData {
         this.status = status;
     }
 
+    public void setStatus(boolean status) {
+        this.status = status ? ALIVE : DOWN;
+    }
+
+    public boolean addressEquals(Object obj) {
+        if (!(obj instanceof ClientConnectionData))
+            return false;
+        ClientConnectionData other = (ClientConnectionData) obj;
+        return this.ip.equals(other.ip) &&
+                this.host.equals(other.host);
+    }
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof ClientConnectionData))

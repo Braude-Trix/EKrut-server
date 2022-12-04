@@ -28,7 +28,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class ServerGUIController implements Initializable {
     public static boolean isConnected;
@@ -188,6 +191,7 @@ public class ServerGUIController implements Initializable {
         HostCol.setCellValueFactory(new PropertyValueFactory<>("host"));
         StatusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
         ClientsConnectionTable.setItems(connectionDataList);
+        refreshBtn.setTooltip(new Tooltip("Refresh connected clients"));
 
         // adding eventListener to buttons
         refreshBtn.setOnAction(event -> refreshConnectedClients());
@@ -218,15 +222,36 @@ public class ServerGUIController implements Initializable {
     //    ----------- Event Handlers -----------
     private void refreshConnectedClients() {
         if (Server.server_instance != null) {
-            Thread[] clients = Server.server_instance.getClientConnections();
-            connectionDataList.clear();
-            for (Thread client : clients) {
-                ConnectionToClient connection = (ConnectionToClient) client;
-                ClientConnectionData connectionData = new ClientConnectionData(connection);
-                connectionDataList.add(connectionData);
-            }
+            updateClientsDataList();
         }
         ClientsConnectionTable.refresh();
+    }
+
+    private void updateClientsDataList() {
+        Thread[] clients = Server.server_instance.getClientConnections();
+        List<ClientConnectionData> currentClients = new ArrayList<>();
+        // appending all current clients
+        for (Thread client : clients) {
+            ConnectionToClient connection = (ConnectionToClient) client;
+            currentClients.add(new ClientConnectionData(connection));
+        }
+        for (ClientConnectionData oldClientData : connectionDataList) {
+            // getting changed client with the same ip and host
+            List<ClientConnectionData> currentChangedClients = currentClients.stream()
+                    .filter(clientConnectionData -> clientConnectionData.addressEquals(oldClientData))
+                    .collect(Collectors.toList());
+            if (currentChangedClients.isEmpty()) { // oldClient is now down, or still down
+                oldClientData.setStatus(false);
+            } else { // oldClient is still connected, or has been reconnected
+                oldClientData.setStatus(currentChangedClients.get(0).getStatus());
+            }
+        }
+        // adding new clients (all changed clients has been updated in `connectionDataList`)
+        for (ClientConnectionData newClientData : currentClients) {
+            if (!connectionDataList.contains(newClientData)) {
+                connectionDataList.add(newClientData);
+            }
+        }
     }
 
     public void checkConnectedClients() {

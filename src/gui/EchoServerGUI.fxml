@@ -96,7 +96,7 @@
                                  <columns>
                                     <TableColumn fx:id="IPCol" prefWidth="180.0" text="IP" />
                                     <TableColumn fx:id="HostCol" prefWidth="180.0" text="Host" />
-                                    <TableColumn fx:id="StatusCol" prefWidth="60.0" text="Status" />
+                                    <TableColumn fx:id="StatusCol" prefWidth="58.0" text="Status" />
                                  </columns>
                               </TableView>
                               <Button fx:id="refreshBtn" mnemonicParsing="false" onAction="#refreshClients" text="Refresh" />

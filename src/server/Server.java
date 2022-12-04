@@ -98,34 +98,6 @@ public class Server extends AbstractServer {
     protected void serverStarted() {
         MainGUI.serverGui.printToConsole("Server listening for connections on port " + getPort());
         mysqlController = new mysqlController(currentConf);
-        // todo: delete all below
-        //mysqlController.updateSubscriberNumberAndSubscriberCreditCard("111", "0", "0");
-        //models.Subscriber subscriber = new models.Subscriber("242", "55","2222","333","5","6",null);
-        //s.saveSubscriberToDB(subscriber);
-        //    s.updateSubscriberNumber("111", "123456789");
-        //    s.updateSubscriberNumber("3", null);
-        //    s.updateSubscriberNumber("6", "yuval");
-        //    models.Subscriber subscriber = s.getSubscriberDetails("111");
-        //    System.out.println(subscriber.getFirstName());
-        //    System.out.println(subscriber.getLastName());
-        //    System.out.println(subscriber.getId());
-        //    System.out.println(subscriber.getPhoneNumber());
-        //    System.out.println(subscriber.getEmailAddress());
-        //    System.out.println(subscriber.getCreditCardNumber());
-        //    System.out.println(subscriber.getSubscriberNumber());
-        //    models.Subscriber subscriber2 = s.getSubscriberDetails("123");
-        //    System.out.println(subscriber2.getFirstName());
-        //    System.out.println(subscriber2.getLastName());
-        //    System.out.println(subscriber2.getId());
-        //    System.out.println(subscriber2.getPhoneNumber());
-        //    System.out.println(subscriber2.getEmailAddress());
-        //    System.out.println(subscriber2.getCreditCardNumber());
-        //    System.out.println(subscriber2.getSubscriberNumber());
-        //    models.Subscriber subscriber3 = s.getSubscriberDetails("notexistid");
-        //    System.out.println(subscriber3);
-        //    System.out.println(s.isSubscriberExistInDB("notexistid"));
-        //    System.out.println(s.isSubscriberExistInDB("444"));
-        //    System.out.println(s.isSubscriberExistInDB("0"));
     }
 
     /**
