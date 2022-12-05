@@ -187,6 +187,7 @@ public class ServerGUIController implements Initializable {
         markFieldAsOk(DBField);
         markFieldAsOk(DBUserField);
         markFieldAsOk(DBPasswordField);
+        DBPasswordField.setOnMouseEntered(event -> updatePasswordTooltip());
         ConnectorDisBTN.setStyle(OK_STYLE_BTN);
 
         // init table
@@ -200,6 +201,11 @@ public class ServerGUIController implements Initializable {
         refreshBtn.setOnAction(event -> refreshConnectedClients());
         PortField.setOnKeyTyped(event -> validatePortField());
         IpRefreshBtn.setOnAction(event -> refreshIpField());
+    }
+
+    private void updatePasswordTooltip() {
+        String password = DBPasswordField.getText();
+        DBPasswordField.setTooltip(new Tooltip(password));
     }
 
     public void printToConsole(String msg) {
