@@ -95,7 +95,10 @@ public class ServerGUIController implements Initializable {
         String btnStyle = isConnected ? ERROR_STYLE_BTN : OK_STYLE_BTN;
         if (!isConnected) {
             boolean isServerClosed = Server.server_instance.closeServer();
-            boolean isDBClosed = Server.server_instance.mysqlController.closeConnection();
+            boolean isDBClosed = true;
+            if (Server.server_instance.mysqlController != null) {
+                isDBClosed = Server.server_instance.mysqlController.closeConnection();
+            }
             if (!isServerClosed || !isDBClosed) {
                 printToConsole("One of the resources couldn't close, please reopen the app", true);
                 Platform.runLater(() -> controller.ConnectorDisBTN.setDisable(false));
