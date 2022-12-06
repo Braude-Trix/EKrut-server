@@ -169,7 +169,7 @@ public class ServerGUIController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // init ip-refresh btn
         IpRefreshBtn.setText("");
-        Image img = new Image("./assets/reload.png", IpRefreshBtn.getMaxWidth(), IpRefreshBtn.getMaxHeight(),
+        Image img = new Image("/assets/reload.png", IpRefreshBtn.getMaxWidth(), IpRefreshBtn.getMaxHeight(),
                 true, true, true);
         ImageView imgView = new ImageView(img);
         IpRefreshBtn.setGraphic(imgView);
