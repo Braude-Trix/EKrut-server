@@ -87,11 +87,13 @@ public class Server extends AbstractServer {
                             subscriber.getCreditCardNumber(), response);
                     response.setPath("/UpdateSubscriber");
                 }
+                break;
             case "/AllSubscribers":
                 if (requestMethod == Method.GET) {
                     mysqlController.getAllSubscribersFromDB(response);
                     response.setPath("/AllSubscribers");
                 }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);
@@ -160,7 +162,7 @@ public class Server extends AbstractServer {
         } catch (UnknownHostException ignored) {
         }
         int port = 5555;
-        String dbScheme = "world";
+        String dbScheme = "ekrut";
         String dbUserName = "root";
         String dbPassword = "1234";
         return new ServerConf(ip, port, dbScheme, dbUserName, dbPassword);
