@@ -1,8 +1,14 @@
 package server;
 
 import gui.MainGUI;
-import models.*;
-import ocsf.server.*;
+import models.IRequest;
+import models.Method;
+import models.Request;
+import models.Response;
+import models.ResponseCode;
+import models.Subscriber;
+import ocsf.server.AbstractServer;
+import ocsf.server.ConnectionToClient;
 import serverModels.ServerConf;
 
 import java.io.IOException;
@@ -86,6 +92,9 @@ public class Server extends AbstractServer {
                     mysqlController.getAllSubscribersFromDB(response);
                     response.setPath("/AllSubscribers");
                 }
+            default:
+                mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
+                        "Operation doesn't exist", null);
         }
         return response;
     }
