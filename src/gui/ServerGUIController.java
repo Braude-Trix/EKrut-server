@@ -34,7 +34,7 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class ServerGUIController implements Initializable {
-    public static boolean isConnected;
+    private static boolean isConnected;
     private static ServerGUIController controller;
     private static final ObservableList<ClientConnectionData> connectionDataList =
             FXCollections.observableArrayList();

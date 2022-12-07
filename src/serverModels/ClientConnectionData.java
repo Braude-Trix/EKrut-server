@@ -1,6 +1,5 @@
 package serverModels;
 
-import javafx.beans.property.SimpleStringProperty;
 import ocsf.server.ConnectionToClient;
 
 import java.util.Objects;
@@ -11,8 +10,6 @@ public class ClientConnectionData {
     private String ip;
     private String host;
     public String status;
-
-//    public ClientConnectionData() {}
 
     public ClientConnectionData(ConnectionToClient connectionToClient) {
         ip = Objects.requireNonNull(connectionToClient.getInetAddress()).getHostAddress();

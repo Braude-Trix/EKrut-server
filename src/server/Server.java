@@ -1,6 +1,6 @@
 package server;
 
-import gui.MainGUI;
+import gui.ServerGui;
 import models.IRequest;
 import models.Method;
 import models.Request;
@@ -40,8 +40,8 @@ public class Server extends AbstractServer {
      * @param client the connection connected to the client.
      */
     protected void clientConnected(ConnectionToClient client) {
-        MainGUI.serverGui.printToConsole("New client has been connected -> see table");
-        MainGUI.serverGui.checkConnectedClients();
+        ServerGui.serverGui.printToConsole("New client has been connected -> see table");
+        ServerGui.serverGui.checkConnectedClients();
     }
 
     /**
@@ -50,8 +50,8 @@ public class Server extends AbstractServer {
      * @param client the connection with the client.
      */
     protected void clientDisconnected(ConnectionToClient client) {
-        MainGUI.serverGui.printToConsole("Client has been disconnected -> see table");
-        MainGUI.serverGui.checkConnectedClients();
+        ServerGui.serverGui.printToConsole("Client has been disconnected -> see table");
+        ServerGui.serverGui.checkConnectedClients();
     }
 
     /**
@@ -61,7 +61,7 @@ public class Server extends AbstractServer {
      * @param client The connection from which the message originated.
      */
     public void handleMessageFromClient(Object msg, ConnectionToClient client) {
-        MainGUI.serverGui.checkConnectedClients();
+        ServerGui.serverGui.checkConnectedClients();
         IRequest request = (Request) msg;
         Response response = parseClientRequest(request);
         try {
@@ -107,7 +107,7 @@ public class Server extends AbstractServer {
      * Called when the server starts listening for connections.
      */
     protected void serverStarted() {
-        MainGUI.serverGui.printToConsole("Server listening for connections on port " + getPort());
+        ServerGui.serverGui.printToConsole("Server listening for connections on port " + getPort());
         mysqlController = new mysqlController(currentConf);
     }
 
@@ -116,7 +116,7 @@ public class Server extends AbstractServer {
      * when the server stops listening for connections.
      */
     protected void serverStopped() {
-        MainGUI.serverGui.printToConsole("Server has stopped listening for connections.");
+        ServerGui.serverGui.printToConsole("Server has stopped listening for connections.");
     }
 
 
@@ -125,7 +125,7 @@ public class Server extends AbstractServer {
             try {
                 this.close();
             } catch (IOException e) {
-                MainGUI.serverGui.printToConsole("Could not close server, because of an error", true);
+                ServerGui.serverGui.printToConsole("Could not close server, because of an error", true);
                 e.printStackTrace();
                 return false;
             }
@@ -149,8 +149,8 @@ public class Server extends AbstractServer {
         try {
             Server.server_instance.listen(); // Start listening for connections
         } catch (Exception ex) {
-            MainGUI.serverGui.printToConsole("Server stopped listening for clients!", true);
-            MainGUI.serverGui.setConnected(false);
+            ServerGui.serverGui.printToConsole("Server stopped listening for clients!", true);
+            ServerGui.serverGui.setConnected(false);
         }
     }
 

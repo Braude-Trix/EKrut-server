@@ -1,6 +1,6 @@
 package server;
 
-import gui.MainGUI;
+import gui.ServerGui;
 import models.Response;
 import models.ResponseCode;
 import models.Subscriber;
@@ -25,9 +25,9 @@ public class mysqlController {
         String dbPassword = serverConf.getDbPassword();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-            MainGUI.serverGui.printToConsole("Driver definition succeed");
+            ServerGui.serverGui.printToConsole("Driver definition succeed");
         } catch (Exception ex) { // handle the error
-            MainGUI.serverGui.printToConsole("Driver definition failed", true);
+            ServerGui.serverGui.printToConsole("Driver definition failed", true);
         }
 
         try {
@@ -35,13 +35,13 @@ public class mysqlController {
                     String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", dbScheme),
                     dbUserName,
                     dbPassword);
-            MainGUI.serverGui.printToConsole("SQL connection succeed");
-            MainGUI.serverGui.setConnected(true);
+            ServerGui.serverGui.printToConsole("SQL connection succeed");
+            ServerGui.serverGui.setConnected(true);
         } catch (SQLException ex) { // handle any errors
-            MainGUI.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
-            MainGUI.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
-            MainGUI.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
-            MainGUI.serverGui.setConnected(false);
+            ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
+            ServerGui.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
+            ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
+            ServerGui.serverGui.setConnected(false);
         }
     }
 
@@ -49,9 +49,9 @@ public class mysqlController {
         if (conn != null) {
             try {
                 conn.close();
-                MainGUI.serverGui.printToConsole("SQL connection was closed");
+                ServerGui.serverGui.printToConsole("SQL connection was closed");
             } catch (SQLException e) {
-                MainGUI.serverGui.printToConsole("Couldn't close SQL connection", true);
+                ServerGui.serverGui.printToConsole("Couldn't close SQL connection", true);
                 return false;
             }
         }
@@ -64,7 +64,7 @@ public class mysqlController {
      */
     public void saveSubscriberToDB(Subscriber subscriber) {
         PreparedStatement stmt;
-        MainGUI.serverGui.printToConsole("Inserting Subscriber to DB");
+        ServerGui.serverGui.printToConsole("Inserting Subscriber to DB");
         String query = "INSERT into Subscriber VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             stmt = conn.prepareStatement(query);
@@ -76,10 +76,10 @@ public class mysqlController {
             stmt.setString(6, subscriber.getCreditCardNumber());
             stmt.setString(7, subscriber.getSubscriberNumber());
             stmt.executeUpdate();
-            MainGUI.serverGui.printToConsole("Subscriber update done successfully");
+            ServerGui.serverGui.printToConsole("Subscriber update done successfully");
         } catch (SQLException e) {
             e.printStackTrace();
-            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
 
@@ -97,12 +97,12 @@ public class mysqlController {
             stmt.setString(2, newSubscriberNumber);
             stmt.setString(3, id);
             stmt.executeUpdate();
-            MainGUI.serverGui.printToConsole("Subscriber update done successfully");
+            ServerGui.serverGui.printToConsole("Subscriber update done successfully");
             editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
-            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
 
@@ -129,7 +129,7 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return null; //Subscriber id does not exists
     }
@@ -152,7 +152,7 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return false;
     }
@@ -182,7 +182,7 @@ public class mysqlController {
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
-            MainGUI.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return subscribersList;
     }
