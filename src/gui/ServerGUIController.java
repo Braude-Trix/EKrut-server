@@ -143,7 +143,7 @@ public class ServerGUIController implements Initializable {
         AnchorPane pane;
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("EchoServerGUI.fxml"));
+            loader.setLocation(getClass().getResource("/assets/EchoServerGUI.fxml"));
             pane = loader.load();
             controller = loader.getController();
         } catch (IOException e) {
