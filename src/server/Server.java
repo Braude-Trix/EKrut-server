@@ -1,12 +1,7 @@
 package server;
 
 import gui.ServerGui;
-import models.IRequest;
-import models.Method;
-import models.Request;
-import models.Response;
-import models.ResponseCode;
-import models.Subscriber;
+import models.*;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 import serverModels.ServerConf;
@@ -15,7 +10,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-
 /**
  * This class overrides some methods in the abstract
  * superclass in order to give more functionality to the server.
@@ -77,7 +71,6 @@ public class Server extends AbstractServer {
         Method requestMethod = request.getMethod();
         List<Object> requestBody = request.getBody();
         Response response = new Response();
-
         switch (requestPath) {
             case "/UpdateSubscriber":
                 Subscriber subscriber = (Subscriber) requestBody.get(0);
@@ -85,15 +78,39 @@ public class Server extends AbstractServer {
                     mysqlController.updateSubscriberNumberAndCreditCard(
                             subscriber.getId(), subscriber.getSubscriberNumber(),
                             subscriber.getCreditCardNumber(), response);
-                    response.setPath("/UpdateSubscriber");
                 }
                 break;
             case "/AllSubscribers":
                 if (requestMethod == Method.GET) {
                     mysqlController.getAllSubscribersFromDB(response);
-                    response.setPath("/AllSubscribers");
                 }
                 break;
+            case "/newOrder":
+                Order order = (Order) requestBody.get(0);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveOrderToDB(order, response);
+                }
+                break;
+            case "/queryMessage":
+                String customerId = (String) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMyMessages(customerId, response);
+                }
+                break;
+
+            case "/requestMachineProducts":
+                String machineId = (String) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAllProductsInMachine(machineId, response);
+                }
+                break;
+
+            case "/requestProducts":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAllProducts(response);
+                }
+                break;
+
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);

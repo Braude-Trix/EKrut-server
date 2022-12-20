@@ -13,7 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
+import models.*;
 public class mysqlController {
     public Connection conn;
     private final String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
@@ -192,4 +192,131 @@ public class mysqlController {
         response.setCode(code);
         response.setDescription(description);
     }
+
+
+    public void getAllProducts(Response response) {
+        Product product;
+        List<Object> products = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM Products";
+        try {
+            //productName, productId, information, price
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                product = new Product(
+                        rs.getString("productName"), rs.getString("productId"),
+                        rs.getString("information"),
+                        rs.getDouble("price"));
+                products.add(product);
+            }
+            editResponse(response, ResponseCode.OK, "Successfully import all products", products);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+    public void getAllProductsInMachine(String machineId, Response response) {
+        ProductInMachine productInMachine;
+        List<Object> ProductsInMachine = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM ProductInMachine WHERE machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, machineId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                productInMachine = new ProductInMachine(
+                        rs.getString("machineId"), rs.getString("productId"),
+                        StatusInMachine.valueOf(rs.getString("statusInMachine")),
+                        rs.getInt("amountInMachine"));
+                ProductsInMachine.add(productInMachine);
+            }
+            editResponse(response, ResponseCode.OK, "Successfully import all products from machine", ProductsInMachine);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+    public void saveOrderToDB(Order order, Response response) {
+        PreparedStatement stmt;
+        String query = "INSERT into orders (pickUpMethod, orderDate, price, machineId, orderStatus) VALUES (?, ?, ?, ?, ?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, order.getPickUpMethod().toString());
+            stmt.setString(2, order.getDate());
+            stmt.setDouble(3, order.getPrice());
+            stmt.setString(4, order.getMachineId());
+            stmt.setString(5, order.getStatus());
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully save order", null);
+            ServerGui.serverGui.printToConsole("Subscriber saved successfully");
+        } catch (SQLException e) {
+            System.out.println("XXX");
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+    public void getMyMessages(String customerId, Response response) {
+        List<Object> messages = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM messages WHERE to_customerId = ? AND readed = 0";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, customerId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                messages.add(rs.getString("message_content"));
+                messages.add(rs.getInt("from_Id"));
+            }
+            editResponse(response, ResponseCode.OK, "Successfully query messages", null);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void getAllDeliveriesOrdersByRegion(Response response, String region) {
+        DeliveryOrder deliveryOrder;
+        List<Object> deliveriesOrders = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM deliveries WHERE region = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, region);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                deliveryOrder = new DeliveryOrder(
+                        rs.getString("orderId"), rs.getString("deliveryAddress"),
+                        rs.getString("region"),
+                        rs.getString("deliveryDate"));
+                deliveriesOrders.add(deliveryOrder);
+            }
+            editResponse(response, ResponseCode.OK, "Successfully get all deliveries orders", deliveriesOrders);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
 }
+
+
