@@ -2,8 +2,11 @@ package models;
 
 import java.io.Serializable;
 
-public class ProductInMachine implements Serializable{
+public class ProductInMachine implements Serializable {
     String machineId;
+    String productId;
+    StatusInMachine statusInMachine;
+    Integer amount;
 
     public ProductInMachine(String machineId, String productId, StatusInMachine statusInMachine, Integer amount) {
         this.machineId = machineId;
@@ -12,9 +15,6 @@ public class ProductInMachine implements Serializable{
         this.amount = amount;
     }
 
-    String productId;
-    StatusInMachine statusInMachine;
-    Integer amount;
 
     public String getMachineId() {
         return machineId;
