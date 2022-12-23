@@ -92,7 +92,7 @@ public class Server extends AbstractServer {
                     mysqlController.saveOrderToDB(order, response);
                 }
                 break;
-            case "/queryMessage":
+            case "/getMessages":
                 String customerId = (String) requestBody.get(0);
                 if (requestMethod == Method.GET) {
                     mysqlController.getMyMessages(customerId, response);

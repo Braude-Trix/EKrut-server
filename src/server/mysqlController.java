@@ -273,24 +273,43 @@ public class mysqlController {
 
 
     public void getMyMessages(String customerId, Response response) {
+        List<Integer> messages_ids = new ArrayList<>();
         List<Object> messages = new ArrayList<>();
+        messages.add("Msg");
         PreparedStatement stmt;
         ResultSet rs;
         String query = "SELECT * FROM messages WHERE to_customerId = ? AND readed = 0";
         try {
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, customerId);
+            stmt.setInt(1, Integer.parseInt(customerId));
             rs = stmt.executeQuery();
             while (rs.next()) {
                 messages.add(rs.getString("message_content"));
-                messages.add(rs.getInt("from_Id"));
+                messages_ids.add(rs.getInt("messageId"));
             }
-            editResponse(response, ResponseCode.OK, "Successfully query messages", null);
+            editResponse(response, ResponseCode.OK, "Successfully query messages", messages);
             rs.close();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        setMessageReaded(messages_ids);
+    }
+
+    public void setMessageReaded(List<Integer> messages_ids){
+        for(Integer msg_id: messages_ids) {
+            PreparedStatement stmt;
+            String query = "UPDATE messages SET readed = 1 WHERE messageId = ? ";
+            try {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, msg_id);
+                stmt.executeUpdate();
+                ServerGui.serverGui.printToConsole("message readed successfully");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            }
         }
     }
 
