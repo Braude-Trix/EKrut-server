@@ -6,6 +6,7 @@ import models.ResponseCode;
 import models.Subscriber;
 import serverModels.ServerConf;
 
+import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -205,11 +206,21 @@ public class mysqlController {
             stmt = conn.prepareStatement(query);
             rs = stmt.executeQuery();
             while (rs.next()) {
-                product = new Product(
-                        rs.getString("productName"), rs.getString("productId"),
+                String productName = rs.getString("productName");
+                FileInputStream input = new FileInputStream("src/styles/" + productName +".png");
+                BufferedInputStream buffer = new BufferedInputStream(input);
+                DataInputStream image = new DataInputStream(buffer);
+                byte[] imageBytes = buffer.readAllBytes();
+
+                        product = new Product(
+                        productName, rs.getString("productId"),
                         rs.getString("information"),
-                        rs.getDouble("price"));
+                        rs.getDouble("price"),
+                                imageBytes);
                 products.add(product);
+
+
+
             }
             editResponse(response, ResponseCode.OK, "Successfully import all products", products);
             rs.close();
@@ -217,6 +228,10 @@ public class mysqlController {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -262,7 +277,6 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully save order", null);
             ServerGui.serverGui.printToConsole("Subscriber saved successfully");
         } catch (SQLException e) {
-            System.out.println("XXX");
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }

@@ -1,5 +1,7 @@
 package models;
 
+import java.io.DataInputStream;
+import java.io.File;
 import java.io.Serializable;
 
 public class Product implements Serializable {
@@ -7,18 +9,21 @@ public class Product implements Serializable {
     private String productId;
     private String information;
     private double price;
+    private byte[] image;
 
-    public Product(String name, String productId, String information, double price) {
+    public Product(String name, String productId, String information, double price, byte[] image) {
         this.name = name;
         this.productId = productId;
         this.information = information;
         this.price = price;
+        this.image = image;
     }
 
-    public Product(String name, String productId, double price) {
+    public Product(String name, String productId, double price, byte[] image) {
         this.name = name;
         this.productId = productId;
         this.price = price;
+        this.image = image;
     }
 
     public String getName() {
@@ -52,4 +57,9 @@ public class Product implements Serializable {
     public void setPrice(double price) {
         this.price = price;
     }
+
+    public void setImage(byte[] image){this.image = image;}
+    public byte[] getImage(){return image;}
+
+
 }
