@@ -1,6 +1,7 @@
 package server;
 
 import gui.ServerGui;
+import javafx.scene.image.Image;
 import models.Response;
 import models.ResponseCode;
 import models.Subscriber;
@@ -209,7 +210,14 @@ public class mysqlController {
             rs = stmt.executeQuery();
             while (rs.next()) {
                 String productName = rs.getString("productName");
-                FileInputStream input = new FileInputStream("src/styles/" + productName +".png");
+                FileInputStream input = null;
+                try {
+
+                    input = new FileInputStream("src/styles/" + productName +".png");
+                } catch (Exception e) {
+                    input = new FileInputStream("src/styles/defultProductImage.png");
+                }
+
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
                 byte[] imageBytes = buffer.readAllBytes();
