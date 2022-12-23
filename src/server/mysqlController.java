@@ -14,7 +14,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import models.*;
+
 public class mysqlController {
     public Connection conn;
     private final String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
@@ -244,7 +246,7 @@ public class mysqlController {
         String query = "SELECT * FROM ProductInMachine WHERE machineId = ?";
         try {
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, machineId);
+            stmt.setInt(1, Integer.valueOf(machineId));
             rs = stmt.executeQuery();
             while (rs.next()) {
                 productInMachine = new ProductInMachine(
@@ -257,7 +259,7 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
@@ -265,14 +267,15 @@ public class mysqlController {
 
     public void saveOrderToDB(Order order, Response response) {
         PreparedStatement stmt;
-        String query = "INSERT into orders (pickUpMethod, orderDate, price, machineId, orderStatus) VALUES (?, ?, ?, ?, ?)";
+        String query = "INSERT into orders (orderId, pickUpMethod, orderDate, price, machineId, orderStatus) VALUES (?,?, ?, ?, ?, ?)";
         try {
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, order.getPickUpMethod().toString());
-            stmt.setString(2, order.getDate());
-            stmt.setDouble(3, order.getPrice());
-            stmt.setString(4, order.getMachineId());
-            stmt.setString(5, order.getStatus());
+            stmt.setString(1, order.getOrderId());
+            stmt.setString(2, order.getPickUpMethod().toString());
+            stmt.setString(3, order.getDate());
+            stmt.setDouble(4, order.getPrice());
+            stmt.setString(5, order.getMachineId());
+            stmt.setString(6, order.getStatus());
             stmt.executeUpdate();
             editResponse(response, ResponseCode.OK, "Successfully save order", null);
             ServerGui.serverGui.printToConsole("Subscriber saved successfully");
@@ -284,24 +287,43 @@ public class mysqlController {
 
 
     public void getMyMessages(String customerId, Response response) {
+        List<Integer> messages_ids = new ArrayList<>();
         List<Object> messages = new ArrayList<>();
+        messages.add("Msg");
         PreparedStatement stmt;
         ResultSet rs;
         String query = "SELECT * FROM messages WHERE to_customerId = ? AND readed = 0";
         try {
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, customerId);
+            stmt.setInt(1, Integer.parseInt(customerId));
             rs = stmt.executeQuery();
             while (rs.next()) {
                 messages.add(rs.getString("message_content"));
-                messages.add(rs.getInt("from_Id"));
+                messages_ids.add(rs.getInt("messageId"));
             }
-            editResponse(response, ResponseCode.OK, "Successfully query messages", null);
+            editResponse(response, ResponseCode.OK, "Successfully query messages", messages);
             rs.close();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        setMessageReaded(messages_ids);
+    }
+
+    public void setMessageReaded(List<Integer> messages_ids){
+        for(Integer msg_id: messages_ids) {
+            PreparedStatement stmt;
+            String query = "UPDATE messages SET readed = 1 WHERE messageId = ? ";
+            try {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, msg_id);
+                stmt.executeUpdate();
+                ServerGui.serverGui.printToConsole("message readed successfully");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            }
         }
     }
 
@@ -330,6 +352,75 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+
+    public void saveProductsInOrder(Response response, String orderId, List<Object> productsList) {
+        PreparedStatement stmt;
+        for (Object product : productsList) {
+            String query = "INSERT into product_in_order VALUES (?, ?, ?)";
+            try {
+                stmt = conn.prepareStatement(query);
+                stmt.setString(1, orderId);
+                stmt.setString(2, ((ProductInOrder) product).getProduct().getProductId());
+                stmt.setInt(3, ((ProductInOrder) product).getAmount());
+                stmt.executeUpdate();
+                editResponse(response, ResponseCode.OK, "Successfully save products in order", null);
+                ServerGui.serverGui.printToConsole("Successfully save products in order");
+            } catch (SQLException e) {
+                System.out.println("XXX");
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            }
+        }
+    }
+
+    public void getMachineThreshold(Response response, Integer machineId) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> resList = new ArrayList<>();
+        String query = "SELECT * FROM machine WHERE machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, machineId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                resList.add(rs.getInt("threshold"));
+                editResponse(response, ResponseCode.OK, "Successfully get machine threshold", resList);
+
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void updateInventoryInDB(Response response, List<Object> updatedInventory) {
+        ProductInMachine productInMachineCasted;
+        for(Object productInMachine : updatedInventory) {
+            productInMachineCasted = (ProductInMachine)productInMachine;
+            PreparedStatement stmt;
+            String query = "UPDATE ProductInMachine SET amountInMachine= ?, statusInMachine= ? WHERE productId = ? AND machineId = ?";
+            try {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, productInMachineCasted.getAmount());
+                stmt.setString(2, productInMachineCasted.getStatusInMachine().toString());
+                stmt.setString(3, productInMachineCasted.getProductId());
+                stmt.setString(4, productInMachineCasted.getMachineId());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            }
+        }
+        ServerGui.serverGui.printToConsole("Subscriber update done successfully");
+        editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
+    }
+
+
+
+
+
 
 }
 

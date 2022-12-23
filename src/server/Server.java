@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+
 /**
  * This class overrides some methods in the abstract
  * superclass in order to give more functionality to the server.
@@ -91,7 +92,7 @@ public class Server extends AbstractServer {
                     mysqlController.saveOrderToDB(order, response);
                 }
                 break;
-            case "/queryMessage":
+            case "/getMessages":
                 String customerId = (String) requestBody.get(0);
                 if (requestMethod == Method.GET) {
                     mysqlController.getMyMessages(customerId, response);
@@ -99,7 +100,7 @@ public class Server extends AbstractServer {
                 break;
 
             case "/requestMachineProducts":
-                String machineId = (String) requestBody.get(0);
+                String machineId = requestBody.get(0).toString();
                 if (requestMethod == Method.GET) {
                     mysqlController.getAllProductsInMachine(machineId, response);
                 }
@@ -108,6 +109,26 @@ public class Server extends AbstractServer {
             case "/requestProducts":
                 if (requestMethod == Method.GET) {
                     mysqlController.getAllProducts(response);
+                }
+                break;
+            case "/saveProductsInOrder":
+                String orderId = (String) requestBody.get(0);
+                List<Object> productsList = (List<Object>) requestBody.get(1);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveProductsInOrder(response, orderId, productsList);
+                }
+                break;
+
+            case "/getMachineThreshold":
+                Integer getMachineId = (Integer) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMachineThreshold(response, getMachineId);
+                }
+                break;
+            case "/updateInventory":
+                List<Object> updatedInventory = (List<Object>)requestBody.get(0);
+                if (requestMethod == Method.PUT) {
+                    mysqlController.updateInventoryInDB(response, updatedInventory);
                 }
                 break;
 
