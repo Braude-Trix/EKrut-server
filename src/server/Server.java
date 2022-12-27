@@ -131,7 +131,30 @@ public class Server extends AbstractServer {
                     mysqlController.updateInventoryInDB(response, updatedInventory);
                 }
                 break;
-
+            case "/getCustomerIdByOrderId":
+                String OrderIdFromCustomerId = requestBody.get(0).toString();
+                if (requestMethod == Method.PUT) {
+                    mysqlController.getCustomerIdByOrderIdFromDB(response, OrderIdFromCustomerId);
+                }
+                break;
+            case "/saveDeliveryOrder":
+                DeliveryOrder deliveryOrder = (DeliveryOrder) requestBody.get(0);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveDeliveryOrder(response, deliveryOrder);
+                }
+                break;
+            case "/getMachineName":
+                Integer machineIdForName =  Integer.parseInt((String)requestBody.get(0));
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMachineName(response, machineIdForName);
+                }
+                break;
+            case "/saveLatePickUpOrder":
+                PickupOrder pickupOrder = (PickupOrder) requestBody.get(0);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveLatePickUpOrder(response, pickupOrder);
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import models.*;
+import sun.misc.IOUtils;
 
 public class mysqlController {
     public Connection conn;
@@ -220,9 +221,11 @@ public class mysqlController {
 
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
-                byte[] imageBytes = buffer.readAllBytes();
+                //byte[] imageBytes = buffer.readAllBytes();
+                byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
-                        product = new Product(
+
+                product = new Product(
                         productName, rs.getString("productId"),
                         rs.getString("information"),
                         rs.getDouble("price"),
@@ -275,7 +278,7 @@ public class mysqlController {
 
     public void saveOrderToDB(Order order, Response response) {
         PreparedStatement stmt;
-        String query = "INSERT into orders (orderId, pickUpMethod, orderDate, price, machineId, orderStatus) VALUES (?,?, ?, ?, ?, ?)";
+        String query = "INSERT into orders (orderId, pickUpMethod, orderDate, price, machineId, orderStatus, customerId) VALUES (?,?, ?, ?, ?, ?, ?)";
         try {
             stmt = conn.prepareStatement(query);
             stmt.setString(1, order.getOrderId());
@@ -284,6 +287,8 @@ public class mysqlController {
             stmt.setDouble(4, order.getPrice());
             stmt.setString(5, order.getMachineId());
             stmt.setString(6, order.getStatus());
+            stmt.setInt(7, order.getCustomerId());
+
             stmt.executeUpdate();
             editResponse(response, ResponseCode.OK, "Successfully save order", null);
             ServerGui.serverGui.printToConsole("Subscriber saved successfully");
@@ -335,27 +340,64 @@ public class mysqlController {
         }
     }
 
-    public void getAllDeliveriesOrdersByRegion(Response response, String region) {
-        DeliveryOrder deliveryOrder;
-        List<Object> deliveriesOrders = new ArrayList<>();
+//    public void getAllDeliveriesOrdersByRegion(Response response, String region) {
+//        DeliveryOrder deliveryOrder;
+//        List<Object> deliveriesOrders = new ArrayList<>();
+//        PreparedStatement stmt;
+//        ResultSet rs;
+//        String query = "SELECT * FROM deliveries WHERE region = ?";
+//        try {
+//            stmt = conn.prepareStatement(query);
+//            stmt.setString(1, region);
+//            rs = stmt.executeQuery();
+//            while (rs.next()) {
+//                deliveryOrder = new DeliveryOrder(
+//                        rs.getString("orderId"), rs.getString("deliveryAddress"),
+//                        rs.getString("region"),
+//                        rs.getString("deliveryDate"));
+//                deliveriesOrders.add(deliveryOrder);
+//            }
+//            editResponse(response, ResponseCode.OK, "Successfully get all deliveries orders", deliveriesOrders);
+//            rs.close();
+//        } catch (SQLException e) {
+//            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+//            e.printStackTrace();
+//            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+//        }
+//    }
+
+    public void saveDeliveryOrder(Response response, DeliveryOrder deliveryOrder) {
         PreparedStatement stmt;
-        ResultSet rs;
-        String query = "SELECT * FROM deliveries WHERE region = ?";
+        String query = "INSERT into deliveryorder (firstNameContact, lastNameContact, phoneNumberContact, fullAddress, pincode, region, orderId) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, region);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                deliveryOrder = new DeliveryOrder(
-                        rs.getString("orderId"), rs.getString("deliveryAddress"),
-                        rs.getString("region"),
-                        rs.getString("deliveryDate"));
-                deliveriesOrders.add(deliveryOrder);
-            }
-            editResponse(response, ResponseCode.OK, "Successfully get all deliveries orders", deliveriesOrders);
-            rs.close();
+            stmt.setString(1, deliveryOrder.getFirstNameCustomer());
+            stmt.setString(2, deliveryOrder.getLastNameCustomer());
+            stmt.setString(3, deliveryOrder.getPhoneNumber());
+            stmt.setString(4, deliveryOrder.getFullAddress());
+            stmt.setString(5, deliveryOrder.getPincode());
+            stmt.setString(6, deliveryOrder.getRegion().toString());
+            stmt.setString(7, deliveryOrder.getOrderId());
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully save delivery order", null);
+            ServerGui.serverGui.printToConsole("Successfully save delivery order");
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void saveLatePickUpOrder(Response response, PickupOrder pickupOrder) {
+        PreparedStatement stmt;
+        String query = "INSERT into pickuporder (pickupCode, orderId) VALUES (?, ?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, pickupOrder.getPickupCode());
+            stmt.setString(2, pickupOrder.getOrderId());
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully save delivery order", null);
+            ServerGui.serverGui.printToConsole("Successfully save delivery order");
+        } catch (SQLException e) {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -425,8 +467,46 @@ public class mysqlController {
         editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
     }
 
+    public void getCustomerIdByOrderIdFromDB(Response response, String orderId) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> resList = new ArrayList<>();
+        String query = "SELECT * FROM orders WHERE orderId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, orderId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                resList.add(rs.getInt("orderId   "));
+                editResponse(response, ResponseCode.OK, "Successfully get machine threshold", resList);
 
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+    public void getMachineName(Response response, Integer machineId) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> resList = new ArrayList<>();
+        String query = "SELECT * FROM machine WHERE machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, machineId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                resList.add(rs.getString("machineName"));
+                editResponse(response, ResponseCode.OK, "Successfully get machine threshold", resList);
 
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
 
 
 

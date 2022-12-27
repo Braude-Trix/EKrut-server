@@ -7,7 +7,7 @@ import java.util.List;
 public class Order implements Serializable {
 
 
-
+    private Integer customerId;
     private PickUpMethod pickUpMethod;
     private String orderId;
     private String date;
@@ -16,7 +16,7 @@ public class Order implements Serializable {
     private String status;
     private List<ProductInOrder> productsInOrder;
 
-    public Order(String orderId, String date, double price, String machineId, String status, PickUpMethod pickUpMethod) {
+    public Order(String orderId, String date, double price, String machineId, String status, PickUpMethod pickUpMethod, Integer customerId) {
         this.orderId = orderId;
         this.date = date;
         this.price = price;
@@ -24,6 +24,7 @@ public class Order implements Serializable {
         this.status = status;
         this.productsInOrder = new ArrayList<>();
         this.pickUpMethod = pickUpMethod;
+        this.customerId = customerId;
     }
 
 
@@ -84,6 +85,12 @@ public class Order implements Serializable {
     }
 
 
+    public Integer getCustomerId() {
+        return customerId;
+    }
 
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
+    }
 
 }
