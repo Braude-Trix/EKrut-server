@@ -7,7 +7,7 @@ public class PickupOrder extends Order implements Serializable {
 	private String pickupCode;
 	private String dateReceived;
 	
-	public PickupOrder(String orderId, String date, double price, String machineId, String status,
+	public PickupOrder(String orderId, String date, double price, String machineId, OrderStatus status,
 			PickUpMethod pickUpMethod, String pickupCode, Integer customerId ,String dateReceived) {
 		super(orderId, date, price, machineId, status, pickUpMethod, customerId);  
 		this.pickupCode = pickupCode;

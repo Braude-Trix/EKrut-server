@@ -155,6 +155,19 @@ public class Server extends AbstractServer {
                     mysqlController.saveLatePickUpOrder(response, pickupOrder);
                 }
                 break;
+            case "/getMonthlyBill":
+                Integer userId = (Integer)requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMonthlyBill(response, userId);
+                }
+                break;
+            case "/UpdateMonthlyBill":
+                Integer userIdForUpdateMonthlyBill = (Integer)requestBody.get(0);
+                Double newMonthlyBill = Double.parseDouble(requestBody.get(1).toString());
+                if (requestMethod == Method.PUT) {
+                    mysqlController.updateMonthlyBill(response, userIdForUpdateMonthlyBill, newMonthlyBill);
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);

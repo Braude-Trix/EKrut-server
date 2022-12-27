@@ -286,7 +286,7 @@ public class mysqlController {
             stmt.setString(3, order.getDate());
             stmt.setDouble(4, order.getPrice());
             stmt.setString(5, order.getMachineId());
-            stmt.setString(6, order.getStatus());
+            stmt.setString(6, order.getStatus().toString());
             stmt.setInt(7, order.getCustomerId());
 
             stmt.executeUpdate();
@@ -506,6 +506,48 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
+    }
+
+    public void getMonthlyBill(Response response, Integer userId) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> resList = new ArrayList<>();
+        String query = "SELECT * FROM customers WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, userId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                resList.add(rs.getDouble("monthlyBill"));
+                editResponse(response, ResponseCode.OK, "Successfully get monthly bill", resList);
+
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+    public void updateMonthlyBill(Response response, Integer userId, Double newMonthlyBill) {
+
+        PreparedStatement stmt;
+        String query = "UPDATE customers SET monthlyBill= ? WHERE id = ?";
+        try {
+                stmt = conn.prepareStatement(query);
+                stmt.setDouble(1, newMonthlyBill);
+                stmt.setInt(2, userId);
+                stmt.executeUpdate();
+            ServerGui.serverGui.printToConsole("update Monthly Bill successfully");
+            editResponse(response, ResponseCode.OK, "Successfully update Monthly Bill successfully", null);
+            } catch (SQLException e) {
+                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+
     }
 
 

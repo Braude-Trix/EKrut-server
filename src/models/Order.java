@@ -13,10 +13,10 @@ public class Order implements Serializable {
     private String date;
     private double price;
     private String machineId;
-    private String status;
+    private OrderStatus status;
     private List<ProductInOrder> productsInOrder;
 
-    public Order(String orderId, String date, double price, String machineId, String status, PickUpMethod pickUpMethod, Integer customerId) {
+    public Order(String orderId, String date, double price, String machineId, OrderStatus status, PickUpMethod pickUpMethod, Integer customerId) {
         this.orderId = orderId;
         this.date = date;
         this.price = price;
@@ -52,11 +52,11 @@ public class Order implements Serializable {
         this.machineId = machineId;
     }
 
-    public String getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 
