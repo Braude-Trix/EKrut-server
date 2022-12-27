@@ -155,6 +155,13 @@ public class Server extends AbstractServer {
                     mysqlController.saveLatePickUpOrder(response, pickupOrder);
                 }
                 break;
+
+            case "/requestCompletedOrders":
+                Integer userId = (Integer) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getCompletedOrders(response,userId);
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);

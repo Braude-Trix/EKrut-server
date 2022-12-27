@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import models.*;
-import sun.misc.IOUtils;
 
 public class mysqlController {
     public Connection conn;
@@ -221,8 +220,8 @@ public class mysqlController {
 
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
-                //byte[] imageBytes = buffer.readAllBytes();
-                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+                byte[] imageBytes = buffer.readAllBytes();
+               // byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
 
                 product = new Product(
@@ -504,6 +503,36 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void getCompletedOrders(Response response, Integer customerId) {
+        List<Object> OrderedIds = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM orders WHERE customerId = ?";
+        Boolean idExist = false;
+
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, customerId);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer id = rs.getInt("customerId");
+                if(id.equals(customerId))
+                {
+                    idExist = true;
+                }
+
+            }
+            OrderedIds.add(idExist);
+            editResponse(response, ResponseCode.OK, "Successfully import all products from machine",OrderedIds);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
