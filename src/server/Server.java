@@ -168,6 +168,12 @@ public class Server extends AbstractServer {
                     mysqlController.updateMonthlyBill(response, userIdForUpdateMonthlyBill, newMonthlyBill);
                 }
                 break;
+            case "/requestCompletedOrders":
+                Integer userIdCompleted = (Integer) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getCompletedOrders(response,userIdCompleted);
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);

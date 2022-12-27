@@ -525,6 +525,35 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void getCompletedOrders(Response response, Integer customerId) {
+        List<Object> OrderedIds = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM orders WHERE customerId = ?";
+        Boolean idExist = false;
+
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, customerId);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer id = rs.getInt("customerId");
+                if(id.equals(customerId))
+                {
+                    idExist = true;
+                }
+
+            }
+            OrderedIds.add(idExist);
+            editResponse(response, ResponseCode.OK, "Successfully import all products from machine",OrderedIds);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
@@ -546,9 +575,8 @@ public class mysqlController {
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-
-
     }
+
 
 
 
