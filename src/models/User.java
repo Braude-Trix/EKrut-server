@@ -6,61 +6,27 @@ public class User implements Serializable {
 
 	private String firstName;
 	private String lastName;
-	private Integer idNumber;
+	private Integer id;
 	private String email;
 	private String phoneNumber;
 	private String username;
 	private String password;
-	private UserType type;
+	private String creditCardNumber;
 	private boolean isLoggedIn;
-	private String machineId;
 	
-	public User(String firstName, String lastName, Integer idNumber, String email, String phoneNumber, String username,
-			String password, UserType type, String machineId, boolean isLoggedIn) {
+	public User(String firstName, String lastName, Integer id, String email, String phoneNumber, String username,
+			String password, boolean isLoggedIn, String creditCardNumber) {
 		super();
 		this.firstName = firstName;
 		this.lastName = lastName;
-		this.idNumber = idNumber;
+		this.id = id;
 		this.email = email;
 		this.phoneNumber = phoneNumber;
 		this.username = username;
 		this.password = password;
-		this.type = type;
-		this.machineId = machineId;
 		this.isLoggedIn = isLoggedIn;
+		this.creditCardNumber = creditCardNumber;
 
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public boolean getIsLoggedIn() {
-		return isLoggedIn;
-	}
-
-	public void setIsLoggedIn(boolean isLoggedIn) {
-		this.isLoggedIn = isLoggedIn;
-	}
-
-	public String getMachineId() {
-		return machineId;
-	}
-
-	public void setMachineId(String machineId) {
-		this.machineId = machineId;
-	}
-
-	public UserType getType() {
-		return type;
-	}
-
-	public void setType(UserType type) {
-		this.type = type;
 	}
 
 	public String getFirstName() {
@@ -79,12 +45,12 @@ public class User implements Serializable {
 		this.lastName = lastName;
 	}
 
-	public Integer getIdNumber() {
-		return idNumber;
+	public Integer getId() {
+		return id;
 	}
 
-	public void setIdNumber(Integer idNumber) {
-		this.idNumber = idNumber;
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	public String getEmail() {
@@ -103,6 +69,14 @@ public class User implements Serializable {
 		this.phoneNumber = phoneNumber;
 	}
 
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
 	public String getPassword() {
 		return password;
 	}
@@ -110,6 +84,20 @@ public class User implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
-	
+
+	public String getCreditCardNumber() {
+		return creditCardNumber;
+	}
+
+	public void setCreditCardNumber(String creditCardNumber) {
+		this.creditCardNumber = creditCardNumber;
+	}
+
+	public boolean isLoggedIn() {
+		return isLoggedIn;
+	}
+
+	public void setLoggedIn(boolean isLoggedIn) {
+		this.isLoggedIn = isLoggedIn;
+	}	
 }

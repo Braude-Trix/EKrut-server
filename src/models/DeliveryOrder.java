@@ -10,16 +10,12 @@ public class DeliveryOrder extends Order implements Serializable {
 	private String fullAddress;
 	private String pincode;
 	private Regions region;
-	private String timeForDelivery;
-	private String deliveryLoadingTime;
-	private Double distance;
-	private String regionalManagerId;
 	private String dateReceived;
 
 	
-	public DeliveryOrder(String orderId, String date, double price, String machineId, String status, PickUpMethod pickUpMethod, Integer customerId,
-			String timeForDelivery, String regionalManagerId, String firstNameCustomer, String lastNameCustomer, String phoneNumber, String fullAddress,
-			Regions region, String dateReceived, String pincode, String deliveryLoadingTime, Double distance) {
+	public DeliveryOrder(String orderId, String date, double price, String machineId, OrderStatus status, PickUpMethod pickUpMethod, Integer customerId,
+			 String firstNameCustomer, String lastNameCustomer, String phoneNumber, String fullAddress,
+			Regions region, String dateReceived, String pincode) {
 		super(orderId, date, price, machineId, status, pickUpMethod, customerId); 
 		this.firstNameCustomer = firstNameCustomer;
 		this.lastNameCustomer = lastNameCustomer;
@@ -27,32 +23,7 @@ public class DeliveryOrder extends Order implements Serializable {
 		this.fullAddress = fullAddress;
 		this.pincode = pincode;
 		this.region = region;
-		this.timeForDelivery = timeForDelivery;
-		this.regionalManagerId = regionalManagerId;
 		this.dateReceived = dateReceived;
-		this.distance = distance;
-		this.deliveryLoadingTime = deliveryLoadingTime;
-	}
-
-
-
-	public String getDeliveryLoadingTime() {
-		return deliveryLoadingTime;
-	}
-
-
-	public void setDeliveryLoadingTime(String deliveryLoadingTime) {
-		this.deliveryLoadingTime = deliveryLoadingTime;
-	}
-
-
-	public double getDistance() {
-		return distance;
-	}
-
-
-	public void setDistance(double distance) {
-		this.distance = distance;
 	}
 
 
@@ -125,23 +96,6 @@ public class DeliveryOrder extends Order implements Serializable {
 		this.dateReceived = dateReceived;
 	}
 
-
-	public String getTimeForDelivery() {
-		return timeForDelivery;
-	}
-
-	public void setTimeForDelivery(String timeForDelivery) {
-		this.timeForDelivery = timeForDelivery;
-	}
-
-
-	public String getRegionalManagerId() {
-		return regionalManagerId;
-	}
-
-	public void setRegionalManagerId(String regionalManagerId) {
-		this.regionalManagerId = regionalManagerId;
-	}
 
 	
 }

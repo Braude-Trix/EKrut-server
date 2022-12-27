@@ -2,12 +2,12 @@ package server;
 
 import gui.ServerGui;
 import models.MyOrders;
+import models.OrderStatus;
 import models.PickUpMethod;
 import models.Response;
 import models.ResponseCode;
 import models.Subscriber;
 import models.User;
-import models.UserType;
 import serverModels.ServerConf;
 
 import java.sql.Connection;
@@ -198,7 +198,6 @@ public class mysqlController {
     	List<Object> userDetails= new ArrayList<>();
 
         User user;
-    	UserType userType;
         PreparedStatement stmt;
         ResultSet rs;
         String query = "SELECT * FROM users WHERE username = ? AND userPassword = ?";
@@ -208,10 +207,9 @@ public class mysqlController {
             stmt.setString(2, password);
             rs = stmt.executeQuery();
             if (rs.next()) {
-            	userType = UserType.valueOf(rs.getString("typeUser")); 
                 user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
                 		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
-                		userType, rs.getString("machineId"), rs.getBoolean("isLoggedIn"));
+                		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
                 userDetails.add(user);
                 editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
             }
@@ -241,7 +239,7 @@ public class mysqlController {
             rs = stmt.executeQuery();
             while (rs.next()) {
             	MyOrders order = new MyOrders(rs.getString("orderId"), rs.getString("orderDate"), rs.getString("orderDate"), rs.getInt("price"), rs.getString("machineId"),
-            			rs.getString("orderStatus"), PickUpMethod.valueOf(rs.getString("pickUpMethod")), rs.getInt("customerId"));
+            			OrderStatus.valueOf(rs.getString("orderStatus")), PickUpMethod.valueOf(rs.getString("pickUpMethod")), rs.getInt("customerId"));
             	MyOrders.add(order);
             }
             editResponse(response, ResponseCode.OK, "Successfully sent all orders of specific user", MyOrders);
@@ -327,11 +325,49 @@ public class mysqlController {
         return pickupCode;
     }
 	
-	
+	public void setStatusDeliveryOrderInDB(Response response, String orderId, OrderStatus status, String dateReceived) {
+	/*
+	this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
+	*/
+		PreparedStatement stmt;
+		String query = "UPDATE orders SET orderStatus= ? WHERE OrderId= ?";
+		try {
+		stmt = conn.prepareStatement(query);
+		String tempStatusString = getStringStatus(status);
+		stmt.setString(1, tempStatusString);
+		stmt.setString(2, orderId);
+		stmt.executeUpdate();
+		ServerGui.serverGui.printToConsole("Update order status - delivery successfully");
+		
+		query = "UPDATE deliveryOrder SET dateReceived= ? WHERE OrderId= ?";
+		stmt = conn.prepareStatement(query);
+		stmt.setString(1, dateReceived);
+		stmt.setString(2, orderId);
+		stmt.executeUpdate();
+		ServerGui.serverGui.printToConsole("Update order date received - delivery successfully");
+
+		
+		editResponse(response, ResponseCode.OK, "Successfully Update order status and date received - delivery", null);
+		} catch (SQLException e) {
+			editResponse(response, ResponseCode.DB_ERROR, "Communication problem, try again", null);
+			e.printStackTrace();
+			ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+		}
+	}
 
     void editResponse(Response response, ResponseCode code, String description, List<Object> body) {
         response.setBody(body);
         response.setCode(code);
         response.setDescription(description);
+    }
+    
+    private String getStringStatus(OrderStatus status) {
+		switch(status) {
+		case NotCollected: return "NotCollected";
+		case Collected: return "Collected";
+		case WaitingApproveDelivery: return "WaitingApproveDelivery";
+		case Done: return "Done";
+	    }
+		return null;
     }
 }

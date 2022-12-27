@@ -3,6 +3,7 @@ package server;
 import gui.ServerGui;
 import models.IRequest;
 import models.Method;
+import models.OrderStatus;
 import models.Request;
 import models.Response;
 import models.ResponseCode;
@@ -124,12 +125,19 @@ public class Server extends AbstractServer {
                     response.setPath("/order/pickupOrder/getPickupCode");
                 }
                 break;
+            case "/order/deliveryOrder/changeStatusAndDateReceived":
+                if (requestMethod == Method.PUT) {
+                    mysqlController.setStatusDeliveryOrderInDB(response, (String)requestBody.get(0), (OrderStatus)requestBody.get(1), (String)requestBody.get(2));
+                    response.setPath("/order/deliveryOrder/changeStatusAndDateReceived");
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);
         }
         return response;
     }
+    
     
     /**
      * This method overrides the one in the superclass.
