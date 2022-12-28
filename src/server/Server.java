@@ -2,6 +2,12 @@ package server;
 
 import gui.ServerGui;
 import models.*;
+import models.IRequest;
+import models.Method;
+import models.OrderStatus;
+import models.Request;
+import models.Response;
+import models.ResponseCode;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 import serverModels.ServerConf;
@@ -73,17 +79,45 @@ public class Server extends AbstractServer {
         List<Object> requestBody = request.getBody();
         Response response = new Response();
         switch (requestPath) {
-            case "/UpdateSubscriber":
-                Subscriber subscriber = (Subscriber) requestBody.get(0);
-                if (requestMethod == Method.PUT) {
-                    mysqlController.updateSubscriberNumberAndCreditCard(
-                            subscriber.getId(), subscriber.getSubscriberNumber(),
-                            subscriber.getCreditCardNumber(), response);
+//            case "/UpdateSubscriber":
+//                Subscriber subscriber = (Subscriber) requestBody.get(0);
+//                if (requestMethod == Method.PUT) {
+//                    mysqlController.updateSubscriberNumberAndCreditCard(
+//                            subscriber.getId(), subscriber.getSubscriberNumber(),
+//                            subscriber.getCreditCardNumber(), response);
+//                    response.setPath("/UpdateSubscriber");
+//                }
+//                break;
+//            case "/AllSubscribers":
+//                if (requestMethod == Method.GET) {
+//                    mysqlController.getAllSubscribersFromDB(response);
+//                    response.setPath("/AllSubscribers");
+//                }
+//                break;
+                
+            case "/login/getUser":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getUserFromDB(response, (String)requestBody.get(0), (String)requestBody.get(1));
+                    response.setPath("/login/getUser");
                 }
                 break;
-            case "/AllSubscribers":
+            case "/user/myOrders":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMyOrdersFromDB(response, (Integer)requestBody.get(0));
+                    response.setPath("/user/myOrders");
+                }
+                break;
+            case "/order/RecivedDateDelivery":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getRecivedDateDeliveryFromDB(response, (String)requestBody.get(0));
+                    response.setPath("/order/RecivedDateDelivery");
+                }
+                break;
+            case "/order/RecivedDatePickup":
                 if (requestMethod == Method.GET) {
                     mysqlController.getAllSubscribersFromDB(response);
+                    mysqlController.getRecivedDatePickupFromDB(response, (String)requestBody.get(0));
+                    response.setPath("/order/RecivedDatePickup");
                 }
                 break;
             case "/newOrder":
@@ -174,14 +208,26 @@ public class Server extends AbstractServer {
                     mysqlController.getCompletedOrders(response,userIdCompleted);
                 }
                 break;
+            case "/order/pickupOrder/getPickupCode":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getPickupCodeFromDB(response, (String)requestBody.get(0));
+                    response.setPath("/order/pickupOrder/getPickupCode");
+                }
+                break;
+            case "/order/deliveryOrder/changeStatusAndDateReceived":
+                if (requestMethod == Method.PUT) {
+                    mysqlController.setStatusDeliveryOrderInDB(response, (String)requestBody.get(0), (OrderStatus)requestBody.get(1), (String)requestBody.get(2));
+                    response.setPath("/order/deliveryOrder/changeStatusAndDateReceived");
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);
         }
         return response;
     }
-
-
+    
+    
     /**
      * This method overrides the one in the superclass.
      * Called when the server starts listening for connections.
