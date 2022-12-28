@@ -4,14 +4,14 @@ import java.io.Serializable;
 
 public class ProductInOrder implements Serializable {
     private Product product;
-    private Double amount;
+    private Integer amount;
     private Double totalProductPrice;
 
 
     private String productName;
 
 
-    public ProductInOrder(Product product, Double amount, Double totalProductPrice) {
+    public ProductInOrder(Product product, Integer amount, Double totalProductPrice) {
         super();
         this.product = product;
         this.amount = amount;
@@ -27,11 +27,11 @@ public class ProductInOrder implements Serializable {
         this.product = product;
     }
 
-    public Double getAmount() {
+    public Integer getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(Integer amount) {
         this.amount = amount;
     }
 
