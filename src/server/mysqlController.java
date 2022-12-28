@@ -452,7 +452,7 @@ public class mysqlController {
             stmt.setString(3, order.getDate());
             stmt.setDouble(4, order.getPrice());
             stmt.setString(5, order.getMachineId());
-            stmt.setString(6, order.getStatus().toString());
+            stmt.setString(6, getStringStatus(order.getStatus()));
             stmt.setInt(7, order.getCustomerId());
 
             stmt.executeUpdate();
@@ -745,13 +745,15 @@ public class mysqlController {
 
 
     private String getStringStatus(OrderStatus status) {
+        if (status == null)
+            return "null";
 		switch(status) {
 		case NotCollected: return "NotCollected";
 		case Collected: return "Collected";
 		case WaitingApproveDelivery: return "WaitingApproveDelivery";
 		case Done: return "Done";
 	    }
-		return null;
+		return "null";
     }
 }
 

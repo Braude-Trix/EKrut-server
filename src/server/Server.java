@@ -115,7 +115,6 @@ public class Server extends AbstractServer {
                 break;
             case "/order/RecivedDatePickup":
                 if (requestMethod == Method.GET) {
-                    mysqlController.getAllSubscribersFromDB(response);
                     mysqlController.getRecivedDatePickupFromDB(response, (String)requestBody.get(0));
                     response.setPath("/order/RecivedDatePickup");
                 }

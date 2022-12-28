@@ -2,6 +2,7 @@ package models;
 
 import java.io.DataInputStream;
 import java.io.File;
+
 import java.io.Serializable;
 
 public class Product implements Serializable {
@@ -24,6 +25,12 @@ public class Product implements Serializable {
         this.productId = productId;
         this.price = price;
         this.image = image;
+    }
+
+    public Product(String name, String productId, float price) {
+        this.name = name;
+        this.productId = productId;
+        this.price = price;
     }
 
     public String getName() {
@@ -60,6 +67,5 @@ public class Product implements Serializable {
 
     public void setImage(byte[] image){this.image = image;}
     public byte[] getImage(){return image;}
-
 
 }
