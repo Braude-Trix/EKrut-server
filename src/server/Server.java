@@ -1,6 +1,7 @@
 package server;
 
 import gui.ServerGui;
+import models.*;
 import models.IRequest;
 import models.Method;
 import models.OrderStatus;
@@ -77,7 +78,6 @@ public class Server extends AbstractServer {
         Method requestMethod = request.getMethod();
         List<Object> requestBody = request.getBody();
         Response response = new Response();
-
         switch (requestPath) {
 //            case "/UpdateSubscriber":
 //                Subscriber subscriber = (Subscriber) requestBody.get(0);
@@ -115,8 +115,97 @@ public class Server extends AbstractServer {
                 break;
             case "/order/RecivedDatePickup":
                 if (requestMethod == Method.GET) {
+                    mysqlController.getAllSubscribersFromDB(response);
                     mysqlController.getRecivedDatePickupFromDB(response, (String)requestBody.get(0));
                     response.setPath("/order/RecivedDatePickup");
+                }
+                break;
+            case "/newOrder":
+                Order order = (Order) requestBody.get(0);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveOrderToDB(order, response);
+                }
+                break;
+            case "/getMessages":
+                String customerId = (String) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMyMessages(customerId, response);
+                }
+                break;
+
+            case "/requestMachineProducts":
+                String machineId = requestBody.get(0).toString();
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAllProductsInMachine(machineId, response);
+                }
+                break;
+
+            case "/requestProducts":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAllProducts(response);
+                }
+                break;
+            case "/saveProductsInOrder":
+                String orderId = (String) requestBody.get(0);
+                List<Object> productsList = (List<Object>) requestBody.get(1);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveProductsInOrder(response, orderId, productsList);
+                }
+                break;
+
+            case "/getMachineThreshold":
+                Integer getMachineId = (Integer) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMachineThreshold(response, getMachineId);
+                }
+                break;
+            case "/updateInventory":
+                List<Object> updatedInventory = (List<Object>)requestBody.get(0);
+                if (requestMethod == Method.PUT) {
+                    mysqlController.updateInventoryInDB(response, updatedInventory);
+                }
+                break;
+            case "/getCustomerIdByOrderId":
+                String OrderIdFromCustomerId = requestBody.get(0).toString();
+                if (requestMethod == Method.PUT) {
+                    mysqlController.getCustomerIdByOrderIdFromDB(response, OrderIdFromCustomerId);
+                }
+                break;
+            case "/saveDeliveryOrder":
+                DeliveryOrder deliveryOrder = (DeliveryOrder) requestBody.get(0);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveDeliveryOrder(response, deliveryOrder);
+                }
+                break;
+            case "/getMachineName":
+                Integer machineIdForName =  Integer.parseInt((String)requestBody.get(0));
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMachineName(response, machineIdForName);
+                }
+                break;
+            case "/saveLatePickUpOrder":
+                PickupOrder pickupOrder = (PickupOrder) requestBody.get(0);
+                if (requestMethod == Method.POST) {
+                    mysqlController.saveLatePickUpOrder(response, pickupOrder);
+                }
+                break;
+            case "/getMonthlyBill":
+                Integer userId = (Integer)requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMonthlyBill(response, userId);
+                }
+                break;
+            case "/UpdateMonthlyBill":
+                Integer userIdForUpdateMonthlyBill = (Integer)requestBody.get(0);
+                Double newMonthlyBill = Double.parseDouble(requestBody.get(1).toString());
+                if (requestMethod == Method.PUT) {
+                    mysqlController.updateMonthlyBill(response, userIdForUpdateMonthlyBill, newMonthlyBill);
+                }
+                break;
+            case "/requestCompletedOrders":
+                Integer userIdCompleted = (Integer) requestBody.get(0);
+                if (requestMethod == Method.GET) {
+                    mysqlController.getCompletedOrders(response,userIdCompleted);
                 }
                 break;
             case "/order/pickupOrder/getPickupCode":
