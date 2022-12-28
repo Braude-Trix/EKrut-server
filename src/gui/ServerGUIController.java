@@ -83,6 +83,9 @@ public class ServerGUIController implements Initializable {
     @FXML
     private TextArea msgBox;
 
+    @FXML
+    private ImageView refresh;
+
     /**
      * This method handles the ConnectorDisBTN, and handling its properties according to the status of Server and SQL.
      * i.e. Server connected and SQL couldn't will result the server to shut down and the button will enable connection.
