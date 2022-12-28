@@ -755,6 +755,33 @@ public class mysqlController {
 	    }
 		return "null";
     }
+    
+	public List<Object> getMachinesOfRegions(Response response, Regions region) {
+    	List<Object> machines= new ArrayList<>();
+    	Machine machine;
+        PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT * FROM machine WHERE region = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, region.toString());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	machine = new Machine(rs.getString("machineId"), rs.getString("machineName"), rs.getString("region"), rs.getString("threshold"));
+            	machines.add(machine);
+            }
+            editResponse(response, ResponseCode.OK, "Successfully sent the time of receiving the delivery order", machines);
+            rs.close();
+
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return machines;
+    }
+    
+    
 }
 
 

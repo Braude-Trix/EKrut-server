@@ -219,6 +219,12 @@ public class Server extends AbstractServer {
                     response.setPath("/order/deliveryOrder/changeStatusAndDateReceived");
                 }
                 break;
+            case "/machines/getMachine":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMachinesOfRegions(response, (Regions)requestBody.get(0));
+                    response.setPath("/machines/getMachine");
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);
