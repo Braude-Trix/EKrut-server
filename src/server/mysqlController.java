@@ -16,6 +16,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -245,6 +246,10 @@ public class mysqlController {
             			OrderStatus.valueOf(rs.getString("orderStatus")), PickUpMethod.valueOf(rs.getString("pickUpMethod")), rs.getInt("customerId"));
             	MyOrders.add(order);
             }
+            
+            if (MyOrders.size() == 0) {
+            	MyOrders = null;
+            }
             editResponse(response, ResponseCode.OK, "Successfully sent all orders of specific user", MyOrders);
             rs.close();
 
@@ -256,12 +261,12 @@ public class mysqlController {
         return MyOrders;
     }
 	
-	public List<Object> getRecivedDateDeliveryFromDB(Response response, String orderId) {
+	public List<Object> getReceivedDateDeliveryFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
         PreparedStatement stmt;
         ResultSet rs ;
-        String query = "SELECT dateReceived FROM deliveryOrder WHERE OrderId = ?";
+        String query = "SELECT dateReceived FROM deliveryOrder WHERE orderId = ?";
         try {
         	stmt = conn.prepareStatement(query);
         	stmt.setString(1, orderId);
@@ -280,12 +285,12 @@ public class mysqlController {
         return RecivedDate;
     }
 	
-	public List<Object> getRecivedDatePickupFromDB(Response response, String orderId) {
+	public List<Object> getReceivedDatePickupFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
         PreparedStatement stmt;
         ResultSet rs ;
-        String query = "SELECT dateReceived FROM pickupOrder WHERE OrderId = ?";
+        String query = "SELECT dateReceived FROM pickupOrder WHERE orderId = ?";
         try {
         	stmt = conn.prepareStatement(query);
         	stmt.setString(1, orderId);
@@ -309,7 +314,7 @@ public class mysqlController {
 
         PreparedStatement stmt;
         ResultSet rs ;
-        String query = "SELECT pickupCode FROM pickupOrder WHERE OrderId = ?";
+        String query = "SELECT pickupCode FROM pickupOrder WHERE orderId = ?";
         try {
         	stmt = conn.prepareStatement(query);
         	stmt.setString(1, orderId);
@@ -333,7 +338,7 @@ public class mysqlController {
 	this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
 	*/
 		PreparedStatement stmt;
-		String query = "UPDATE orders SET orderStatus= ? WHERE OrderId= ?";
+		String query = "UPDATE orders SET orderStatus= ? WHERE orderId= ?";
 		try {
 		stmt = conn.prepareStatement(query);
 		String tempStatusString = getStringStatus(status);
@@ -342,7 +347,7 @@ public class mysqlController {
 		stmt.executeUpdate();
 		ServerGui.serverGui.printToConsole("Update order status - delivery successfully");
 		
-		query = "UPDATE deliveryOrder SET dateReceived= ? WHERE OrderId= ?";
+		query = "UPDATE deliveryOrder SET dateReceived= ? WHERE orderId= ?";
 		stmt = conn.prepareStatement(query);
 		stmt.setString(1, dateReceived);
 		stmt.setString(2, orderId);
@@ -810,7 +815,119 @@ public class mysqlController {
         }
         return amountDeliveryNotCollected;
     }
+	
+	public List<Object> putPickupCodeAndChangeStatus(Response response, Integer userId, String pickupCode, String machineId) {
+    	List<String> ordersId = new ArrayList<>();
+
+    	PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT orderId FROM orders WHERE orderStatus = ? and customerId = ? and pickUpMethod = ? and machineId = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, getStringStatus(OrderStatus.NotCollected));
+        	stmt.setInt(2, userId);
+        	stmt.setString(3, PickUpMethod.latePickUp.toString());
+        	stmt.setInt(4, Integer.parseInt(machineId));
+
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	ordersId.add(rs.getString("orderId"));
+            }
+            
+            if (ordersId.size() == 0) {
+                editResponse(response, ResponseCode.INVALID_DATA, "Entered code is incorrect, please try again", null);
+                rs.close();
+                return null;
+            }
+            rs.close();
+            
+            for (String order: ordersId) {
+                if (isExistPickupOrder(response, order, pickupCode)) {
+                	updateTimeReceived(response, order, pickupCode);
+                    if (response.getCode() == ResponseCode.DB_ERROR || response.getCode() == ResponseCode.SERVER_ERROR) {
+                    	break;
+                    }
+                	changeStatusPickupOrderAfterEnterCode(response, order);
+                	break;
+                }
+                if (response.getCode() == ResponseCode.DB_ERROR || response.getCode() == ResponseCode.SERVER_ERROR) {
+                	break;
+                }
+
+            }
+            if (response.getCode() == null) {
+                editResponse(response, ResponseCode.INVALID_DATA, "Entered code is incorrect, please try again", null);
+            }
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)3", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return null;
+    }
+	
+	private boolean isExistPickupOrder(Response response, String orderId, String pickupCode) {
+		PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT orderId FROM pickupOrder WHERE orderId = ? and pickupCode = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, orderId);
+        	stmt.setString(2, pickupCode);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                rs.close();
+            	return true;
+            }
+            else {
+                rs.close();
+            	return false;
+            }
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)2", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return false;
+	}
+	
+	private void changeStatusPickupOrderAfterEnterCode(Response response, String orderId) {
+        PreparedStatement stmt;
+		String query = "UPDATE orders SET orderStatus= ? WHERE orderId= ?";
+
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, getStringStatus(OrderStatus.Collected));
+            stmt.setString(2, orderId);
+    		stmt.executeUpdate();
+
+            editResponse(response, ResponseCode.OK, "A valid code has been entered for a pickup order",null);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)1", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+	}
+	
+	private void updateTimeReceived(Response response, String orderId, String pickupCode) {
+		PreparedStatement stmt;
+        String query = "UPDATE pickupOrder SET dateReceived= ? WHERE orderId= ? and pickupCode = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, LocalDate.now().toString());
+        	stmt.setString(2, orderId);
+        	stmt.setString(3, pickupCode);
+    		stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)2", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+	}
     
+	
+	
 }
 
 

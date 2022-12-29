@@ -105,14 +105,14 @@ public class Server extends AbstractServer {
                     mysqlController.getMyOrdersFromDB(response, (Integer)requestBody.get(0));
                 }
                 break;
-            case "/order/RecivedDateDelivery":
+            case "/order/ReceivedDateDelivery":
                 if (requestMethod == Method.GET) {
-                    mysqlController.getRecivedDateDeliveryFromDB(response, (String)requestBody.get(0));
+                    mysqlController.getReceivedDateDeliveryFromDB(response, (String)requestBody.get(0));
                 }
                 break;
-            case "/order/RecivedDatePickup":
+            case "/order/ReceivedDatePickup":
                 if (requestMethod == Method.GET) {
-                    mysqlController.getRecivedDatePickupFromDB(response, (String)requestBody.get(0));
+                    mysqlController.getReceivedDatePickupFromDB(response, (String)requestBody.get(0));
                 }
                 break;
             case "/newOrder":
@@ -221,6 +221,11 @@ public class Server extends AbstractServer {
             case "/user/myOrders/deliveryNotCollected":
                 if (requestMethod == Method.GET) {
                     mysqlController.getAmountNotificationDelivery(response, (Integer)requestBody.get(0));
+                }
+                break;
+            case "/order/checkExistPickupOrderAndChangeStatus":
+                if (requestMethod == Method.PUT) {
+                    mysqlController.putPickupCodeAndChangeStatus(response, (Integer)requestBody.get(0), (String)requestBody.get(1), (String)requestBody.get(2));
                 }
                 break;
             default:
