@@ -321,7 +321,7 @@ public class mysqlController {
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error in data problem: please try again", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -770,17 +770,46 @@ public class mysqlController {
             	machine = new Machine(rs.getString("machineId"), rs.getString("machineName"), rs.getString("region"), rs.getString("threshold"));
             	machines.add(machine);
             }
-            editResponse(response, ResponseCode.OK, "Successfully sent the time of receiving the delivery order", machines);
+            if (machines.size() == 0) {
+            	machines = null;
+            }
+            editResponse(response, ResponseCode.OK, "Successfully sent the machines of that region", machines);
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading region machines, please try again", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return machines;
     }
-    
+	
+	public List<Object> getAmountNotificationDelivery(Response response, Integer userId) {
+    	List<Object> amountDeliveryNotCollected = new ArrayList<>();
+    	int count = 0;
+        PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT orderId FROM orders WHERE orderStatus = ? and customerId = ? and pickUpMethod = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, getStringStatus(OrderStatus.NotCollected));
+        	stmt.setInt(2, userId);
+        	stmt.setString(3, PickUpMethod.delivery.toString());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	count++;
+            }
+            amountDeliveryNotCollected.add(count);
+            editResponse(response, ResponseCode.OK, "Successfully sent the amount of notifications this user has", amountDeliveryNotCollected);
+            rs.close();
+
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return amountDeliveryNotCollected;
+    }
     
 }
 

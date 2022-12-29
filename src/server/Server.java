@@ -98,25 +98,21 @@ public class Server extends AbstractServer {
             case "/login/getUser":
                 if (requestMethod == Method.GET) {
                     mysqlController.getUserFromDB(response, (String)requestBody.get(0), (String)requestBody.get(1));
-                    response.setPath("/login/getUser");
                 }
                 break;
             case "/user/myOrders":
                 if (requestMethod == Method.GET) {
                     mysqlController.getMyOrdersFromDB(response, (Integer)requestBody.get(0));
-                    response.setPath("/user/myOrders");
                 }
                 break;
             case "/order/RecivedDateDelivery":
                 if (requestMethod == Method.GET) {
                     mysqlController.getRecivedDateDeliveryFromDB(response, (String)requestBody.get(0));
-                    response.setPath("/order/RecivedDateDelivery");
                 }
                 break;
             case "/order/RecivedDatePickup":
                 if (requestMethod == Method.GET) {
                     mysqlController.getRecivedDatePickupFromDB(response, (String)requestBody.get(0));
-                    response.setPath("/order/RecivedDatePickup");
                 }
                 break;
             case "/newOrder":
@@ -210,19 +206,21 @@ public class Server extends AbstractServer {
             case "/order/pickupOrder/getPickupCode":
                 if (requestMethod == Method.GET) {
                     mysqlController.getPickupCodeFromDB(response, (String)requestBody.get(0));
-                    response.setPath("/order/pickupOrder/getPickupCode");
                 }
                 break;
             case "/order/deliveryOrder/changeStatusAndDateReceived":
                 if (requestMethod == Method.PUT) {
                     mysqlController.setStatusDeliveryOrderInDB(response, (String)requestBody.get(0), (OrderStatus)requestBody.get(1), (String)requestBody.get(2));
-                    response.setPath("/order/deliveryOrder/changeStatusAndDateReceived");
                 }
                 break;
             case "/machines/getMachine":
                 if (requestMethod == Method.GET) {
                     mysqlController.getMachinesOfRegions(response, (Regions)requestBody.get(0));
-                    response.setPath("/machines/getMachine");
+                }
+                break;
+            case "/user/myOrders/deliveryNotCollected":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAmountNotificationDelivery(response, (Integer)requestBody.get(0));
                 }
                 break;
             default:

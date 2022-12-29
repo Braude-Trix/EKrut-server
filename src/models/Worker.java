@@ -13,6 +13,13 @@ public class Worker extends User implements Serializable {
 		this.region = region;
 		this.type = type;
 	}
+	
+	public Worker(User user, workerType type, Regions region) {
+		super(user.getFirstName(), user.getLastName(), user.getId(), user.getEmail(), user.getPhoneNumber(), user.getUsername(), 
+				user.getPassword(), user.isLoggedIn(), user.getCreditCardNumber());
+		this.region = region;
+		this.type = type;
+	}
 
 	public workerType getType() {
 		return type;

@@ -25,7 +25,18 @@ public class DeliveryOrder extends Order implements Serializable {
 		this.region = region;
 		this.dateReceived = dateReceived;
 	}
-
+	
+	public DeliveryOrder(Order order, String firstNameCustomer, String lastNameCustomer, String phoneNumber, String fullAddress,
+			Regions region, String dateReceived, String pincode) {
+		super(order.getOrderId(), order.getDate(), order.getPrice(), order.getMachineId(), order.getStatus(), order.getPickUpMethod(), order.getCustomerId());  
+		this.firstNameCustomer = firstNameCustomer;
+		this.lastNameCustomer = lastNameCustomer;
+		this.phoneNumber = phoneNumber;
+		this.fullAddress = fullAddress;
+		this.pincode = pincode;
+		this.region = region;
+		this.dateReceived = dateReceived;
+	}
 
 	public String getFirstNameCustomer() {
 		return firstNameCustomer;
