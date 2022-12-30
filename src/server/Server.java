@@ -228,12 +228,23 @@ public class Server extends AbstractServer {
                     mysqlController.putPickupCodeAndChangeStatus(response, (Integer)requestBody.get(0), (String)requestBody.get(1), (String)requestBody.get(2));
                 }
                 break;
+            case "/login/getUserForEkConfiguration":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getCustomer(response, (User)requestBody.get(0));
+                }
+                break;
+            case "/login/getUserForOLConfiguration":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getUserForOL(response, (User)requestBody.get(0));
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);
         }
         return response;
     }
+    
     
     
     /**
