@@ -79,21 +79,7 @@ public class Server extends AbstractServer {
         List<Object> requestBody = request.getBody();
         Response response = new Response();
         switch (requestPath) {
-//            case "/UpdateSubscriber":
-//                Subscriber subscriber = (Subscriber) requestBody.get(0);
-//                if (requestMethod == Method.PUT) {
-//                    mysqlController.updateSubscriberNumberAndCreditCard(
-//                            subscriber.getId(), subscriber.getSubscriberNumber(),
-//                            subscriber.getCreditCardNumber(), response);
-//                    response.setPath("/UpdateSubscriber");
-//                }
-//                break;
-//            case "/AllSubscribers":
-//                if (requestMethod == Method.GET) {
-//                    mysqlController.getAllSubscribersFromDB(response);
-//                    response.setPath("/AllSubscribers");
-//                }
-//                break;
+
                 
             case "/login/getUser":
                 if (requestMethod == Method.GET) {
@@ -166,7 +152,7 @@ public class Server extends AbstractServer {
                 break;
             case "/getCustomerIdByOrderId":
                 String OrderIdFromCustomerId = requestBody.get(0).toString();
-                if (requestMethod == Method.PUT) {
+                if (requestMethod == Method.GET) {
                     mysqlController.getCustomerIdByOrderIdFromDB(response, OrderIdFromCustomerId);
                 }
                 break;
@@ -219,6 +205,33 @@ public class Server extends AbstractServer {
                     response.setPath("/order/deliveryOrder/changeStatusAndDateReceived");
                 }
                 break;
+            case "/getPendingDeliveriesOrdersByRegion":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAllPendingDeliveriesOrdersByRegion(response, (requestBody.get(0).toString()));
+                }
+                break;
+            case "/getCollectedDeliveryOrdersWithDate":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getCollectedDeliveryOrdersWithDate(response);
+                }
+                break;
+            case "/getWaitingDeliveryOrdersWithDate":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getWaitingDeliveryOrdersWithDate(response);
+                }
+                break;
+            case "/updateOrderStatus":
+                if (requestMethod == Method.PUT) {
+                    mysqlController.updateOrderStatus(response, requestBody.get(0).toString(), (OrderStatus)requestBody.get(1));
+                }
+                break;
+            case "/postMsg":
+                if (requestMethod == Method.POST) {
+                    mysqlController.postMsg(response, requestBody.get(0).toString(), Integer.parseInt(requestBody.get(1).toString()), Integer.parseInt(requestBody.get(2).toString()));
+                }
+                break;
+
+
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);
