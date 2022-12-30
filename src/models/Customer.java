@@ -15,6 +15,14 @@ public class Customer extends User implements Serializable {
 		this.subscriberNumber = subscriberNumber;
 		this.region = region;
 	}
+	
+	public Customer(User user, CustomerType type, String subscriberNumber, Regions region) {
+		super(user.getFirstName(), user.getLastName(), user.getId(), user.getEmail(), user.getPhoneNumber(), user.getUsername(), 
+				user.getPassword(), user.isLoggedIn(), user.getCreditCardNumber());
+		this.type = type;
+		this.subscriberNumber = subscriberNumber;
+		this.region = region;
+	}
 
 	public CustomerType getType() {
 		return type;

@@ -84,25 +84,21 @@ public class Server extends AbstractServer {
             case "/login/getUser":
                 if (requestMethod == Method.GET) {
                     mysqlController.getUserFromDB(response, (String)requestBody.get(0), (String)requestBody.get(1));
-                    response.setPath("/login/getUser");
                 }
                 break;
             case "/user/myOrders":
                 if (requestMethod == Method.GET) {
                     mysqlController.getMyOrdersFromDB(response, (Integer)requestBody.get(0));
-                    response.setPath("/user/myOrders");
                 }
                 break;
-            case "/order/RecivedDateDelivery":
+            case "/order/ReceivedDateDelivery":
                 if (requestMethod == Method.GET) {
-                    mysqlController.getRecivedDateDeliveryFromDB(response, (String)requestBody.get(0));
-                    response.setPath("/order/RecivedDateDelivery");
+                    mysqlController.getReceivedDateDeliveryFromDB(response, (String)requestBody.get(0));
                 }
                 break;
-            case "/order/RecivedDatePickup":
+            case "/order/ReceivedDatePickup":
                 if (requestMethod == Method.GET) {
-                    mysqlController.getRecivedDatePickupFromDB(response, (String)requestBody.get(0));
-                    response.setPath("/order/RecivedDatePickup");
+                    mysqlController.getReceivedDatePickupFromDB(response, (String)requestBody.get(0));
                 }
                 break;
             case "/newOrder":
@@ -196,13 +192,26 @@ public class Server extends AbstractServer {
             case "/order/pickupOrder/getPickupCode":
                 if (requestMethod == Method.GET) {
                     mysqlController.getPickupCodeFromDB(response, (String)requestBody.get(0));
-                    response.setPath("/order/pickupOrder/getPickupCode");
                 }
                 break;
             case "/order/deliveryOrder/changeStatusAndDateReceived":
                 if (requestMethod == Method.PUT) {
                     mysqlController.setStatusDeliveryOrderInDB(response, (String)requestBody.get(0), (OrderStatus)requestBody.get(1), (String)requestBody.get(2));
-                    response.setPath("/order/deliveryOrder/changeStatusAndDateReceived");
+                }
+                break;
+            case "/machines/getMachine":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getMachinesOfRegions(response, (Regions)requestBody.get(0));
+                }
+                break;
+            case "/user/myOrders/deliveryNotCollected":
+                if (requestMethod == Method.GET) {
+                    mysqlController.getAmountNotificationDelivery(response, (Integer)requestBody.get(0));
+                }
+                break;
+            case "/order/checkExistPickupOrderAndChangeStatus":
+                if (requestMethod == Method.PUT) {
+                    mysqlController.putPickupCodeAndChangeStatus(response, (Integer)requestBody.get(0), (String)requestBody.get(1), (String)requestBody.get(2));
                 }
                 break;
             case "/getPendingDeliveriesOrdersByRegion":
