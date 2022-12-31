@@ -226,7 +226,7 @@ public class Server extends AbstractServer {
 				mysqlController.getUserForOL(response, (User) requestBody.get(0));
 			}
 			break;
-		case "/login/setLoggeedIn":
+		case "/login/setLoggedIn":
 			if (requestMethod == Method.PUT) {
 				mysqlController.changeLoggedInUser(response, (Integer) requestBody.get(0),
 						(Boolean) requestBody.get(1));
