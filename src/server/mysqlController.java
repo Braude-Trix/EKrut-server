@@ -1064,6 +1064,7 @@ public class mysqlController {
 	}
 	
 	public void getUserForOL(Response response, User user) {
+
 		getCustomer(response, user);
 		Worker worker = null;
 		List<Object> userDetails = new ArrayList<>();
@@ -1110,7 +1111,66 @@ public class mysqlController {
 	}
 	
 	
+	public void getSubscribersForFastLogin(Response response) {
+		List<Object> subscribersId = new ArrayList<>();
+		PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT id FROM customers WHERE customerType = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+            stmt.setString(1, "Subscriber");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	subscribersId.add(rs.getInt("id"));
+            }
+            rs.close();
+        	editResponse(response, ResponseCode.OK, "Successfully sent all subscribers id",subscribersId);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+	}
 	
+	
+	public void getUserById(Response response, Integer id) {
+
+    	List<Object> userDetails= new ArrayList<>();
+
+        User user;
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM users WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
+                		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
+                		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
+                if (user.isLoggedIn()) {
+                    editResponse(response, ResponseCode.INVALID_DATA, "The user is already logged in", null);
+                }
+                else {
+                    userDetails.add(user);
+                    editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                	changeLoggedInUser(response, user.getId(), true);
+                	getCustomer(response, user);
+                }
+            }
+            else {
+                editResponse(response, ResponseCode.INVALID_DATA, "The username or password are incorrect", null);
+            }
+            	
+            rs.close();
+
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
     
 	
 	
