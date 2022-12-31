@@ -238,6 +238,11 @@ public class Server extends AbstractServer {
                     mysqlController.getUserForOL(response, (User)requestBody.get(0));
                 }
                 break;
+            case "/login/setLoggeedIn":
+                if (requestMethod == Method.PUT) {
+                    mysqlController.changeLoggedInUser(response, (Integer)requestBody.get(0), (Boolean)requestBody.get(1));
+                }
+                break;
             default:
                 mysqlController.editResponse(response, ResponseCode.SERVER_ERROR,
                         "Operation doesn't exist", null);

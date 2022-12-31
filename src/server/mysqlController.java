@@ -207,11 +207,16 @@ public class mysqlController {
                 user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
                 		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
                 		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
-                userDetails.add(user);
-                editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                if (user.isLoggedIn()) {
+                    editResponse(response, ResponseCode.INVALID_DATA, "The user is already logged in", null);
+                }
+                else {
+                    userDetails.add(user);
+                    editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                }
             }
             else {
-                editResponse(response, ResponseCode.INVALID_DATA, "Error: invalid user details", null);
+                editResponse(response, ResponseCode.INVALID_DATA, "The username or password are incorrect", null);
             }
             	
             rs.close();
@@ -925,6 +930,7 @@ public class mysqlController {
             	customer = new Customer(user,CustomerType.valueOf(rs.getString("customerType")),rs.getString("subscriberNumber"),rs.getInt("monthlyBill"));
             	customerDetails.add(customer);
             	editResponse(response, ResponseCode.OK, "Registered customer successfully accepted",customerDetails);
+            	changeLoggedInUser(response, user.getId(), true);
             }
             else {
                 editResponse(response, ResponseCode.INVALID_DATA, "Unregistered user",null);
@@ -935,6 +941,23 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
+	}
+	
+	public void changeLoggedInUser(Response response, Integer userId, boolean isLoggedIn) {
+		PreparedStatement stmt;
+        String query = "UPDATE users SET isLoggedIn = ? WHERE id = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setBoolean(1, isLoggedIn);
+        	stmt.setInt(2, userId);
+    		stmt.executeUpdate();
+        	editResponse(response, ResponseCode.OK, response.getDescription(), response.getBody());
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        
 	}
 	
 	public void getUserForOL(Response response, User user) {
@@ -957,6 +980,7 @@ public class mysqlController {
 		else {
 			userDetails.add(worker);
 			editResponse(response, ResponseCode.OK, "The employee has successfully logged in",userDetails);
+        	changeLoggedInUser(response, user.getId(), true);
 		}
 	}
 	
