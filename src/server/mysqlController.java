@@ -215,6 +215,7 @@ public class mysqlController {
                 else {
                     userDetails.add(user);
                     editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                	changeLoggedInUser(response, user.getId(), true);
                 }
             }
             else {
@@ -1033,7 +1034,6 @@ public class mysqlController {
             	customer = new Customer(user,CustomerType.valueOf(rs.getString("customerType")),rs.getString("subscriberNumber"),rs.getInt("monthlyBill"));
             	customerDetails.add(customer);
             	editResponse(response, ResponseCode.OK, "Registered customer successfully accepted",customerDetails);
-            	changeLoggedInUser(response, user.getId(), true);
             }
             else {
                 editResponse(response, ResponseCode.INVALID_DATA, "Unregistered user",null);
@@ -1083,7 +1083,6 @@ public class mysqlController {
 		else {
 			userDetails.add(worker);
 			editResponse(response, ResponseCode.OK, "The employee has successfully logged in",userDetails);
-        	changeLoggedInUser(response, user.getId(), true);
 		}
 	}
 	
