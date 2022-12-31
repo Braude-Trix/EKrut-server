@@ -365,7 +365,10 @@ public class mysqlController {
         response.setDescription(description);
     }
 
-
+    /**
+     * function that get all the products from table product in DB. edit the response accordingly.
+     * @param response - Response object for the user
+     */
     public void getAllProducts(Response response) {
         Product product;
         List<Object> products = new ArrayList<>();
@@ -415,7 +418,11 @@ public class mysqlController {
         }
     }
 
-
+    /**
+     * function that get all the products in specific machine with given machineId. edit the response accordingly.
+     * @param machineId - the machine id
+     * @param response - Response object for the user
+     */
     public void getAllProductsInMachine(String machineId, Response response) {
         ProductInMachine productInMachine;
         List<Object> ProductsInMachine = new ArrayList<>();
@@ -442,7 +449,11 @@ public class mysqlController {
         }
     }
 
-
+    /**
+     * function that save new order to orders table in DB. edit the response accordingly.
+     * @param order - Order object
+     * @param response - Response object for the user
+     */
     public void saveOrderToDB(Order order, Response response) {
         PreparedStatement stmt;
         String query = "INSERT into orders (orderId, pickUpMethod, orderDate, price, machineId, orderStatus, customerId) VALUES (?,?, ?, ?, ?, ?, ?)";
@@ -465,7 +476,11 @@ public class mysqlController {
         }
     }
 
-
+    /**
+     * get all the messages with given customerId  from the messages' table in DB. edit the response accordingly.
+     * @param customerId - Customer Id
+     * @param response - Response object for the user
+     */
     public void getMyMessages(String customerId, Response response) {
         List<Integer> messages_ids = new ArrayList<>();
         List<Object> messages = new ArrayList<>();
@@ -491,6 +506,10 @@ public class mysqlController {
         setMessageReaded(messages_ids);
     }
 
+    /**
+     * function that set message to readed (=1) in DB. edit the response accordingly.
+     * @param messages_ids - list of messages that will set to 1
+     */
     public void setMessageReaded(List<Integer> messages_ids){
         for(Integer msg_id: messages_ids) {
             PreparedStatement stmt;
@@ -507,6 +526,11 @@ public class mysqlController {
         }
     }
 
+    /**
+     * function that get all the pending deliveries from deliveryorder table, with given region. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param region - Region object casting to String
+     */
     public void getAllPendingDeliveriesOrdersByRegion(Response response, String region) {
         DeliveryOrder deliveryOrder;
         List<Object> deliveriesOrders = new ArrayList<>();
@@ -534,10 +558,10 @@ public class mysqlController {
     }
 
 
-
-
-
-
+    /**
+     * function that get the delivery orders and their date with orderStatus WaitingApproveDelivery from DB. edit the response accordingly.
+     * @param response - Response object for the user
+     */
     public void getWaitingDeliveryOrdersWithDate(Response response) {
         List<Object> resList = new ArrayList<>();
         Map<String, String> resMap = new HashMap<>();
@@ -561,6 +585,10 @@ public class mysqlController {
         }
     }
 
+    /**
+     * function that get the delivery Orders with date with orderStatus Collected. edit the response accordingly.
+     * @param response - Response object for the user
+     */
     public void getCollectedDeliveryOrdersWithDate(Response response) {
         List<Object> resList = new ArrayList<>();
         Map<String, String> resMap = new HashMap<>();
@@ -585,9 +613,11 @@ public class mysqlController {
     }
 
 
-
-
-
+    /**
+     * function that save Delivery order to DB with given DeliveryOrder object. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param deliveryOrder - DeliveryOrder object
+     */
     public void saveDeliveryOrder(Response response, DeliveryOrder deliveryOrder) {
         PreparedStatement stmt;
         String query = "INSERT into deliveryorder (firstNameContact, lastNameContact, phoneNumberContact, fullAddress, pincode, region, orderId) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -609,6 +639,11 @@ public class mysqlController {
         }
     }
 
+    /**
+     * function that save in DB latePickUp order with given PickUpOrder object. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param pickupOrder - PickupOrder object
+     */
     public void saveLatePickUpOrder(Response response, PickupOrder pickupOrder) {
         PreparedStatement stmt;
         String query = "INSERT into pickuporder (pickupCode, orderId) VALUES (?, ?)";
@@ -625,6 +660,12 @@ public class mysqlController {
         }
     }
 
+    /**
+     * function that save products in orders in product_in_order table in DB with the given productList. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param orderId - Order id
+     * @param productsList - list of products in the order
+     */
     public void saveProductsInOrder(Response response, String orderId, List<Object> productsList) {
         PreparedStatement stmt;
         for (Object product : productsList) {
@@ -646,7 +687,13 @@ public class mysqlController {
     }
 
 
-
+    /**
+     * function that write new message to the messages' table in DB. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param msg - String message
+     * @param fromId - sender message id
+     * @param toId - receiver message id
+     */
     public void postMsg(Response response, String msg, Integer fromId, Integer toId) {
         PreparedStatement stmt;
         String query = "INSERT into messages (to_customerId, from_Id, message_content, readed) VALUES (?, ?, ?, ?)";
@@ -669,10 +716,11 @@ public class mysqlController {
     //postMsg(response, requestBody.get(0).toString(), requestBody.get(1).toString());
 
 
-
-
-
-
+    /**
+     * function that get the machine threshold with given machineId from DB. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param machineId - machine Id
+     */
     public void getMachineThreshold(Response response, Integer machineId) {
         PreparedStatement stmt;
         ResultSet rs;
@@ -694,6 +742,11 @@ public class mysqlController {
         }
     }
 
+    /**
+     * function that update in inventory in DB after a new order.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param updatedInventory - list of ProductInMachine objects
+     */
     public void updateInventoryInDB(Response response, List<Object> updatedInventory) {
         ProductInMachine productInMachineCasted;
         for(Object productInMachine : updatedInventory) {
@@ -717,6 +770,11 @@ public class mysqlController {
         editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
     }
 
+    /**
+     * function that get the customerId by the given orderId from DB.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param orderId - Order Id
+     */
     public void getCustomerIdByOrderIdFromDB(Response response, String orderId) {
         PreparedStatement stmt;
         ResultSet rs;
@@ -737,6 +795,12 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+
+    /**
+     * function that get machineName with given machineId according to the DB. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param machineId - machineId
+     */
     public void getMachineName(Response response, Integer machineId) {
         PreparedStatement stmt;
         ResultSet rs;
@@ -758,6 +822,11 @@ public class mysqlController {
         }
     }
 
+    /**
+     * function that get the monthly bill from db with given userId.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param userId - User id
+     */
     public void getMonthlyBill(Response response, Integer userId) {
         PreparedStatement stmt;
         ResultSet rs;
@@ -808,7 +877,12 @@ public class mysqlController {
         }
     }
 
-
+    /**
+     * function that update the monthly bill of subscriber in DB given userId and new monthly bill sum. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param userId - user Id
+     * @param newMonthlyBill - new sum of monthly bill
+     */
     public void updateMonthlyBill(Response response, Integer userId, Double newMonthlyBill) {
 
         PreparedStatement stmt;
@@ -828,10 +902,10 @@ public class mysqlController {
     }
 
     /**
-     *
-     * @param response
-     * @param orderId
-     * @param orderStatus
+     * function that update in DB the order status accroding specific orderId and new orderStatus. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param orderId - Order Id
+     * @param orderStatus - OrderStatus Enum
      */
     public void updateOrderStatus(Response response, String orderId, OrderStatus orderStatus) {
 
