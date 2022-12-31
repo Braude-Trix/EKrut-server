@@ -832,6 +832,13 @@ public class mysqlController {
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+
+    /**
+     *
+     * @param response
+     * @param orderId
+     * @param orderStatus
+     */
     public void updateOrderStatus(Response response, String orderId, OrderStatus orderStatus) {
 
         PreparedStatement stmt;
