@@ -11,7 +11,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import models.*;
 import sun.misc.IOUtils;
@@ -504,31 +506,86 @@ public class mysqlController {
         }
     }
 
-//    public void getAllDeliveriesOrdersByRegion(Response response, String region) {
-//        DeliveryOrder deliveryOrder;
-//        List<Object> deliveriesOrders = new ArrayList<>();
-//        PreparedStatement stmt;
-//        ResultSet rs;
-//        String query = "SELECT * FROM deliveries WHERE region = ?";
-//        try {
-//            stmt = conn.prepareStatement(query);
-//            stmt.setString(1, region);
-//            rs = stmt.executeQuery();
-//            while (rs.next()) {
-//                deliveryOrder = new DeliveryOrder(
-//                        rs.getString("orderId"), rs.getString("deliveryAddress"),
-//                        rs.getString("region"),
-//                        rs.getString("deliveryDate"));
-//                deliveriesOrders.add(deliveryOrder);
-//            }
-//            editResponse(response, ResponseCode.OK, "Successfully get all deliveries orders", deliveriesOrders);
-//            rs.close();
-//        } catch (SQLException e) {
-//            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
-//            e.printStackTrace();
-//            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-//        }
-//    }
+    public void getAllPendingDeliveriesOrdersByRegion(Response response, String region) {
+        DeliveryOrder deliveryOrder;
+        List<Object> deliveriesOrders = new ArrayList<>();
+        List<String> resList;
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM deliveryorder WHERE region = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, region);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                deliveryOrder = new DeliveryOrder(rs.getString("orderId"),null, 0.0, null, null, null,null, null, null, null, rs.getString("fullAddress"), Regions.valueOf(region),rs.getString("dateReceived"), null);
+                deliveriesOrders.add(deliveryOrder);
+            }
+            if(deliveriesOrders.size() == 0)
+                deliveriesOrders = null;
+            editResponse(response, ResponseCode.OK, "Successfully get all deliveries orders", deliveriesOrders);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+
+
+
+
+    public void getWaitingDeliveryOrdersWithDate(Response response) {
+        List<Object> resList = new ArrayList<>();
+        Map<String, String> resMap = new HashMap<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM orders WHERE orderStatus = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, "WaitingApproveDelivery");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                resMap.put(rs.getString("orderId"), rs.getString("orderDate"));
+            }
+            resList.add(resMap);
+            editResponse(response, ResponseCode.OK, "Successfully get all waiting approve deliveries orders", resList);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void getCollectedDeliveryOrdersWithDate(Response response) {
+        List<Object> resList = new ArrayList<>();
+        Map<String, String> resMap = new HashMap<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM orders WHERE orderStatus = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, "Collected");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                resMap.put(rs.getString("orderId"), rs.getString("orderDate"));
+            }
+            resList.add(resMap);
+            editResponse(response, ResponseCode.OK, "Successfully get all waiting approve deliveries orders", resList);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+
+
 
     public void saveDeliveryOrder(Response response, DeliveryOrder deliveryOrder) {
         PreparedStatement stmt;
@@ -587,6 +644,34 @@ public class mysqlController {
         }
     }
 
+
+
+    public void postMsg(Response response, String msg, Integer fromId, Integer toId) {
+        PreparedStatement stmt;
+        String query = "INSERT into messages (to_customerId, from_Id, message_content, readed) VALUES (?, ?, ?, ?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, toId);
+            stmt.setInt(2, fromId);
+            stmt.setString(3, msg);
+            stmt.setInt(4, 0);
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully save message", null);
+            ServerGui.serverGui.printToConsole("Successfully save message");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+
+    //postMsg(response, requestBody.get(0).toString(), requestBody.get(1).toString());
+
+
+
+
+
+
     public void getMachineThreshold(Response response, Integer machineId) {
         PreparedStatement stmt;
         ResultSet rs;
@@ -641,8 +726,8 @@ public class mysqlController {
             stmt.setString(1, orderId);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                resList.add(rs.getInt("orderId   "));
-                editResponse(response, ResponseCode.OK, "Successfully get machine threshold", resList);
+                resList.add(rs.getInt("customerId"));
+                editResponse(response, ResponseCode.OK, "Successfully get customer id", resList);
 
             }
             rs.close();
@@ -740,6 +825,24 @@ public class mysqlController {
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    public void updateOrderStatus(Response response, String orderId, OrderStatus orderStatus) {
+
+        PreparedStatement stmt;
+        String query = "UPDATE orders SET orderStatus = ? WHERE orderId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, getStringStatus(orderStatus));
+            stmt.setString(2, orderId);
+            stmt.executeUpdate();
+            ServerGui.serverGui.printToConsole("update order status successfully");
+            editResponse(response, ResponseCode.OK, "Successfully update order status", null);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
 
 
     private String getStringStatus(OrderStatus status) {
