@@ -2,13 +2,6 @@ package server;
 
 import gui.ServerGui;
 import javafx.scene.image.Image;
-import models.MyOrders;
-import models.OrderStatus;
-import models.PickUpMethod;
-import models.Response;
-import models.ResponseCode;
-import models.Subscriber;
-import models.User;
 import serverModels.ServerConf;
 import java.io.*;
 import java.sql.Connection;
@@ -199,7 +192,7 @@ public class mysqlController {
 //        return subscribersList;
 //    }
     
-	public List<Object> getUserFromDB(Response response, String username, String password) {
+	public void getUserFromDB(Response response, String username, String password) {
 
     	List<Object> userDetails= new ArrayList<>();
 
@@ -216,11 +209,17 @@ public class mysqlController {
                 user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
                 		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
                 		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
-                userDetails.add(user);
-                editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                if (user.isLoggedIn()) {
+                    editResponse(response, ResponseCode.INVALID_DATA, "The user is already logged in", null);
+                }
+                else {
+                    userDetails.add(user);
+                    editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                	changeLoggedInUser(response, user.getId(), true);
+                }
             }
             else {
-                editResponse(response, ResponseCode.INVALID_DATA, "Error: invalid user details", null);
+                editResponse(response, ResponseCode.INVALID_DATA, "The username or password are incorrect", null);
             }
             	
             rs.close();
@@ -230,10 +229,9 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return userDetails;
     }
 	
-	public List<Object> getMyOrdersFromDB(Response response, Integer customerId) {
+	public void getMyOrdersFromDB(Response response, Integer customerId) {
     	List<Object> MyOrders= new ArrayList<>();
 
         PreparedStatement stmt;
@@ -260,10 +258,9 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return MyOrders;
     }
 	
-	public List<Object> getReceivedDateDeliveryFromDB(Response response, String orderId) {
+	public void getReceivedDateDeliveryFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
         PreparedStatement stmt;
@@ -284,10 +281,9 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return RecivedDate;
     }
 	
-	public List<Object> getReceivedDatePickupFromDB(Response response, String orderId) {
+	public void getReceivedDatePickupFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
         PreparedStatement stmt;
@@ -308,10 +304,9 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return RecivedDate;
     }
 	
-	public List<Object> getPickupCodeFromDB(Response response, String orderId) {
+	public void getPickupCodeFromDB(Response response, String orderId) {
     	List<Object> pickupCode= new ArrayList<>();
 
         PreparedStatement stmt;
@@ -332,7 +327,6 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return pickupCode;
     }
 	
 	public void setStatusDeliveryOrderInDB(Response response, String orderId, OrderStatus status, String dateReceived) {
@@ -871,7 +865,7 @@ public class mysqlController {
 		return "null";
     }
     
-	public List<Object> getMachinesOfRegions(Response response, Regions region) {
+	public void getMachinesOfRegions(Response response, Regions region) {
     	List<Object> machines= new ArrayList<>();
     	Machine machine;
         PreparedStatement stmt;
@@ -896,10 +890,9 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return machines;
     }
 	
-	public List<Object> getAmountNotificationDelivery(Response response, Integer userId) {
+	public void getAmountNotificationDelivery(Response response, Integer userId) {
     	List<Object> amountDeliveryNotCollected = new ArrayList<>();
     	int count = 0;
         PreparedStatement stmt;
@@ -923,10 +916,9 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return amountDeliveryNotCollected;
     }
 	
-	public List<Object> putPickupCodeAndChangeStatus(Response response, Integer userId, String pickupCode, String machineId) {
+	public void putPickupCodeAndChangeStatus(Response response, Integer userId, String pickupCode, String machineId) {
     	List<String> ordersId = new ArrayList<>();
 
     	PreparedStatement stmt;
@@ -947,7 +939,7 @@ public class mysqlController {
             if (ordersId.size() == 0) {
                 editResponse(response, ResponseCode.INVALID_DATA, "Entered code is incorrect, please try again", null);
                 rs.close();
-                return null;
+                return;
             }
             rs.close();
             
@@ -969,11 +961,10 @@ public class mysqlController {
                 editResponse(response, ResponseCode.INVALID_DATA, "Entered code is incorrect, please try again", null);
             }
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)3", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-        return null;
     }
 	
 	private boolean isExistPickupOrder(Response response, String orderId, String pickupCode) {
@@ -994,7 +985,7 @@ public class mysqlController {
             	return false;
             }
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)2", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1013,7 +1004,7 @@ public class mysqlController {
 
             editResponse(response, ResponseCode.OK, "A valid code has been entered for a pickup order",null);
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)1", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1030,11 +1021,163 @@ public class mysqlController {
     		stmt.executeUpdate();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)2", null);
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
 	}
+	
+	public void getCustomer(Response response, User user) {
+		List<Object> customerDetails = new ArrayList<>();
+		Customer customer;
+		PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT * FROM customers WHERE id = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setInt(1, user.getId());
+            rs = stmt.executeQuery();
+            if (rs.next()) {   	
+            	customer = new Customer(user,CustomerType.valueOf(rs.getString("customerType")),rs.getString("subscriberNumber"),rs.getInt("monthlyBill"));
+            	customerDetails.add(customer);
+            	editResponse(response, ResponseCode.OK, "Registered customer successfully accepted",customerDetails);
+            }
+            else {
+                editResponse(response, ResponseCode.INVALID_DATA, "Unregistered user",null);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+	}
+	
+	public void changeLoggedInUser(Response response, Integer userId, boolean isLoggedIn) {
+		PreparedStatement stmt;
+        String query = "UPDATE users SET isLoggedIn = ? WHERE id = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setBoolean(1, isLoggedIn);
+        	stmt.setInt(2, userId);
+    		stmt.executeUpdate();
+        	editResponse(response, ResponseCode.OK, response.getDescription(), response.getBody());
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        
+	}
+	
+	public void getUserForOL(Response response, User user) {
+
+		getCustomer(response, user);
+		Worker worker = null;
+		List<Object> userDetails = new ArrayList<>();
+		worker = getWorker(response, user);
+		if (response.getCode() == ResponseCode.OK) {
+			userDetails.add(response.getBody().get(0));
+			if (response.getCode() == ResponseCode.OK && worker != null) {
+				userDetails.add(worker);
+		    	editResponse(response, ResponseCode.OK, "The user is both a customer and an employee",userDetails);
+			}
+			return;
+		}
+		worker = getWorker(response, user);
+		if (worker == null) {
+		    editResponse(response, ResponseCode.INVALID_DATA, "Unregistered user",null);
+		}
+		else {
+			userDetails.add(worker);
+			editResponse(response, ResponseCode.OK, "The employee has successfully logged in",userDetails);
+		}
+	}
+	
+	private Worker getWorker(Response response, User user) {
+		Worker worker = null;
+		PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT * FROM workers WHERE id = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setInt(1, user.getId());
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+            	Regions tempRegion = (rs.getString("region") == null)? null: Regions.valueOf(rs.getString("region"));
+            	worker = new Worker(user, WorkerType.valueOf(rs.getString("workerType")), tempRegion);
+            }
+            rs.close();
+            return worker;
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return null;
+	}
+	
+	
+	public void getSubscribersForFastLogin(Response response) {
+		List<Object> subscribersId = new ArrayList<>();
+		PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT id FROM customers WHERE customerType = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+            stmt.setString(1, "Subscriber");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	subscribersId.add(rs.getInt("id"));
+            }
+            rs.close();
+        	editResponse(response, ResponseCode.OK, "Successfully sent all subscribers id",subscribersId);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+	}
+	
+	
+	public void getUserById(Response response, Integer id) {
+
+    	List<Object> userDetails= new ArrayList<>();
+
+        User user;
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM users WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
+                		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
+                		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
+                if (user.isLoggedIn()) {
+                    editResponse(response, ResponseCode.INVALID_DATA, "The user is already logged in", null);
+                }
+                else {
+                    userDetails.add(user);
+                    editResponse(response, ResponseCode.OK, "Successfully got user details", userDetails);
+                	changeLoggedInUser(response, user.getId(), true);
+                	getCustomer(response, user);
+                }
+            }
+            else {
+                editResponse(response, ResponseCode.INVALID_DATA, "The username or password are incorrect", null);
+            }
+            	
+            rs.close();
+
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
     
 	
 	
