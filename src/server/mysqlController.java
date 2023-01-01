@@ -4,11 +4,7 @@ import gui.ServerGui;
 import javafx.scene.image.Image;
 import serverModels.ServerConf;
 import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,10 +17,11 @@ import com.mysql.cj.conf.ConnectionUrl.Type;
 
 public class mysqlController {
     public Connection conn;
+    public Connection externalDBSchemeConn;
     private final String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
 
-    public mysqlController(ServerConf serverConf) {
+    public mysqlController(ServerConf serverConf, String externalDBSchemeName) {
         String dbScheme = serverConf.getDbScheme();
         String dbUserName = serverConf.getDbUserName();
         String dbPassword = serverConf.getDbPassword();
@@ -40,6 +37,10 @@ public class mysqlController {
                     String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", dbScheme),
                     dbUserName,
                     dbPassword);
+            externalDBSchemeConn = DriverManager.getConnection(
+                    String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", externalDBSchemeName),
+                    dbUserName,
+                    dbPassword);
             ServerGui.serverGui.printToConsole("SQL connection succeed");
             ServerGui.serverGui.setConnected(true);
         } catch (SQLException ex) { // handle any errors
@@ -48,6 +49,7 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
             ServerGui.serverGui.setConnected(false);
         }
+        importUsersDateFromExternalDB(serverConf, externalDBSchemeName);
     }
 
     public boolean closeConnection() {
@@ -61,6 +63,22 @@ public class mysqlController {
             }
         }
         return true;
+    }
+
+    public void importUsersDateFromExternalDB(ServerConf serverConf, String externalDBSchemeName){
+        String queryUsers = "INSERT INTO " + serverConf.getDbScheme() + "." + "users" + " SELECT * FROM " + externalDBSchemeName + "." + "users";
+        String queryWorkers = "INSERT INTO " + serverConf.getDbScheme() + "." + "workers" + " SELECT * FROM " + externalDBSchemeName + "." + "workers";
+        String queryCustomers = "INSERT INTO " + serverConf.getDbScheme() + "." + "customers" + " SELECT * FROM " + externalDBSchemeName + "." + "customers";
+        try {
+            Statement stmtUsers = externalDBSchemeConn.createStatement();
+            stmtUsers.executeUpdate(queryUsers);
+            Statement stmtWorkers = externalDBSchemeConn.createStatement();
+            stmtWorkers.executeUpdate(queryWorkers);
+            Statement stmtCustomers = externalDBSchemeConn.createStatement();
+            stmtCustomers.executeUpdate(queryCustomers);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

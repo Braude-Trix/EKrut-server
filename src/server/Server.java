@@ -26,6 +26,8 @@ public class Server extends AbstractServer {
 	public mysqlController mysqlController;
 	private ServerConf currentConf;
 
+	private String externalDBSchemeName = "ekrut_external_data_scheme";
+
 	/**
 	 * Constructs an instance of the server.
 	 *
@@ -226,7 +228,7 @@ public class Server extends AbstractServer {
 				mysqlController.getUserForOL(response, (User) requestBody.get(0));
 			}
 			break;
-		case "/login/setLoggeedIn":
+		case "/login/setLoggedIn":
 			if (requestMethod == Method.PUT) {
 				mysqlController.changeLoggedInUser(response, (Integer) requestBody.get(0),
 						(Boolean) requestBody.get(1));
@@ -282,7 +284,7 @@ public class Server extends AbstractServer {
 	 */
 	protected void serverStarted() {
 		ServerGui.serverGui.printToConsole("Server listening for connections on port " + getPort());
-		mysqlController = new mysqlController(currentConf);
+		mysqlController = new mysqlController(currentConf, externalDBSchemeName);
 	}
 
 	/**
