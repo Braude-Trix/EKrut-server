@@ -154,6 +154,8 @@ public class ServerGUIController implements Initializable {
             return;
         }
         Scene s = new Scene(pane);
+        s.getStylesheets().add("styles/worker_table.css");
+        s.getStylesheets().add("styles/SideButtons.css");
         primaryStage.setTitle("EKrut Server");
         primaryStage.setScene(s);
         primaryStage.setResizable(false);
