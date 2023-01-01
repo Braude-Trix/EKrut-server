@@ -204,6 +204,9 @@ public class ServerGUIController implements Initializable {
         refreshBtn.setOnAction(event -> refreshConnectedClients());
         PortField.setOnKeyTyped(event -> validatePortField());
         IpRefreshBtn.setOnAction(event -> refreshIpField());
+
+        msgBox.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; " +
+                "-fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill:#00ff00;");
     }
 
     private void updatePasswordTooltip() {
