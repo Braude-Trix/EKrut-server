@@ -75,7 +75,12 @@ public class mysqlController {
         if (conn != null) {
             try {
                 conn.close();
-                externalDBSchemeConn.close();
+                try {
+                    externalDBSchemeConn.close();
+                }
+                catch(Exception e){
+
+                }
                 ServerGui.serverGui.printToConsole("SQL connection was closed");
             } catch (SQLException e) {
                 ServerGui.serverGui.printToConsole("Couldn't close SQL connection", true);

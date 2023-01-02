@@ -228,12 +228,13 @@ public class Server extends AbstractServer {
 				mysqlController.getUserForOL(response, (User) requestBody.get(0));
 			}
 			break;
-		case "/login/setLoggedIn":
+		case "/login/setLoggedIn": {
 			if (requestMethod == Method.PUT) {
 				mysqlController.changeLoggedInUser(response, (Integer) requestBody.get(0),
 						(Boolean) requestBody.get(1));
 			}
 			break;
+		}
 		case "/getPendingDeliveriesOrdersByRegion":
 			if (requestMethod == Method.GET) {
 				mysqlController.getAllPendingDeliveriesOrdersByRegion(response, (requestBody.get(0).toString()));
@@ -272,7 +273,7 @@ public class Server extends AbstractServer {
 				mysqlController.getUserById(response, (Integer) requestBody.get(0));
 			}
 			break;
-		case "/sales":
+		case "/sales": {
 			if (requestMethod == Method.GET) {
 				mysqlController.getSales(response, (String) requestBody.get(0), (String) requestBody.get(1));
 			}
@@ -282,7 +283,9 @@ public class Server extends AbstractServer {
 			if (requestMethod == Method.PUT) {
 				mysqlController.changeSaleStatus(response, (String) requestBody.get(0), (String) requestBody.get(1));
 			}
+
 			break;
+		}
 		default:
 			mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 		}
