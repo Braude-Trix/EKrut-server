@@ -21,6 +21,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import ocsf.server.ConnectionToClient;
 import server.Server;
+import server.mysqlController;
 import serverModels.ClientConnectionData;
 import serverModels.ServerConf;
 
@@ -43,7 +44,8 @@ public class ServerGUIController implements Initializable {
     private final String SUCCESS_STYLE = "-fx-border-color: #A9A9A9; -fx-border-width: 2; -fx-border-radius: 5;";
     private final String OK_STYLE_BTN = "-fx-background-color: AQUAMARINE;";
     private final String ERROR_STYLE_BTN = "-fx-background-color: ORANGERED;";
-
+    @FXML
+    private Button importDataBtn;
     @FXML
     private TextField IPField;
 
@@ -294,5 +296,15 @@ public class ServerGUIController implements Initializable {
     private void markFieldAsOk(TextField textField) {
         textField.setStyle(SUCCESS_STYLE);
         ConnectorDisBTN.setDisable(false);
+    }
+
+    @FXML
+    void importDataClicked(ActionEvent event) {
+
+
+        if(mysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName)){
+            importDataBtn.setDisable(true);
+            importDataBtn.setOpacity(0.5);
+        }
     }
 }

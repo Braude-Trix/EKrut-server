@@ -26,7 +26,7 @@ public class Server extends AbstractServer {
 	public mysqlController mysqlController;
 	private ServerConf currentConf;
 
-	private String externalDBSchemeName = "ekrut_external_data_scheme";
+	public static String externalDBSchemeName = "ekrut_external_data_scheme";
 
 	/**
 	 * Constructs an instance of the server.
@@ -284,7 +284,7 @@ public class Server extends AbstractServer {
 	 */
 	protected void serverStarted() {
 		ServerGui.serverGui.printToConsole("Server listening for connections on port " + getPort());
-		mysqlController = new mysqlController(currentConf, externalDBSchemeName);
+		mysqlController = new mysqlController(currentConf);
 	}
 
 	/**
@@ -342,4 +342,7 @@ public class Server extends AbstractServer {
 		String dbPassword = "1234";
 		return new ServerConf(ip, port, dbScheme, dbUserName, dbPassword);
 	}
+
+
+
 }

@@ -17,11 +17,11 @@ import com.mysql.cj.conf.ConnectionUrl.Type;
 
 public class mysqlController {
     public Connection conn;
-    public Connection externalDBSchemeConn;
+    public static Connection externalDBSchemeConn = null;
     private final String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
 
-    public mysqlController(ServerConf serverConf, String externalDBSchemeName) {
+    public mysqlController(ServerConf serverConf) {
         String dbScheme = serverConf.getDbScheme();
         String dbUserName = serverConf.getDbUserName();
         String dbPassword = serverConf.getDbPassword();
@@ -37,11 +37,6 @@ public class mysqlController {
                     String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", dbScheme),
                     dbUserName,
                     dbPassword);
-            externalDBSchemeConn = DriverManager.getConnection(
-                    String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", externalDBSchemeName),
-                    dbUserName,
-                    dbPassword);
-            ServerGui.serverGui.printToConsole("SQL connection succeed");
             ServerGui.serverGui.setConnected(true);
         } catch (SQLException ex) { // handle any errors
             ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
@@ -49,13 +44,38 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
             ServerGui.serverGui.setConnected(false);
         }
-        importUsersDateFromExternalDB(serverConf, externalDBSchemeName);
+    }
+
+    private static boolean connectExternalDB(String externalDBSchemeName, String dbUserName, String dbPassword){
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+            ServerGui.serverGui.printToConsole("Driver definition succeed");
+        } catch (Exception ex) { // handle the error
+            ServerGui.serverGui.printToConsole("Driver definition failed", true);
+        }
+
+        try {
+            externalDBSchemeConn = DriverManager.getConnection(
+                    String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", externalDBSchemeName),
+                    dbUserName,
+                    dbPassword);
+            ServerGui.serverGui.printToConsole("SQL connection to external DB succeed");
+            return true;
+        } catch (SQLException ex) { // handle any errors
+            ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
+            ServerGui.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
+            ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
+        }
+        return false;
+
+
     }
 
     public boolean closeConnection() {
         if (conn != null) {
             try {
                 conn.close();
+                externalDBSchemeConn.close();
                 ServerGui.serverGui.printToConsole("SQL connection was closed");
             } catch (SQLException e) {
                 ServerGui.serverGui.printToConsole("Couldn't close SQL connection", true);
@@ -65,11 +85,31 @@ public class mysqlController {
         return true;
     }
 
-    public void importUsersDateFromExternalDB(ServerConf serverConf, String externalDBSchemeName){
-        String queryUsers = "INSERT INTO " + serverConf.getDbScheme() + "." + "users" + " SELECT * FROM " + externalDBSchemeName + "." + "users";
-        String queryWorkers = "INSERT INTO " + serverConf.getDbScheme() + "." + "workers" + " SELECT * FROM " + externalDBSchemeName + "." + "workers";
-        String queryCustomers = "INSERT INTO " + serverConf.getDbScheme() + "." + "customers" + " SELECT * FROM " + externalDBSchemeName + "." + "customers";
+    /**
+     * function for 'import simulation', import all users, workers and customers tables from external scheme to our scheme
+     * @param dbSchemeName - the name of our scheme
+     * @param externalDBSchemeName - the name of the external scheme
+     * @return true/false accordingly if everything succeed or not
+     */
+    public static boolean importUsersDataFromExternalDB(String dbSchemeName, String externalDBSchemeName){
+        String queryUsers = "INSERT INTO " + dbSchemeName + "." + "users" + " SELECT * FROM " + externalDBSchemeName + "." + "users";
+        String queryWorkers = "INSERT INTO " + dbSchemeName + "." + "workers" + " SELECT * FROM " + externalDBSchemeName + "." + "workers";
+        String queryCustomers = "INSERT INTO " + dbSchemeName + "." + "customers" + " SELECT * FROM " + externalDBSchemeName + "." + "customers";
+        String deleteCustomersQuery = "DELETE FROM " + dbSchemeName + ".customers";
+        String deleteWorkersQuery = "DELETE FROM " + dbSchemeName + ".workers";
+        String deleteUsersQuery = "DELETE FROM " + dbSchemeName + ".users";
         try {
+            if(externalDBSchemeConn == null) {
+                if (!connectExternalDB(externalDBSchemeName, ServerConf.dbUserName, ServerConf.dbPassword))
+                    return false;
+            }
+            Statement stmtDeleteCustomers = externalDBSchemeConn.createStatement();
+            stmtDeleteCustomers.executeUpdate(deleteCustomersQuery);
+            Statement stmtDeleteWorkers = externalDBSchemeConn.createStatement();
+            stmtDeleteWorkers.executeUpdate(deleteWorkersQuery);
+            Statement stmtDeleteUsers = externalDBSchemeConn.createStatement();
+            stmtDeleteUsers.executeUpdate(deleteUsersQuery);
+
             Statement stmtUsers = externalDBSchemeConn.createStatement();
             stmtUsers.executeUpdate(queryUsers);
             Statement stmtWorkers = externalDBSchemeConn.createStatement();
@@ -77,8 +117,10 @@ public class mysqlController {
             Statement stmtCustomers = externalDBSchemeConn.createStatement();
             stmtCustomers.executeUpdate(queryCustomers);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            ServerGui.serverGui.printToConsole(e.getMessage(), true);
+            return false;
         }
+        return true;
     }
 
     /**

@@ -3,9 +3,9 @@ package serverModels;
 public class ServerConf {
     private String ip;
     private int port;
-    private String dbScheme;
-    private String dbUserName;
-    private String dbPassword;
+    public static String dbScheme;
+    public static String dbUserName;
+    public static String dbPassword;
 
     public ServerConf(String ip, int port, String dbScheme,
                       String dbUserName, String dbPassword) {

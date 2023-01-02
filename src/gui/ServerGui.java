@@ -1,6 +1,8 @@
 package gui;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 public class ServerGui extends Application {
@@ -11,6 +13,7 @@ public class ServerGui extends Application {
 		serverGui = new ServerGUIController();
 		serverGui.start(primaryStage);
 	}
+
 
 	public static void main(String[] args) {
 		launch(args);
