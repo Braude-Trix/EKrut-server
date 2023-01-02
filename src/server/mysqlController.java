@@ -148,28 +148,28 @@ public class mysqlController {
 //        }
 //    }
 
-
-    public void updateSubscriberNumberAndCreditCard(String id, String newSubscriberNumber,
-                                                    String newCreditCardNumber, Response response) {
-        /*
-          this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
-         */
-        PreparedStatement stmt;
-        String query = "UPDATE Subscriber SET creditCardNumber= ?, SubscriberNumber= ? WHERE id= ?";
-        try {
-            stmt = conn.prepareStatement(query);
-            stmt.setString(1, newCreditCardNumber);
-            stmt.setString(2, newSubscriberNumber);
-            stmt.setString(3, id);
-            stmt.executeUpdate();
-            ServerGui.serverGui.printToConsole("Subscriber update done successfully");
-            editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
-        } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-        }
-    }
+	public void updateSubscriberNumberAndCreditCard(String id, String newSubscriberNumber, String newCreditCardNumber,
+			Response response) {
+		/*
+		 * this method get id of subscriber and update his subscriberNumber to
+		 * 'newSubscriberNumber' in DB.
+		 */
+		PreparedStatement stmt;
+		String query = "UPDATE Subscriber SET creditCardNumber= ?, SubscriberNumber= ? WHERE id= ?";
+		try {
+			stmt = conn.prepareStatement(query);
+			stmt.setString(1, newCreditCardNumber);
+			stmt.setString(2, newSubscriberNumber);
+			stmt.setString(3, id);
+			stmt.executeUpdate();
+			ServerGui.serverGui.printToConsole("Subscriber update done successfully");
+			editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
+		} catch (SQLException e) {
+			editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+			e.printStackTrace();
+			ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+		}
+	}
 
 //    public Subscriber getSubscriberDetails(String id) {
 //        /**
@@ -985,7 +985,57 @@ public class mysqlController {
         }
     }
 
+    private String getStringStatus(Regions region) {
+        if (region == null)
+            return "null";
+        switch (region) {
+            case All:
+                return "All";
+            case North:
+                return "North";
+            case South:
+                return "South";
+            case UAE:
+                return "UAE";
+        }
+        return "null";
+    }
 
+    private String getStringStatus(SaleStatus status) {
+        if (status == null)
+            return "null";
+        switch (status) {
+            case Template:
+                return "Template";
+            case Ready:
+                return "Ready";
+            case Running:
+                return "Running";
+            case Outdated:
+                return "Outdated";
+        }
+        return "null";
+    }
+
+    private String getStringStatus(TimeSale time) {
+        if (time == null)
+            return "null";
+        switch (time) {
+            case AllDay:
+                return "AllDay";
+            case Morning:
+                return "Morning";
+            case Noon:
+                return "Noon";
+            case Afternoon:
+                return "Afternoon";
+            case Evening:
+                return "Evening";
+            case Night:
+                return "Night";
+        }
+        return "null";
+    }
 
     private String getStringStatus(OrderStatus status) {
         if (status == null)
@@ -1308,6 +1358,108 @@ public class mysqlController {
 
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+    public void getSales(Response response, String wantedRegion, String wantedType) {
+        List<Object> salesWithWantedRegionAndType = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query;
+        boolean allFlag = false;
+        if (wantedRegion.equals("All")) {
+            allFlag = true;
+            query = "SELECT * FROM sales WHERE saleStatus = ?";
+        } else {
+            query = "SELECT * FROM sales WHERE saleStatus = ? and (saleRegion = ? or saleRegion = ?)";
+        }
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, wantedType);
+            if (!allFlag) {
+                stmt.setString(2, wantedRegion);
+                stmt.setString(3, "All");
+
+            }
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Sale sale = new Sale(Integer.toString(rs.getInt("id")), rs.getString("saleStartDate"),
+                        rs.getString("saleEndDate"), TimeSale.valueOf(rs.getString("saleTime")),
+                        rs.getString("saleName"), Regions.valueOf(rs.getString("saleRegion")),
+                        SaleStatus.valueOf(rs.getString("saleStatus")), rs.getString("salePercentage"),
+                        rs.getString("saleDescription"), TypeSale.valueOf(rs.getString("saleType")));
+
+                salesWithWantedRegionAndType.add(sale);
+            }
+            if (salesWithWantedRegionAndType.size() == 0) {
+                salesWithWantedRegionAndType = null;
+            }
+            editResponse(response, ResponseCode.OK, "Successfully sent the sales with the wanted type and region",
+                    salesWithWantedRegionAndType);
+            rs.close();
+
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    private String getStringStatus(TypeSale type) {
+        if (type == null)
+            return "null";
+        switch (type) {
+            case Sale2Plus1:
+                return "Sale2Plus1";
+            case Sale1Plus1:
+                return "Sale1Plus1";
+            case Sale2Plus2:
+                return "Sale2Plus2";
+            case PercentageDiscount:
+                return "PercentageDiscount";
+            case GetSecondOneAtDiscount:
+                return "GetSecondOneAtDiscount";
+        }
+        return "null";
+    }
+    public void postSales(Response response, Sale sale) {
+        PreparedStatement stmt;
+        String query = "INSERT into sales (saleName, saleType, saleRegion, saleStatus, saleStartDate, saleEndDate, saleTime, saleDescription, salePercentage) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, sale.getSaleName());
+            stmt.setString(2, getStringStatus(sale.getSaleType()));
+            stmt.setString(3, getStringStatus(sale.getSaleRegion()));
+            stmt.setString(4, getStringStatus(sale.getSaleStatus()));
+            stmt.setString(5, sale.getSaleStartDate());
+            stmt.setString(6, sale.getSaleEndDate());
+            stmt.setString(7, getStringStatus(sale.getSaleTime()));
+            stmt.setString(8, sale.getSaleDiscription());
+            stmt.setString(9, sale.getSalePercentage());
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully added sale template", null);
+            ServerGui.serverGui.printToConsole("Successfully added sale template");
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+    public void changeSaleStatus(Response response, String saleID, String wantedType) {
+
+        PreparedStatement stmt;
+
+        String query = "UPDATE sales SET saleStatus= ? WHERE id= ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, wantedType);
+            stmt.setString(2, saleID);
+            stmt.executeUpdate();
+            ServerGui.serverGui.printToConsole("Update sale status - changed successfully");
+            editResponse(response, ResponseCode.OK, "Successfully Updated sale status", null);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Communication problem, try again", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
