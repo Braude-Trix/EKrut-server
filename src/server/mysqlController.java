@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1008,7 +1009,7 @@ public class mysqlController {
         String query = "UPDATE pickupOrder SET dateReceived= ? WHERE orderId= ? and pickupCode = ?";
         try {
         	stmt = conn.prepareStatement(query);
-        	stmt.setString(1, LocalDate.now().toString());
+        	stmt.setString(1, LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         	stmt.setString(2, orderId);
         	stmt.setString(3, pickupCode);
     		stmt.executeUpdate();
