@@ -270,6 +270,17 @@ public class Server extends AbstractServer {
 				mysqlController.getUserById(response, (Integer) requestBody.get(0));
 			}
 			break;
+		case "/sales":
+			if (requestMethod == Method.GET) {
+				mysqlController.getSales(response, (String) requestBody.get(0), (String) requestBody.get(1));
+			}
+			if (requestMethod == Method.POST) {
+				mysqlController.postSales(response, (Sale) requestBody.get(0));
+			}
+			if (requestMethod == Method.PUT) {
+				mysqlController.changeSaleStatus(response, (String) requestBody.get(0), (String) requestBody.get(1));
+			}
+			break;
 		default:
 			mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 		}
