@@ -8,12 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -332,11 +328,25 @@ public class ServerGUIController implements Initializable {
 
     @FXML
     void importDataClicked(ActionEvent event) {
-
-
-        if(mysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName)){
-            importDataBtn.setDisable(true);
-            importDataBtn.setOpacity(0.5);
+        if(importDataConfirmationDialog()) {
+            if (mysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName)) {
+                importDataBtn.setDisable(true);
+                importDataBtn.setOpacity(0.5);
+            }
         }
+    }
+
+    private boolean importDataConfirmationDialog(){
+        Alert alertImportDataDialog = new Alert(Alert.AlertType.CONFIRMATION);
+        alertImportDataDialog.setTitle("Import data confirmation");
+        alertImportDataDialog.setHeaderText("Are you sure ?");
+        alertImportDataDialog.setContentText("NOTE: This operation will overwrite your current [users, workers, customers] tables !");
+        ButtonType proceedButtonType = new ButtonType("Proceed");
+        ButtonType cancelButtonType = new ButtonType("Cancel");
+        alertImportDataDialog.getButtonTypes().setAll(proceedButtonType, cancelButtonType);
+        Optional<ButtonType> userChoice = alertImportDataDialog.showAndWait();
+        if(userChoice.get() == proceedButtonType)
+            return true;
+        return false;
     }
 }

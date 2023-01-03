@@ -123,6 +123,14 @@ public class mysqlController {
             stmtCustomers.executeUpdate(queryCustomers);
         } catch (SQLException e) {
             ServerGui.serverGui.printToConsole(e.getMessage(), true);
+            if(externalDBSchemeConn != null) {
+                try {
+                    externalDBSchemeConn.close();
+                    externalDBSchemeConn = null;
+                } catch (SQLException ex) {
+                    ServerGui.serverGui.printToConsole(ex.getMessage(), true);
+                }
+            }
             return false;
         }
         return true;
