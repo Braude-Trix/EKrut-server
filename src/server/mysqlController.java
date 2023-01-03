@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 import models.*;
-//import sun.misc.IOUtils;
+import sun.misc.IOUtils;
 import com.mysql.cj.conf.ConnectionUrl.Type;
 
 public class mysqlController {
-    public Connection conn;
+    public static Connection conn;
     public static Connection externalDBSchemeConn = null;
-    private final String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
+    private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
 
     public mysqlController(ServerConf serverConf) {
@@ -424,7 +424,7 @@ public class mysqlController {
 		}
 	}
 
-    void editResponse(Response response, ResponseCode code, String description, List<Object> body) {
+    static void editResponse(Response response, ResponseCode code, String description, List<Object> body) {
         response.setBody(body);
         response.setCode(code);
         response.setDescription(description);
@@ -456,8 +456,8 @@ public class mysqlController {
 
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
-                byte[] imageBytes = buffer.readAllBytes();
-               // byte[] imageBytes = IOUtils.readAllBytes(buffer);
+//                byte[] imageBytes = buffer.readAllBytes();
+                byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
 
                 product = new Product(
@@ -1626,6 +1626,22 @@ public class mysqlController {
         }
 
 
+    }
+    
+    public static void disconnectServer(Response response) {
+		PreparedStatement stmt;
+        String query = "UPDATE users SET isLoggedIn = ? WHERE isLoggedIn = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setBoolean(1, false);
+        	stmt.setBoolean(2, true);
+    		stmt.executeUpdate();
+        	editResponse(response, ResponseCode.OK, response.getDescription(), response.getBody());
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
     }
     
 	

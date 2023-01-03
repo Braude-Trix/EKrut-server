@@ -19,6 +19,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import models.Response;
 import ocsf.server.ConnectionToClient;
 import server.Server;
 import server.mysqlController;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
 
 public class ServerGUIController implements Initializable {
     private static boolean isConnected;
@@ -130,11 +132,25 @@ public class ServerGUIController implements Initializable {
             // trying to connect to server
             Server.initServer(serverConf);
         } else {
-            setConnected(false);
+            setAllUsersLoggedOut();
         }
     }
 
-    @FXML
+    private void setAllUsersLoggedOut() {
+		Response response = new Response();
+        mysqlController.disconnectServer(response);
+		switch (response.getCode()) {
+		case OK:
+            setConnected(false);
+			break;
+		default:
+			String msg = "DB failure updating logout for all users";
+			printToConsole(msg, true);
+			break;
+		}
+	}
+
+	@FXML
     void refreshClients(ActionEvent event) {
         controller.checkConnectedClients();
     }
@@ -162,9 +178,18 @@ public class ServerGUIController implements Initializable {
         primaryStage.setScene(s);
         primaryStage.setResizable(false);
         primaryStage.show();
+        primaryStage.setOnCloseRequest(e -> forcedExit(primaryStage));
     }
 
-    /**
+    private void forcedExit(Stage primaryStage) {
+    	setAllUsersLoggedOut();
+    	primaryStage.close();
+        System.exit(0);
+	}
+
+
+
+	/**
      * Called before the controller is made
      *
      * @param url            The location used to resolve relative paths for the root object, or
