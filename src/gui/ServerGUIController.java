@@ -182,7 +182,9 @@ public class ServerGUIController implements Initializable {
     }
 
     private void forcedExit(Stage primaryStage) {
-    	setAllUsersLoggedOut();
+    	if (isConnected) {
+        	setAllUsersLoggedOut();
+    	}
     	primaryStage.close();
         System.exit(0);
 	}
