@@ -285,8 +285,38 @@ public class Server extends AbstractServer {
 			}
 
 			break;
+
 		}
-		default:
+			case "/requestUsers": // badihi
+				if (requestMethod == Method.GET) {
+					mysqlController.getUsersWithTheirStatus(response);
+				}
+				break;
+
+			case "/requestUserStatus" : // badihi
+				if (requestMethod == Method.GET) {
+					mysqlController.getUsersStatus(response,(Integer)requestBody.get(0));
+				}
+				break;
+
+			case "/upgradeClientToSubscriber": //badihi
+				if (requestMethod == Method.PUT) {
+					mysqlController.UpgradeClientToSubscriber(response, (Integer)requestBody.get(0));
+				}
+				break;
+			case "/upgradeUserToClient": // badihi
+				if (requestMethod == Method.POST) {
+					mysqlController.UpgradeUserToClient(response, (Integer)requestBody.get(0));
+				}
+				break;
+			case "/checkIfUserPending": // badihi
+				if (requestMethod == Method.GET) {
+					mysqlController.checkIfUserPending(response, (Integer)requestBody.get(0));
+				}
+				break;
+
+
+			default:
 			mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 		}
 		return response;

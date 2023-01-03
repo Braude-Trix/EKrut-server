@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import models.*;
-import sun.misc.IOUtils;
+//import sun.misc.IOUtils;
 import com.mysql.cj.conf.ConnectionUrl.Type;
 
 public class mysqlController {
@@ -456,8 +456,8 @@ public class mysqlController {
 
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
-                //byte[] imageBytes = buffer.readAllBytes();
-                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+                byte[] imageBytes = buffer.readAllBytes();
+               // byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
 
                 product = new Product(
@@ -1468,6 +1468,164 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
+    }
+    /**
+     * this method return all the users from the DB
+     */
+    public void getUsersWithTheirStatus(Response response) { // BADIHI
+        User user;
+        List<Object> users = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM users";
+
+        try {
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
+                        rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
+                        rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
+
+
+                users.add(user);
+            }
+            editResponse(response, ResponseCode.OK, "Successfully import all", users);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+
+    }
+    /**
+     * this method get a user id check if he is client or subscriber
+     */
+    public void getUsersStatus(Response response, Integer id) { // BADIHI
+        String status;
+        List<Object> statusList = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM customers WHERE id = ?";
+
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                status = rs.getString("customerType");
+
+
+                statusList.add(status);
+            }
+            if(statusList.isEmpty())
+            {
+                statusList.add("User");
+            }
+            editResponse(response, ResponseCode.OK, "Successfully import all", statusList);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+
+    }
+    /**
+     * this method get a user id and request to upgrade him to client
+     */
+
+    public void UpgradeUserToClient(Response response, Integer userId) { // Badhi
+
+        PreparedStatement stmt;
+        //  String query = "UPDATE pending_users_to_upgrade SET id= ?";
+        String query = "INSERT into pending_users_to_upgrade (id) VALUES (?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        ServerGui.serverGui.printToConsole("Subscriber update done successfully");
+        editResponse(response, ResponseCode.OK, "Successfully updated subscriber", null);
+
+    }
+    /**
+     * this method get a client id and upgrade him to subscriber
+     */
+    public void UpgradeClientToSubscriber(Response response, Integer userId) { // Badihi
+
+        PreparedStatement stmtForMax;
+        ResultSet rs;
+        Integer maxId=0;
+
+        String queryGetMaxId = "SELECT MAX(subscriberNumber) FROM customers";
+        try {
+            stmtForMax = conn.prepareStatement(queryGetMaxId);
+            rs = stmtForMax.executeQuery();
+            while (rs.next()) {
+                maxId = rs.getInt(1);
+            }
+
+        } catch (SQLException e1) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e1.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return;}
+
+
+        PreparedStatement stmt;
+        String query = "UPDATE customers SET customerType= ?,subscriberNumber = ? WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, "Subscriber");
+            stmt.setInt(2,maxId+1 );
+            stmt.setInt(3,userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        ServerGui.serverGui.printToConsole("Subscriber update done successfully");
+        editResponse(response, ResponseCode.OK, "Successfully updated subscriber", null);
+    }
+    /**
+     * this method get a user id and return true/false if he is pending to upgrade or not
+     */
+    public void checkIfUserPending(Response response, Integer id) { // BADIHI
+        List<Object> statusList = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM pending_users_to_upgrade WHERE id = ?";
+
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                statusList.add(true);
+
+            }
+            if (statusList.isEmpty()) {
+                statusList.add(false);
+
+            }
+            editResponse(response, ResponseCode.OK, "Successfully import all", statusList);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+
     }
     
 	
