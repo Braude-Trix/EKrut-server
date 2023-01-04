@@ -1,7 +1,6 @@
 package server;
 
 import gui.ServerGui;
-import javafx.scene.image.Image;
 import serverModels.ServerConf;
 import java.io.*;
 import java.sql.*;
@@ -10,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import models.*;
 import sun.misc.IOUtils;
@@ -1635,25 +1635,131 @@ public class mysqlController {
 
 
     }
-    
     public static void disconnectServer(Response response) {
-		PreparedStatement stmt;
+        PreparedStatement stmt;
         String query = "UPDATE users SET isLoggedIn = ? WHERE isLoggedIn = ?";
         try {
-        	stmt = conn.prepareStatement(query);
-        	stmt.setBoolean(1, false);
-        	stmt.setBoolean(2, true);
-    		stmt.executeUpdate();
-        	editResponse(response, ResponseCode.OK, response.getDescription(), response.getBody());
+            stmt = conn.prepareStatement(query);
+            stmt.setBoolean(1, false);
+            stmt.setBoolean(2, true);
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, response.getDescription(), response.getBody());
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+        }
+    }
+
+    /**
+     * this method returns all users that are pending to upgrade to customer or not
+     */
+    public void getAllPendingUsers(Response response) {
+        List<Integer> usersIdList = new ArrayList<>();
+        List<Object> usersList = new ArrayList<>();
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM pending_users_to_upgrade";
+        try {
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                usersIdList.add(rs.getInt("id"));
+            }
+            rs.close();
+        }  catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "There was an error while fetching data", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return;
+        }
+
+        // getting all users
+        Response innerResponse = new Response();
+        getUsersWithTheirStatus(innerResponse);
+        if (innerResponse.getCode() != ResponseCode.OK) { // if getUsersWithTheirStatus was failed
+            response.setCode(innerResponse.getCode());
+            response.setDescription(innerResponse.getDescription());
+            response.setBody(innerResponse.getBody());
+            return;
+        }
+        // filtering only pending users data
+        List<User> allUser = innerResponse.getBody().stream()
+                .map(userObject -> (User) userObject)
+                .collect(Collectors.toList());
+        for (User user : allUser) {
+            if (usersIdList.contains(user.getId()))
+                usersList.add(user);
+        }
+        if (usersList.isEmpty())
+            usersList = null;
+        editResponse(response, ResponseCode.OK, "Successfully import all pending users", usersList);
+    }
+
+
+    /**
+     * this method returns if pending users upgrade has been done successfully or not
+     * @param response - Response object for the user
+     * @param idsToUpgrade - list of id of users to be upgraded
+     */
+    public void upgradeUsersToCostumers(Response response, List<Object> idsToUpgrade) {
+        // checking if users are valid for upgrade (exists in pending table)
+        for (Object objId : idsToUpgrade) {
+            Integer id = (Integer) objId;
+            upgradeUserToCostumer(response, id);
+            if (response.getCode() != ResponseCode.OK) {
+                return;
+            }
+        }
+        editResponse(response, ResponseCode.OK, "Successfully confirmed all pending accounts", null);
+        ServerGui.serverGui.printToConsole("Successfully confirmed all pending accounts");
+    }
+
+    /**
+     * this method returns if pending user upgrade has been done successfully or not
+     * @param response - Response object for the user
+     * @param id - id of user to be upgraded
+     */
+    public void upgradeUserToCostumer(Response response, int id) {
+        // checking if user is valid for upgrade (exists in pending table)
+        checkIfUserPending(response, id);
+        if (response.getCode() != ResponseCode.OK) {
+            return;
+        }
+
+        // upgrading pending user
+        PreparedStatement stmt;
+        String insertNewCustomerQuery = "INSERT into customers (id, customerType, subscriberNumber, monthlyBill) " +
+                "VALUES (?, ?, ?, ?)";
+        try {
+            stmt = conn.prepareStatement(insertNewCustomerQuery);
+            stmt.setInt(1, id);
+            stmt.setString(2, CustomerType.Client.toString());
+            stmt.setString(3, null);
+            stmt.setDouble(4, 0.0);
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully confirmed pending account", null);
+            ServerGui.serverGui.printToConsole("Successfully confirmed pending account");
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "There was an error while trying to confirm user", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return;
+        }
+
+        // removing from pending Table
+        String deletePendingUserQuery = "DELETE from pending_users_to_upgrade WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(deletePendingUserQuery);
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+            editResponse(response, ResponseCode.OK, "Successfully deleted pending account", null);
+            ServerGui.serverGui.printToConsole("Successfully deleted pending account from table");
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to deleted pending account", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
-    
-	
-	
 }
 
 
