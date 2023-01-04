@@ -316,7 +316,7 @@ public class Server extends AbstractServer {
 				break;
 			case "/upgradeUserToClient": // badihi
 				if (requestMethod == Method.POST) {
-					mysqlController.UpgradeUserToClient(response, (Integer)requestBody.get(0));
+					mysqlController.UpgradeUserToClient(response, (Integer)requestBody.get(0),(String)requestBody.get(1));
 				}
 				break;
 			case "/checkIfUserPending": // badihi
