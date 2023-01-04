@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import models.*;
 //import sun.misc.IOUtils;
 import com.mysql.cj.conf.ConnectionUrl.Type;
+import sun.misc.IOUtils;
 
 public class mysqlController {
     public static Connection conn;
@@ -467,15 +468,15 @@ public class mysqlController {
                 DataInputStream image = new DataInputStream(buffer);
 
                // OPTION 1
-                int numBytes = image.available();
-                byte[] imageBytes = buffer.readNBytes(numBytes);
+//                int numBytes = image.available();
+//                byte[] imageBytes = buffer.readNBytes(numBytes);
 
                 // OPTION 2
 
                 //      byte[] imageBytes = buffer.readAllBytes();
 
                 // OPTION 3
-//                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+                byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
 
 
