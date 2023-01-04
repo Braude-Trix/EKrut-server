@@ -128,6 +128,21 @@ public class Server extends AbstractServer {
 				mysqlController.getAllProducts(response);
 			}
 			break;
+			
+		case "/machines/requestMachineProductsData":
+			String idMachine = requestBody.get(0).toString();
+			if(requestMethod == Method.GET) {
+				mysqlController.getProductsInMachineData(response, idMachine);
+			}
+			break;
+			
+		case "/machines/requestMachineProductsAmount":
+			String idOfMachine = requestBody.get(0).toString();
+			if(requestMethod == Method.GET) {
+				mysqlController.getProductsInMachineAmount(response, idOfMachine);
+			}
+			break;
+			
 		case "/saveProductsInOrder":
 			String orderId = (String) requestBody.get(0);
 			List<Object> productsList = (List<Object>) requestBody.get(1);
@@ -142,6 +157,22 @@ public class Server extends AbstractServer {
 				mysqlController.getMachineThreshold(response, getMachineId);
 			}
 			break;
+			
+		case "/machines/setMachineThreshold":
+			Integer MachineId = (Integer) requestBody.get(0);
+			Integer getNewThreshold = (Integer) requestBody.get(1);
+			if (requestMethod == Method.PUT) {
+				mysqlController.setMachineThreshold(response, MachineId, getNewThreshold);
+			}
+			break;
+			
+		case "/workers/getWorkersByType":
+			String wantedType = ((WorkerType) requestBody.get(0)).name();
+			if(requestMethod == Method.GET) {
+				mysqlController.getWorkersbyType(response, wantedType);
+			}
+			break;
+			
 		case "/updateInventory":
 			List<Object> updatedInventory = (List<Object>) requestBody.get(0);
 			if (requestMethod == Method.PUT) {

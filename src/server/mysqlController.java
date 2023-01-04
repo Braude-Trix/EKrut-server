@@ -17,6 +17,9 @@ import models.*;
 import com.mysql.cj.conf.ConnectionUrl.Type;
 import sun.misc.IOUtils;
 
+import client.Client;
+import client.ClientUI;
+
 public class mysqlController {
     public static Connection conn;
     public static Connection externalDBSchemeConn = null;
@@ -439,6 +442,58 @@ public class mysqlController {
         response.setCode(code);
         response.setDescription(description);
     }
+    
+    public void getProductsInMachineData(Response response, String machineId) {
+    	List<Object> machineIdList = new ArrayList<>();
+    	List<Object> productsList = new ArrayList<>();
+    	List<Object> newProductsList = new ArrayList<>();
+    	
+    	getAllProductsInMachine(machineId, response);
+    	if(response.getBody() != null)
+    		machineIdList = response.getBody();
+    	
+    	getAllProducts(response);
+    	if(response.getBody() != null)
+    		productsList = response.getBody();
+    	
+    	for (Object product : productsList) {
+    		if (product instanceof Product) {
+    			for (Object productInMachine : machineIdList) {
+    				if(((ProductInMachine) productInMachine).getProductId().equals(((Product) product).getProductId())) {
+    					newProductsList.add(product);
+    				}
+    			}
+    		}
+    	}
+    		
+    	editResponse(response, ResponseCode.OK, "Successfully import all products", newProductsList);
+    }
+    
+    public void getProductsInMachineAmount(Response response, String machineId) {
+    	List<Object> machineIdList = new ArrayList<>();
+    	List<Object> productsList = new ArrayList<>();
+    	List<Object> proudctsAmount = new ArrayList<>();
+    	
+    	getAllProductsInMachine(machineId, response);
+    	if(response.getBody() != null)
+    		machineIdList = response.getBody();
+    	
+    	getAllProducts(response);
+    	if(response.getBody() != null)
+    		productsList = response.getBody();
+    	
+    	for (Object product : productsList) {
+    		if (product instanceof Product) {
+    			for (Object productInMachine : machineIdList) {
+    				if(((ProductInMachine) productInMachine).getProductId().equals(((Product) product).getProductId())) {
+    					proudctsAmount.add(productInMachine);
+    				}
+    			}
+    		}
+    	}
+
+    	editResponse(response, ResponseCode.OK, "Successfully import all products", proudctsAmount);
+    }
 
     /**
      * function that get all the products from table product in DB. edit the response accordingly.
@@ -486,8 +541,6 @@ public class mysqlController {
                         rs.getDouble("price"),
                                 imageBytes);
                 products.add(product);
-
-
 
             }
             editResponse(response, ResponseCode.OK, "Successfully import all products", products);
@@ -800,7 +853,6 @@ public class mysqlController {
 
     //postMsg(response, requestBody.get(0).toString(), requestBody.get(1).toString());
 
-
     /**
      * function that get the machine threshold with given machineId from DB. edit the response accordingly.
      * @param response - Response object for the user
@@ -826,6 +878,91 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    
+    
+ // => fishhhhh
+    /**
+     * function that gets list of workers from DB accurding to a WorkerType.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param wantedType - the name of WorkerType to look for
+     */
+    public void getWorkersbyType(Response response, String wantedType) {
+    	List<Object> workersByType = new ArrayList<>();
+    	User currentUser;
+    	Integer currentId;
+     	Worker currentWorker;
+        PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT * FROM workers WHERE workerType = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, wantedType);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	Regions tempRegion = (rs.getString("region") == null)? null: Regions.valueOf(rs.getString("region"));
+            	currentId = rs.getInt("id");
+            	currentUser = getUserDatabyId(response, currentId);
+            	currentWorker = new Worker(currentUser, WorkerType.valueOf(wantedType), tempRegion);
+            	workersByType.add(currentWorker);
+            }
+            rs.close();
+    		ServerGui.serverGui.printToConsole("Successfully got user details");
+            editResponse(response, ResponseCode.OK, "Successfully got user details", workersByType);
+        }catch(SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+    
+    private User getUserDatabyId(Response response, Integer id) {
+        User user = null;
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM users WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
+                		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
+                		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
+            }
+            rs.close();
+            return user;
+        }catch (SQLException e) {
+                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return null;
+    }
+    
+    /**
+     * function that update threshold of machine in DB.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param machineId - machine ID
+     * @param newthreshold - the threshold to change
+     */
+    public void setMachineThreshold(Response response, Integer machineId, Integer newthreshold) {
+    	PreparedStatement stmt;
+    	String query = "UPDATE machine SET threshold= ? WHERE machineId= ?";
+    	try {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setInt(1, newthreshold);
+    		stmt.setInt(2, machineId);
+    		stmt.executeUpdate();
+    		ServerGui.serverGui.printToConsole("update threshold successfully");
+    		editResponse(response, ResponseCode.OK, "Successfully updated threshold", null);
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error updating threshold", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    	}
+    }
+    
+ // => fishhhhh
 
     /**
      * function that update in inventory in DB after a new order.  edit the response accordingly.
@@ -1073,7 +1210,7 @@ public class mysqlController {
 	    }
 		return "null";
     }
-    
+
 	public void getMachinesOfRegions(Response response, Regions region) {
     	List<Object> machines= new ArrayList<>();
     	Machine machine;
@@ -1302,6 +1439,7 @@ public class mysqlController {
 			editResponse(response, ResponseCode.OK, "The employee has successfully logged in",userDetails);
 		}
 	}
+	
 	
 	private Worker getWorker(Response response, User user) {
 		Worker worker = null;
