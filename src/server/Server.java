@@ -287,6 +287,16 @@ public class Server extends AbstractServer {
 			break;
 
 		}
+			case "users/allPendingUsers":
+				if (requestMethod == Method.GET) {
+					mysqlController.getAllPendingUsers(response);
+				}
+				break;
+			case "users/upgradeToCostumer":
+				if (requestMethod == Method.POST) {
+					mysqlController.upgradeUsersToCostumers(response, requestBody);
+				}
+				break;
 			case "/requestUsers": // badihi
 				if (requestMethod == Method.GET) {
 					mysqlController.getUsersWithTheirStatus(response);
