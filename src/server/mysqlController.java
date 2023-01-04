@@ -3,6 +3,7 @@ package server;
 import gui.ServerGui;
 import serverModels.ServerConf;
 import java.io.*;
+import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import models.*;
-import sun.misc.IOUtils;
+//import sun.misc.IOUtils;
 import com.mysql.cj.conf.ConnectionUrl.Type;
 
 public class mysqlController {
@@ -464,8 +465,18 @@ public class mysqlController {
 
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
-//              byte[] imageBytes = buffer.readAllBytes();
-                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+
+               // OPTION 1
+                int numBytes = image.available();
+                byte[] imageBytes = buffer.readNBytes(numBytes);
+
+                // OPTION 2
+
+                //      byte[] imageBytes = buffer.readAllBytes();
+
+                // OPTION 3
+//                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+
 
 
                 product = new Product(
@@ -1547,14 +1558,14 @@ public class mysqlController {
      * this method get a user id and request to upgrade him to client
      */
 
-    public void UpgradeUserToClient(Response response, Integer userId) { // Badhi
+    public void UpgradeUserToClient(Response response, Integer userId,String region) { // Badhi
 
         PreparedStatement stmt;
-        //  String query = "UPDATE pending_users_to_upgrade SET id= ?";
-        String query = "INSERT into pending_users_to_upgrade (id) VALUES (?)";
+        String query = "INSERT into pending_users_for_upgrade (id,region) VALUES (?,?)";
         try {
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, userId);
+            stmt.setString(2,region);
             stmt.executeUpdate();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
@@ -1612,7 +1623,7 @@ public class mysqlController {
         List<Object> statusList = new ArrayList<>();
         PreparedStatement stmt;
         ResultSet rs;
-        String query = "SELECT * FROM pending_users_to_upgrade WHERE id = ?";
+        String query = "SELECT * FROM pending_users_for_upgrade WHERE id = ?";
 
         try {
             stmt = conn.prepareStatement(query);
@@ -1658,7 +1669,7 @@ public class mysqlController {
         List<Object> usersList = new ArrayList<>();
         PreparedStatement stmt;
         ResultSet rs;
-        String query = "SELECT * FROM pending_users_to_upgrade";
+        String query = "SELECT * FROM pending_users_for_upgrade";
         try {
             stmt = conn.prepareStatement(query);
             rs = stmt.executeQuery();
@@ -1747,7 +1758,7 @@ public class mysqlController {
         }
 
         // removing from pending Table
-        String deletePendingUserQuery = "DELETE from pending_users_to_upgrade WHERE id = ?";
+        String deletePendingUserQuery = "DELETE from pending_users_for_upgrade WHERE id = ?";
         try {
             stmt = conn.prepareStatement(deletePendingUserQuery);
             stmt.setInt(1, id);
