@@ -464,7 +464,7 @@ public class mysqlController {
 
                 BufferedInputStream buffer = new BufferedInputStream(input);
                 DataInputStream image = new DataInputStream(buffer);
-//                byte[] imageBytes = buffer.readAllBytes();
+//              byte[] imageBytes = buffer.readAllBytes();
                 byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
 
@@ -1376,6 +1376,7 @@ public class mysqlController {
         }
     }
     public void getSales(Response response, String wantedRegion, String wantedType) {
+    	checkOutDatedSales();//updating all outdated sales.
         List<Object> salesWithWantedRegionAndType = new ArrayList<>();
         PreparedStatement stmt;
         ResultSet rs;
@@ -1759,6 +1760,27 @@ public class mysqlController {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
+    }
+    
+    /**
+     * This method checks for all sales with endDate<now.
+     * if the method finds finished sales it changes their status to Oudated.
+     */
+    void checkOutDatedSales() {
+    	 PreparedStatement stmt;
+
+         String query = "UPDATE sales SET saleStatus= ? WHERE STR_TO_DATE(saleEndDate, '%d-%m-%Y') < NOW()";
+         try {
+             stmt = conn.prepareStatement(query);
+             stmt.setString(1, "Outdated");
+             stmt.executeUpdate();
+             ServerGui.serverGui.printToConsole("Update sale status - changed successfully");
+//             editResponse(response, ResponseCode.OK, "Successfully Updated sale status", null);
+         } catch (SQLException e) {
+//             editResponse(response, ResponseCode.DB_ERROR, "Communication problem, try again", null);
+             e.printStackTrace();
+             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+         }
     }
 }
 
