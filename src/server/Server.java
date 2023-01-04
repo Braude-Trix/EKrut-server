@@ -314,10 +314,21 @@ public class Server extends AbstractServer {
 					mysqlController.checkIfUserPending(response, (Integer)requestBody.get(0));
 				}
 				break;
+			case "/requestRegionalManagersIds":
+				if (requestMethod == Method.GET) {
+					mysqlController.getRegionalManagersIds(response, (Regions)requestBody.get(0));
+				}
+				break;
+			case "/requestRegionByMachineId":
+				if (requestMethod == Method.GET) {
+					mysqlController.getRegionByMachineId(response, (Integer)requestBody.get(0));
+				}
+				break;
+
 
 
 			default:
-			mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
+				mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 		}
 		return response;
 	}

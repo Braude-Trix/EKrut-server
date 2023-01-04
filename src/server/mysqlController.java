@@ -2,6 +2,7 @@ package server;
 
 import gui.ServerGui;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Region;
 import serverModels.ServerConf;
 import java.io.*;
 import java.sql.*;
@@ -1651,7 +1652,47 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
-    
+
+
+
+    public void getRegionByMachineId(Response response, Integer machineId) {
+        List<Object> res = new ArrayList<>();
+        ResultSet rs;
+        PreparedStatement stmt;
+        String query = "SELECT * FROM machine WHERE machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, machineId);
+            rs = stmt.executeQuery();
+            if(rs.next())
+                res.add(rs.getString("region"));
+            editResponse(response, ResponseCode.OK, "Successfully get region by machine id", res);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void getRegionalManagersIds(Response response, Regions region){
+        List<Object> res = new ArrayList<>();
+        ResultSet rs;
+        PreparedStatement stmt;
+        String query = "SELECT * FROM workers WHERE region = ? and workerType = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, getStringStatus(region));
+            stmt.setString(2, "RegionalManager");
+            rs = stmt.executeQuery();
+            while(rs.next())
+                res.add(rs.getInt("id"));
+            editResponse(response, ResponseCode.OK, "Successfully get regional manager ids", res);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
 	
 	
 }
