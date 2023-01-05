@@ -318,12 +318,12 @@ public class Server extends AbstractServer {
 			break;
 
 		}
-			case "users/allPendingUsers":
+			case "/users/allPendingUsers":
 				if (requestMethod == Method.GET) {
 					mysqlController.getAllPendingUsers(response);
 				}
 				break;
-			case "users/upgradeToCostumer":
+			case "/users/upgradeToCostumer":
 				if (requestMethod == Method.POST) {
 					mysqlController.upgradeUsersToCostumers(response, requestBody);
 				}
@@ -365,9 +365,11 @@ public class Server extends AbstractServer {
 					mysqlController.getRegionByMachineId(response, (Integer)requestBody.get(0));
 				}
 				break;
-
-
-
+			case "/operationalWorker/getOpenedTasks":
+				if (requestMethod == Method.GET) {
+					mysqlController.getOpenInventoryFillTasks(response, (Integer) requestBody.get(0));
+				}
+				break;
 			default:
 				mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 		}

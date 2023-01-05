@@ -3,10 +3,10 @@ package server;
 import gui.ServerGui;
 import serverModels.ServerConf;
 import java.io.*;
-import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +14,6 @@ import java.util.stream.Collectors;
 
 import models.*;
 //import sun.misc.IOUtils;
-import com.mysql.cj.conf.ConnectionUrl.Type;
-import sun.misc.IOUtils;
-
 
 public class mysqlController {
     public static Connection conn;
@@ -2051,6 +2048,7 @@ public class mysqlController {
             while(rs.next())
                 res.add(rs.getInt("id"));
             editResponse(response, ResponseCode.OK, "Successfully get regional manager ids", res);
+            rs.close();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             e.printStackTrace();
@@ -2077,6 +2075,63 @@ public class mysqlController {
              e.printStackTrace();
              ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
          }
+    }
+
+    void getOpenInventoryFillTasks(Response response, Integer assignedWorkerId) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> openedTasks;
+        Map<Integer, InventoryFillTask> tasksMap = new HashMap<>();
+
+        String query = "SELECT * FROM inventory_fill_tasks WHERE assignedWorker = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, assignedWorkerId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                TaskStatus status = TaskStatus.valueOf(rs.getString("status"));
+                if (status == TaskStatus.CLOSED)
+                    continue;
+                String creationDate = rs.getString("creationDate");
+                int machineId = rs.getInt("machineId");
+                int assignedWorker = rs.getInt("assignedWorker");
+                InventoryFillTask task = new InventoryFillTask(creationDate, machineId, status, assignedWorker);
+                tasksMap.put(machineId, task);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to get all opened tasks", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+        // retrieving machine name and it's region
+        query = "SELECT * FROM machine";
+        try {
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                int machineId = rs.getInt("machineId");
+                String machineName = rs.getString("machineName");
+                String machineRegion = rs.getString("region");
+                if (tasksMap.keySet().contains(machineId)) {
+                    tasksMap.get(machineId).setMachineName(machineName);
+                    tasksMap.get(machineId).setRegion(Regions.valueOf(machineRegion));
+                }
+            }
+            openedTasks = Arrays.asList(tasksMap.values().toArray());
+            if (openedTasks.isEmpty()) {
+                openedTasks = null;
+            }
+            editResponse(response, ResponseCode.OK, "Successfully retrieved all opened tasks for worker", openedTasks);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to get all machines data", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
     }
 }
 
