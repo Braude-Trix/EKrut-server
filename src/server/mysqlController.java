@@ -17,8 +17,6 @@ import models.*;
 import com.mysql.cj.conf.ConnectionUrl.Type;
 import sun.misc.IOUtils;
 
-import client.Client;
-import client.ClientUI;
 
 public class mysqlController {
     public static Connection conn;
@@ -551,22 +549,32 @@ public class mysqlController {
                     input = new FileInputStream("src/styles/defultProductImage.png");
                 }
 
-                BufferedInputStream buffer = new BufferedInputStream(input);
-                DataInputStream image = new DataInputStream(buffer);
 
                // OPTION 1
+                //BufferedInputStream buffer = new BufferedInputStream(input);
+                //DataInputStream image = new DataInputStream(buffer);
 //                int numBytes = image.available();
 //                byte[] imageBytes = buffer.readNBytes(numBytes);
 
                 // OPTION 2
-
+                //BufferedInputStream buffer = new BufferedInputStream(input);
+                //DataInputStream image = new DataInputStream(buffer);
                 //      byte[] imageBytes = buffer.readAllBytes();
 
                 // OPTION 3
-                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+                //BufferedInputStream buffer = new BufferedInputStream(input);
+                //DataInputStream image = new DataInputStream(buffer);
+             //   byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
-
-
+                //OPTION 4 - working for java 1.8
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int n = 0;
+                while (-1 != (n = input.read(buffer))) {
+                   output.write(buffer, 0, n);
+                }
+                byte[] imageBytes = output.toByteArray();
+//code continues here:
                 product = new Product(
                         productName, rs.getString("productId"),
                         rs.getString("information"),
