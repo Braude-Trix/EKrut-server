@@ -270,6 +270,14 @@ public class mysqlController {
 //        return subscribersList;
 //    }
     
+    
+    /**
+	 * This method creates a query to the db, the query asks for a specific user, identified by his username and password.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param username - user's username
+	 * @param password - user's password
+	 */
+
 	public void getUserFromDB(Response response, String username, String password) {
 
     	List<Object> userDetails= new ArrayList<>();
@@ -309,6 +317,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query requests all the orders related to a specific customer.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param customerId - users id.
+	 */
+
 	public void getMyOrdersFromDB(Response response, Integer customerId) {
     	List<Object> MyOrders= new ArrayList<>();
 
@@ -338,6 +352,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query asks the date of a specific received delivery order. 
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param orderId - the id of the order wanted to be checked.
+	 */
+
 	public void getReceivedDateDeliveryFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
@@ -361,6 +381,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query asks the date for a specific received Pickup order.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param orderId - the id of the order wanted to be checked. 
+	 */
+
 	public void getReceivedDatePickupFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
@@ -384,6 +410,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query asks for a pickUp code for a specific pickup order.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param orderId - the id of the order wanted to be checked. 
+	 */
+
 	public void getPickupCodeFromDB(Response response, String orderId) {
     	List<Object> pickupCode= new ArrayList<>();
 
@@ -1211,6 +1243,11 @@ public class mysqlController {
 		return "null";
     }
 
+	/**
+	 * This method creates a query to the db, requests all the machines inside a given region.
+	 * @param response - the response object to build and send back to the client.
+	 * @param region - the wanted region. the machines returned must exist in this region.
+	 */
 	public void getMachinesOfRegions(Response response, Regions region) {
     	List<Object> machines= new ArrayList<>();
     	Machine machine;
@@ -1238,6 +1275,11 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, requests all the not-collected deliveries of a specific user.
+	 * @param response - the response object to build and send back to the client.
+	 * @param userId - the id of the specific user. this id connects between the orders and the user.
+	 */
 	public void getAmountNotificationDelivery(Response response, Integer userId) {
     	List<Object> amountDeliveryNotCollected = new ArrayList<>();
     	int count = 0;
@@ -1264,6 +1306,15 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db and calls two more methods inside it.
+	 * The query created by this method requests the id of not collected order set to be picked up from the given machine with the given pickup code.
+	 * Then, after making sure that the order exists and valid, it calls another method to update the status of the order to be collected(by changing the collect time-> time=now).
+	 * @param response - the response object to build and send back to the client.
+	 * @param userId - the id of the user with the pickup order
+	 * @param pickupCode - the code generated after pickup order was created
+	 * @param machineId - the id of the machine the picked up order set to be picked from
+	 */
 	public void putPickupCodeAndChangeStatus(Response response, Integer userId, String pickupCode, String machineId) {
     	List<String> ordersId = new ArrayList<>();
 
@@ -1373,6 +1424,11 @@ public class mysqlController {
         }
 	}
 	
+	/**
+	 * This method creates a query to the db, the query asks for a specific customer with a given id.
+	 * @param response - the response object to build and send back to the client.
+	 * @param user - the specific user the query asks for inside customers table. (contains id).
+	 */
 	public void getCustomer(Response response, User user) {
 		List<Object> customerDetails = new ArrayList<>();
 		Customer customer;
@@ -1399,6 +1455,13 @@ public class mysqlController {
         }
 	}
 	
+	/**
+	 * This method creates a query to the db, sets the isLoggedIn variable in the table to be set with the given boolean variable for a specific user with given id.
+	 * This method used for both ways, showing that a user is logged in and logged out.
+	 * @param response - the response object to build and send back to the client.
+	 * @param userId - the id of the specific user the method wants to change loggedin status of.
+	 * @param isLoggedIn - a boolean variable, contains the value to be inserted into the isLoggedIn col in the table for a specific user
+	 */
 	public void changeLoggedInUser(Response response, Integer userId, boolean isLoggedIn) {
 		PreparedStatement stmt;
         String query = "UPDATE users SET isLoggedIn = ? WHERE id = ?";
@@ -1416,6 +1479,12 @@ public class mysqlController {
         
 	}
 	
+	/**
+	 * This method uses getCustomer method, which requests a specific user with an id, who is also a customer, the method then
+	 * checks if the user is using OL (allowed to enter OL configuration) by checking if he is a worker only or a worker/customer
+	 * @param response - the response object to build and send back to the client.
+	 * @param user - the specific user the method checks.
+	 */
 	public void getUserForOL(Response response, User user) {
 
 		getCustomer(response, user);
@@ -1465,6 +1534,10 @@ public class mysqlController {
 	}
 	
 	
+	/**
+	 * This method creates a query to the db, the query asks for all the ids of subscribers.
+	 * @param response - the response object to build and send back to the client.
+	 */
 	public void getSubscribersForFastLogin(Response response) {
 		List<Object> subscribersId = new ArrayList<>();
 		PreparedStatement stmt;
@@ -1487,6 +1560,11 @@ public class mysqlController {
 	}
 	
 	
+	/**
+	 * This method creates a query to the db, the query asks for a specific user from the users table with a specific given id.
+	 * @param response - the response object to build and send back to the client.
+	 * @param id - the id of wanted user.
+	 */
 	public void getUserById(Response response, Integer id) {
 
     	List<Object> userDetails= new ArrayList<>();
@@ -1525,6 +1603,13 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    /**
+     * This method creates a query to the db, the query requests all the sales from a specific region and a specific type.
+     * This method handles the special case where a manager wants the sales from All regions.
+     * @param response - the response object to build and send back to the client.
+     * @param wantedRegion - the sales from this region.
+     * @param wantedType - the sales of this type.
+     */
     public void getSales(Response response, String wantedRegion, String wantedType) {
     	checkOutDatedSales();//updating all outdated sales.
         List<Object> salesWithWantedRegionAndType = new ArrayList<>();
@@ -1587,6 +1672,12 @@ public class mysqlController {
         }
         return "null";
     }
+    /**
+     * This method creates a query to the db, the query requests to add new sale into the db, with a specific given sale.
+     * All the sales created are of type Template.
+     * @param response - the response object to build and send back to the client.
+     * @param sale - the specific sale added to the db.
+     */
     public void postSales(Response response, Sale sale) {
         PreparedStatement stmt;
         String query = "INSERT into sales (saleName, saleType, saleRegion, saleStatus, saleStartDate, saleEndDate, saleTime, saleDescription, salePercentage) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
@@ -1610,6 +1701,12 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    /**
+     * This method creates a query to the db, the query requests to change a specific sale (by a given sale id) to a specific type (with a given type).
+     * @param response - the response object to build and send back to the client.
+     * @param saleID - the id of the specific sale wanted to be updated.
+     * @param wantedType - the type the method wants to change the sale into.
+     */
     public void changeSaleStatus(Response response, String saleID, String wantedType) {
 
         PreparedStatement stmt;
