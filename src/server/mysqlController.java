@@ -5,6 +5,7 @@ import serverModels.ServerConf;
 import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -977,6 +978,56 @@ public class mysqlController {
     }
     
     /**
+     * function that sets a new task for operationalWorker to a machine in DB. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param workerId - Integer of workerId
+     * @param machineId - Integer of machineId
+     */
+    
+    public void setOpenTaskForOpWorker(Response response, Integer workerId, Integer machineId) {
+    	// first we will get the current max id from all tasks
+    	PreparedStatement stmtForMax;
+        ResultSet rs;
+        Integer maxId=0;
+
+        String queryGetMaxId = "SELECT MAX(id) FROM inventory_fill_tasks";
+        try {
+            stmtForMax = conn.prepareStatement(queryGetMaxId);
+            rs = stmtForMax.executeQuery();
+            while (rs.next()) {
+                maxId = rs.getInt(1);
+            }
+
+        } catch (SQLException e1) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e1.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return;
+        }
+
+    	
+    	PreparedStatement stmt;
+    	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
+    	String query = "INSERT INTO inventory_fill_tasks (id, creationDate, machineId, status, assginedWorker)"
+    			+ " VALUES (?, ?, ?, ?, ?)";
+    	try {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setInt(1, maxId+1);
+    		stmt.setString(2, date);
+    		stmt.setInt(3, machineId);
+    		stmt.setString(4, models.TaskStatus.OPENED.toString());
+    		stmt.setInt(5, workerId);
+    		stmt.executeUpdate();
+    		ServerGui.serverGui.printToConsole("setting open task successfully");
+    		editResponse(response, ResponseCode.OK, "setting open task successfully", null);
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error setting open task", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    	}
+    }
+    
+    /**
      * function that update threshold of machine in DB.  edit the response accordingly.
      * @param response - Response object for the user
      * @param machineId - machine ID
@@ -999,7 +1050,6 @@ public class mysqlController {
     	}
     }
     
- // => fishhhhh
 
     /**
      * function that update in inventory in DB after a new order.  edit the response accordingly.

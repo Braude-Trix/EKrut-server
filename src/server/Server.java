@@ -173,6 +173,14 @@ public class Server extends AbstractServer {
 			}
 			break;
 			
+		case "/workers/setOpenTask":
+			Integer taskWorkerId = (Integer) requestBody.get(0);
+			Integer taskMachineId = (Integer) requestBody.get(1);
+			if(requestMethod == Method.PUT) {
+				mysqlController.setOpenTaskForOpWorker(response, taskWorkerId, taskMachineId);
+			}
+			break;
+			
 		case "/updateInventory":
 			List<Object> updatedInventory = (List<Object>) requestBody.get(0);
 			if (requestMethod == Method.PUT) {
