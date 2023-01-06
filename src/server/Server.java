@@ -128,6 +128,21 @@ public class Server extends AbstractServer {
 				mysqlController.getAllProducts(response);
 			}
 			break;
+			
+		case "/machines/requestMachineProductsData":
+			String idMachine = requestBody.get(0).toString();
+			if(requestMethod == Method.GET) {
+				mysqlController.getProductsInMachineData(response, idMachine);
+			}
+			break;
+			
+		case "/machines/requestMachineProductsAmount":
+			String idOfMachine = requestBody.get(0).toString();
+			if(requestMethod == Method.GET) {
+				mysqlController.getProductsInMachineAmount(response, idOfMachine);
+			}
+			break;
+			
 		case "/saveProductsInOrder":
 			String orderId = (String) requestBody.get(0);
 			List<Object> productsList = (List<Object>) requestBody.get(1);
@@ -142,6 +157,30 @@ public class Server extends AbstractServer {
 				mysqlController.getMachineThreshold(response, getMachineId);
 			}
 			break;
+			
+		case "/machines/setMachineThreshold":
+			Integer MachineId = (Integer) requestBody.get(0);
+			Integer getNewThreshold = (Integer) requestBody.get(1);
+			if (requestMethod == Method.PUT) {
+				mysqlController.setMachineThreshold(response, MachineId, getNewThreshold);
+			}
+			break;
+			
+		case "/workers/getWorkersByType":
+			String wantedType = ((WorkerType) requestBody.get(0)).name();
+			if(requestMethod == Method.GET) {
+				mysqlController.getWorkersbyType(response, wantedType);
+			}
+			break;
+			
+		case "/workers/setOpenTask":
+			Integer taskWorkerId = (Integer) requestBody.get(0);
+			Integer taskMachineId = (Integer) requestBody.get(1);
+			if(requestMethod == Method.PUT) {
+				mysqlController.setOpenTaskForOpWorker(response, taskWorkerId, taskMachineId);
+			}
+			break;
+			
 		case "/updateInventory":
 			List<Object> updatedInventory = (List<Object>) requestBody.get(0);
 			if (requestMethod == Method.PUT) {
@@ -283,16 +322,14 @@ public class Server extends AbstractServer {
 			if (requestMethod == Method.PUT) {
 				mysqlController.changeSaleStatus(response, (String) requestBody.get(0), (String) requestBody.get(1));
 			}
-
 			break;
-
 		}
-			case "users/allPendingUsers":
+			case "/users/allPendingUsers":
 				if (requestMethod == Method.GET) {
 					mysqlController.getAllPendingUsers(response);
 				}
 				break;
-			case "users/upgradeToCostumer":
+			case "/users/upgradeToCostumer":
 				if (requestMethod == Method.POST) {
 					mysqlController.upgradeUsersToCostumers(response, requestBody);
 				}
@@ -324,10 +361,33 @@ public class Server extends AbstractServer {
 					mysqlController.checkIfUserPending(response, (Integer)requestBody.get(0));
 				}
 				break;
-
-
+			case "/requestRegionalManagersIds":
+				if (requestMethod == Method.GET) {
+					mysqlController.getRegionalManagersIds(response, (Regions)requestBody.get(0));
+				}
+				break;
+			case "/requestRegionByMachineId":
+				if (requestMethod == Method.GET) {
+					mysqlController.getRegionByMachineId(response, (Integer)requestBody.get(0));
+				}
+				break;
+			case "/operationalWorker/getOpenedTasks":
+				if (requestMethod == Method.GET) {
+					mysqlController.getOpenInventoryFillTasks(response, (Integer) requestBody.get(0));
+				}
+				break;
+			case "/operationalWorker/fillInventory":
+				if (requestMethod == Method.POST) {
+					mysqlController.updateInventoryInDB(response, requestBody);
+				}
+				break;
+			case "/operationalWorker/setInventoryTask":
+				if (requestMethod == Method.PUT) {
+					mysqlController.setInventoryTaskStatus(response, requestBody);
+				}
+				break;
 			default:
-			mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
+				mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 		}
 		return response;
 	}
@@ -396,10 +456,4 @@ public class Server extends AbstractServer {
 		String dbPassword = "1234";
 		return new ServerConf(ip, port, dbScheme, dbUserName, dbPassword);
 	}
-
-
-
-
-
-
 }

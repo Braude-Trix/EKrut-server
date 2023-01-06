@@ -7,6 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -127,6 +128,8 @@ public class ServerGUIController implements Initializable {
                     port, dbScheme, dbUserName, dbPassword);
             // trying to connect to server
             Server.initServer(serverConf);
+            importDataBtn.setDisable(true);
+            importDataBtn.setOpacity(0.5);
         } else {
             setAllUsersLoggedOut();
         }

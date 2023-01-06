@@ -3,10 +3,11 @@ package server;
 import gui.ServerGui;
 import serverModels.ServerConf;
 import java.io.*;
-import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,6 @@ import java.util.stream.Collectors;
 
 import models.*;
 //import sun.misc.IOUtils;
-import com.mysql.cj.conf.ConnectionUrl.Type;
 
 public class mysqlController {
     public static Connection conn;
@@ -266,6 +266,14 @@ public class mysqlController {
 //        return subscribersList;
 //    }
     
+    
+    /**
+	 * This method creates a query to the db, the query asks for a specific user, identified by his username and password.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param username - user's username
+	 * @param password - user's password
+	 */
+
 	public void getUserFromDB(Response response, String username, String password) {
 
     	List<Object> userDetails= new ArrayList<>();
@@ -305,6 +313,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query requests all the orders related to a specific customer.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param customerId - users id.
+	 */
+
 	public void getMyOrdersFromDB(Response response, Integer customerId) {
     	List<Object> MyOrders= new ArrayList<>();
 
@@ -334,6 +348,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query asks the date of a specific received delivery order. 
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param orderId - the id of the order wanted to be checked.
+	 */
+
 	public void getReceivedDateDeliveryFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
@@ -357,6 +377,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query asks the date for a specific received Pickup order.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param orderId - the id of the order wanted to be checked. 
+	 */
+
 	public void getReceivedDatePickupFromDB(Response response, String orderId) {
     	List<Object> RecivedDate= new ArrayList<>();
 
@@ -380,6 +406,12 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, the query asks for a pickUp code for a specific pickup order.
+	 * @param response - the method edits this response in order to show the user the result of the query
+	 * @param orderId - the id of the order wanted to be checked. 
+	 */
+
 	public void getPickupCodeFromDB(Response response, String orderId) {
     	List<Object> pickupCode= new ArrayList<>();
 
@@ -438,6 +470,58 @@ public class mysqlController {
         response.setCode(code);
         response.setDescription(description);
     }
+    
+    public void getProductsInMachineData(Response response, String machineId) {
+    	List<Object> machineIdList = new ArrayList<>();
+    	List<Object> productsList = new ArrayList<>();
+    	List<Object> newProductsList = new ArrayList<>();
+    	
+    	getAllProductsInMachine(machineId, response);
+    	if(response.getBody() != null)
+    		machineIdList = response.getBody();
+    	
+    	getAllProducts(response);
+    	if(response.getBody() != null)
+    		productsList = response.getBody();
+    	
+    	for (Object product : productsList) {
+    		if (product instanceof Product) {
+    			for (Object productInMachine : machineIdList) {
+    				if(((ProductInMachine) productInMachine).getProductId().equals(((Product) product).getProductId())) {
+    					newProductsList.add(product);
+    				}
+    			}
+    		}
+    	}
+    		
+    	editResponse(response, ResponseCode.OK, "Successfully import all products", newProductsList);
+    }
+    
+    public void getProductsInMachineAmount(Response response, String machineId) {
+    	List<Object> machineIdList = new ArrayList<>();
+    	List<Object> productsList = new ArrayList<>();
+    	List<Object> proudctsAmount = new ArrayList<>();
+    	
+    	getAllProductsInMachine(machineId, response);
+    	if(response.getBody() != null)
+    		machineIdList = response.getBody();
+    	
+    	getAllProducts(response);
+    	if(response.getBody() != null)
+    		productsList = response.getBody();
+    	
+    	for (Object product : productsList) {
+    		if (product instanceof Product) {
+    			for (Object productInMachine : machineIdList) {
+    				if(((ProductInMachine) productInMachine).getProductId().equals(((Product) product).getProductId())) {
+    					proudctsAmount.add(productInMachine);
+    				}
+    			}
+    		}
+    	}
+
+    	editResponse(response, ResponseCode.OK, "Successfully import all products", proudctsAmount);
+    }
 
     /**
      * function that get all the products from table product in DB. edit the response accordingly.
@@ -463,30 +547,38 @@ public class mysqlController {
                     input = new FileInputStream("src/styles/defultProductImage.png");
                 }
 
-                BufferedInputStream buffer = new BufferedInputStream(input);
-                DataInputStream image = new DataInputStream(buffer);
 
                // OPTION 1
-                int numBytes = image.available();
-                byte[] imageBytes = buffer.readNBytes(numBytes);
+                //BufferedInputStream buffer = new BufferedInputStream(input);
+                //DataInputStream image = new DataInputStream(buffer);
+//                int numBytes = image.available();
+//                byte[] imageBytes = buffer.readNBytes(numBytes);
 
                 // OPTION 2
-
+                //BufferedInputStream buffer = new BufferedInputStream(input);
+                //DataInputStream image = new DataInputStream(buffer);
                 //      byte[] imageBytes = buffer.readAllBytes();
 
                 // OPTION 3
-//                byte[] imageBytes = IOUtils.readAllBytes(buffer);
+                //BufferedInputStream buffer = new BufferedInputStream(input);
+                //DataInputStream image = new DataInputStream(buffer);
+             //   byte[] imageBytes = IOUtils.readAllBytes(buffer);
 
-
-
+                //OPTION 4 - working for java 1.8
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int n = 0;
+                while (-1 != (n = input.read(buffer))) {
+                   output.write(buffer, 0, n);
+                }
+                byte[] imageBytes = output.toByteArray();
+//code continues here:
                 product = new Product(
                         productName, rs.getString("productId"),
                         rs.getString("information"),
                         rs.getDouble("price"),
                                 imageBytes);
                 products.add(product);
-
-
 
             }
             editResponse(response, ResponseCode.OK, "Successfully import all products", products);
@@ -799,7 +891,6 @@ public class mysqlController {
 
     //postMsg(response, requestBody.get(0).toString(), requestBody.get(1).toString());
 
-
     /**
      * function that get the machine threshold with given machineId from DB. edit the response accordingly.
      * @param response - Response object for the user
@@ -825,6 +916,139 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    
+    
+ // => fishhhhh
+    /**
+     * function that gets list of workers from DB accurding to a WorkerType.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param wantedType - the name of WorkerType to look for
+     */
+    public void getWorkersbyType(Response response, String wantedType) {
+    	List<Object> workersByType = new ArrayList<>();
+    	User currentUser;
+    	Integer currentId;
+     	Worker currentWorker;
+        PreparedStatement stmt;
+        ResultSet rs ;
+        String query = "SELECT * FROM workers WHERE workerType = ?";
+        try {
+        	stmt = conn.prepareStatement(query);
+        	stmt.setString(1, wantedType);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	Regions tempRegion = (rs.getString("region") == null)? null: Regions.valueOf(rs.getString("region"));
+            	currentId = rs.getInt("id");
+            	currentUser = getUserDatabyId(response, currentId);
+            	currentWorker = new Worker(currentUser, WorkerType.valueOf(wantedType), tempRegion);
+            	workersByType.add(currentWorker);
+            }
+            rs.close();
+    		ServerGui.serverGui.printToConsole("Successfully got user details");
+            editResponse(response, ResponseCode.OK, "Successfully got user details", workersByType);
+        }catch(SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+    
+    private User getUserDatabyId(Response response, Integer id) {
+        User user = null;
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM users WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
+                		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
+                		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
+            }
+            rs.close();
+            return user;
+        }catch (SQLException e) {
+                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        return null;
+    }
+    
+    /**
+     * function that sets a new task for operationalWorker to a machine in DB. edit the response accordingly.
+     * @param response - Response object for the user
+     * @param workerId - Integer of workerId
+     * @param machineId - Integer of machineId
+     */
+    
+    public void setOpenTaskForOpWorker(Response response, Integer workerId, Integer machineId) {
+    	PreparedStatement stmt1;
+    	ResultSet rs;
+    	String query1 = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assignedWorker = ? AND status != ?";
+    	try {
+    		stmt1 = conn.prepareStatement(query1);
+    		stmt1.setInt(1, machineId);
+    		stmt1.setInt(2, workerId);
+    		stmt1.setString(3, models.TaskStatus.CLOSED.dbName());
+    		rs = stmt1.executeQuery();
+    		if(rs.next()) {
+    			ServerGui.serverGui.printToConsole("task for worker and machine already open/in progress");
+        		editResponse(response, ResponseCode.DB_ERROR, "task for worker and machine already open/in progress", null);
+        		return;
+    		}
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error reading from DB", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    		return;
+    	}
+    	
+    	PreparedStatement stmt;
+    	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
+    	String query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assignedWorker)"
+    			+ " VALUES (?, ?, ?, ?)";
+    	try {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setString(1, date);
+    		stmt.setInt(2, machineId);
+    		stmt.setString(3, models.TaskStatus.OPENED.dbName());
+    		stmt.setInt(4, workerId);
+    		stmt.executeUpdate();
+    		ServerGui.serverGui.printToConsole("setting open task successfully");
+    		editResponse(response, ResponseCode.OK, "setting open task successfully", null);
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error setting open task", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    	}
+    }
+    
+    /**
+     * function that update threshold of machine in DB.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param machineId - machine ID
+     * @param newthreshold - the threshold to change
+     */
+    public void setMachineThreshold(Response response, Integer machineId, Integer newthreshold) {
+    	PreparedStatement stmt;
+    	String query = "UPDATE machine SET threshold= ? WHERE machineId= ?";
+    	try {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setInt(1, newthreshold);
+    		stmt.setInt(2, machineId);
+    		stmt.executeUpdate();
+    		ServerGui.serverGui.printToConsole("update threshold successfully");
+    		editResponse(response, ResponseCode.OK, "Successfully updated threshold", null);
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error updating threshold", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    	}
+    }
+    
 
     /**
      * function that update in inventory in DB after a new order.  edit the response accordingly.
@@ -845,13 +1069,14 @@ public class mysqlController {
                 stmt.setString(4, productInMachineCasted.getMachineId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                editResponse(response, ResponseCode.DB_ERROR,
+                        "There was an error while updating products in machine", null);
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             }
         }
-        ServerGui.serverGui.printToConsole("Subscriber update done successfully");
-        editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
+        ServerGui.serverGui.printToConsole("Inventory in machine has been updated successfully");
+        editResponse(response, ResponseCode.OK, "Inventory in machine has been updated successfully", null);
     }
 
     /**
@@ -1075,7 +1300,12 @@ public class mysqlController {
 	    }
 		return "null";
     }
-    
+
+	/**
+	 * This method creates a query to the db, requests all the machines inside a given region.
+	 * @param response - the response object to build and send back to the client.
+	 * @param region - the wanted region. the machines returned must exist in this region.
+	 */
 	public void getMachinesOfRegions(Response response, Regions region) {
     	List<Object> machines= new ArrayList<>();
     	Machine machine;
@@ -1103,6 +1333,11 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db, requests all the not-collected deliveries of a specific user.
+	 * @param response - the response object to build and send back to the client.
+	 * @param userId - the id of the specific user. this id connects between the orders and the user.
+	 */
 	public void getAmountNotificationDelivery(Response response, Integer userId) {
     	List<Object> amountDeliveryNotCollected = new ArrayList<>();
     	int count = 0;
@@ -1129,6 +1364,15 @@ public class mysqlController {
         }
     }
 	
+	/**
+	 * This method creates a query to the db and calls two more methods inside it.
+	 * The query created by this method requests the id of not collected order set to be picked up from the given machine with the given pickup code.
+	 * Then, after making sure that the order exists and valid, it calls another method to update the status of the order to be collected(by changing the collect time-> time=now).
+	 * @param response - the response object to build and send back to the client.
+	 * @param userId - the id of the user with the pickup order
+	 * @param pickupCode - the code generated after pickup order was created
+	 * @param machineId - the id of the machine the picked up order set to be picked from
+	 */
 	public void putPickupCodeAndChangeStatus(Response response, Integer userId, String pickupCode, String machineId) {
     	List<String> ordersId = new ArrayList<>();
 
@@ -1238,6 +1482,11 @@ public class mysqlController {
         }
 	}
 	
+	/**
+	 * This method creates a query to the db, the query asks for a specific customer with a given id.
+	 * @param response - the response object to build and send back to the client.
+	 * @param user - the specific user the query asks for inside customers table. (contains id).
+	 */
 	public void getCustomer(Response response, User user) {
 		List<Object> customerDetails = new ArrayList<>();
 		Customer customer;
@@ -1264,6 +1513,13 @@ public class mysqlController {
         }
 	}
 	
+	/**
+	 * This method creates a query to the db, sets the isLoggedIn variable in the table to be set with the given boolean variable for a specific user with given id.
+	 * This method used for both ways, showing that a user is logged in and logged out.
+	 * @param response - the response object to build and send back to the client.
+	 * @param userId - the id of the specific user the method wants to change loggedin status of.
+	 * @param isLoggedIn - a boolean variable, contains the value to be inserted into the isLoggedIn col in the table for a specific user
+	 */
 	public void changeLoggedInUser(Response response, Integer userId, boolean isLoggedIn) {
 		PreparedStatement stmt;
         String query = "UPDATE users SET isLoggedIn = ? WHERE id = ?";
@@ -1281,6 +1537,12 @@ public class mysqlController {
         
 	}
 	
+	/**
+	 * This method uses getCustomer method, which requests a specific user with an id, who is also a customer, the method then
+	 * checks if the user is using OL (allowed to enter OL configuration) by checking if he is a worker only or a worker/customer
+	 * @param response - the response object to build and send back to the client.
+	 * @param user - the specific user the method checks.
+	 */
 	public void getUserForOL(Response response, User user) {
 
 		getCustomer(response, user);
@@ -1304,6 +1566,7 @@ public class mysqlController {
 			editResponse(response, ResponseCode.OK, "The employee has successfully logged in",userDetails);
 		}
 	}
+	
 	
 	private Worker getWorker(Response response, User user) {
 		Worker worker = null;
@@ -1329,6 +1592,10 @@ public class mysqlController {
 	}
 	
 	
+	/**
+	 * This method creates a query to the db, the query asks for all the ids of subscribers.
+	 * @param response - the response object to build and send back to the client.
+	 */
 	public void getSubscribersForFastLogin(Response response) {
 		List<Object> subscribersId = new ArrayList<>();
 		PreparedStatement stmt;
@@ -1351,6 +1618,11 @@ public class mysqlController {
 	}
 	
 	
+	/**
+	 * This method creates a query to the db, the query asks for a specific user from the users table with a specific given id.
+	 * @param response - the response object to build and send back to the client.
+	 * @param id - the id of wanted user.
+	 */
 	public void getUserById(Response response, Integer id) {
 
     	List<Object> userDetails= new ArrayList<>();
@@ -1389,6 +1661,13 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    /**
+     * This method creates a query to the db, the query requests all the sales from a specific region and a specific type.
+     * This method handles the special case where a manager wants the sales from All regions.
+     * @param response - the response object to build and send back to the client.
+     * @param wantedRegion - the sales from this region.
+     * @param wantedType - the sales of this type.
+     */
     public void getSales(Response response, String wantedRegion, String wantedType) {
     	checkOutDatedSales();//updating all outdated sales.
         List<Object> salesWithWantedRegionAndType = new ArrayList<>();
@@ -1451,6 +1730,12 @@ public class mysqlController {
         }
         return "null";
     }
+    /**
+     * This method creates a query to the db, the query requests to add new sale into the db, with a specific given sale.
+     * All the sales created are of type Template.
+     * @param response - the response object to build and send back to the client.
+     * @param sale - the specific sale added to the db.
+     */
     public void postSales(Response response, Sale sale) {
         PreparedStatement stmt;
         String query = "INSERT into sales (saleName, saleType, saleRegion, saleStatus, saleStartDate, saleEndDate, saleTime, saleDescription, salePercentage) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
@@ -1474,6 +1759,12 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+    /**
+     * This method creates a query to the db, the query requests to change a specific sale (by a given sale id) to a specific type (with a given type).
+     * @param response - the response object to build and send back to the client.
+     * @param saleID - the id of the specific sale wanted to be updated.
+     * @param wantedType - the type the method wants to change the sale into.
+     */
     public void changeSaleStatus(Response response, String saleID, String wantedType) {
 
         PreparedStatement stmt;
@@ -1775,7 +2066,49 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
-    
+
+
+
+    public void getRegionByMachineId(Response response, Integer machineId) {
+        List<Object> res = new ArrayList<>();
+        ResultSet rs;
+        PreparedStatement stmt;
+        String query = "SELECT * FROM machine WHERE machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, machineId);
+            rs = stmt.executeQuery();
+            if(rs.next())
+                res.add(rs.getString("region"));
+            editResponse(response, ResponseCode.OK, "Successfully get region by machine id", res);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void getRegionalManagersIds(Response response, Regions region){
+        List<Object> res = new ArrayList<>();
+        ResultSet rs;
+        PreparedStatement stmt;
+        String query = "SELECT * FROM workers WHERE region = ? and workerType = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, getStringStatus(region));
+            stmt.setString(2, "RegionalManager");
+            rs = stmt.executeQuery();
+            while(rs.next())
+                res.add(rs.getInt("id"));
+            editResponse(response, ResponseCode.OK, "Successfully get regional manager ids", res);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
     /**
      * This method checks for all sales with endDate<now.
      * if the method finds finished sales it changes their status to Oudated.
@@ -1795,6 +2128,84 @@ public class mysqlController {
              e.printStackTrace();
              ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
          }
+    }
+
+    void getOpenInventoryFillTasks(Response response, Integer assignedWorkerId) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> openedTasks;
+        Map<Integer, InventoryFillTask> tasksMap = new HashMap<>();
+
+        String query = "SELECT * FROM inventory_fill_tasks WHERE assignedWorker = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, assignedWorkerId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                TaskStatus status = TaskStatus.valueOf(rs.getString("status"));
+                if (status == TaskStatus.CLOSED)
+                    continue;
+                String creationDate = rs.getString("creationDate");
+                int machineId = rs.getInt("machineId");
+                int assignedWorker = rs.getInt("assignedWorker");
+                InventoryFillTask task = new InventoryFillTask(creationDate, machineId, status, assignedWorker);
+                tasksMap.put(machineId, task);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to get all opened tasks", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+        // retrieving machine name and it's region
+        query = "SELECT * FROM machine";
+        try {
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                int machineId = rs.getInt("machineId");
+                String machineName = rs.getString("machineName");
+                String machineRegion = rs.getString("region");
+                if (tasksMap.keySet().contains(machineId)) {
+                    tasksMap.get(machineId).setMachineName(machineName);
+                    tasksMap.get(machineId).setRegion(Regions.valueOf(machineRegion));
+                }
+            }
+            openedTasks = Arrays.asList(tasksMap.values().toArray());
+            if (openedTasks.isEmpty()) {
+                openedTasks = null;
+            }
+            editResponse(response, ResponseCode.OK, "Successfully retrieved all opened tasks for worker", openedTasks);
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to get all machines data", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void setInventoryTaskStatus(Response response, List<Object> body) {
+        PreparedStatement stmt;
+        InventoryFillTask task = (InventoryFillTask) body.get(0);
+
+        String query = "UPDATE inventory_fill_tasks SET status = ? WHERE machineId = ? AND assignedWorker = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, task.getStatus().dbName());
+            stmt.setInt(2, task.getMachineId());
+            stmt.setInt(3, task.getAssignedWorker());
+            stmt.executeUpdate();
+            ServerGui.serverGui.printToConsole("Inventory task status has been changed successfully");
+            editResponse(response, ResponseCode.OK, "Successfully changed inventory task status", null);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to set inventory task status", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
     }
 }
 

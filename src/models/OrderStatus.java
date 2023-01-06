@@ -10,7 +10,7 @@ public enum OrderStatus implements Serializable {
 		switch(this) {
 		case NotCollected: return "Not Collected";
 		case Collected: return "Collected";
-		case WaitingApproveDelivery: return "Waiting Approve\n(deliver)";
+		case WaitingApproveDelivery: return "Pending";
 		case Done: return "Done";
 		}
 		return null;
