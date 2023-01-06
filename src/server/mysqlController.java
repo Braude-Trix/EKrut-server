@@ -1069,13 +1069,14 @@ public class mysqlController {
                 stmt.setString(4, productInMachineCasted.getMachineId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                editResponse(response, ResponseCode.DB_ERROR,
+                        "There was an error while updating products in machine", null);
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             }
         }
-        ServerGui.serverGui.printToConsole("Subscriber update done successfully");
-        editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
+        ServerGui.serverGui.printToConsole("Inventory in machine has been updated successfully");
+        editResponse(response, ResponseCode.OK, "Inventory in machine has been updated successfully", null);
     }
 
     /**
@@ -2178,6 +2179,27 @@ public class mysqlController {
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR,
                     "There was an error while trying to get all machines data", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void setInventoryTaskStatus(Response response, List<Object> body) {
+        PreparedStatement stmt;
+        InventoryFillTask task = (InventoryFillTask) body.get(0);
+
+        String query = "UPDATE inventory_fill_tasks SET status = ? WHERE machineId = ? AND assignedWorker = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, task.getStatus().dbName());
+            stmt.setInt(2, task.getMachineId());
+            stmt.setInt(3, task.getAssignedWorker());
+            stmt.executeUpdate();
+            ServerGui.serverGui.printToConsole("Inventory task status has been changed successfully");
+            editResponse(response, ResponseCode.OK, "Successfully changed inventory task status", null);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to set inventory task status", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
