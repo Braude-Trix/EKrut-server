@@ -987,12 +987,12 @@ public class mysqlController {
     public void setOpenTaskForOpWorker(Response response, Integer workerId, Integer machineId) {
     	PreparedStatement stmt1;
     	ResultSet rs;
-    	String query1 = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assginedWorker = ? AND status != ?";
+    	String query1 = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assignedWorker = ? AND status != ?";
     	try {
     		stmt1 = conn.prepareStatement(query1);
     		stmt1.setInt(1, machineId);
     		stmt1.setInt(2, workerId);
-    		stmt1.setString(3, models.TaskStatus.CLOSED.toString());
+    		stmt1.setString(3, models.TaskStatus.CLOSED.dbName());
     		rs = stmt1.executeQuery();
     		if(rs.next()) {
     			ServerGui.serverGui.printToConsole("task for worker and machine already open/in progress");
@@ -1008,13 +1008,13 @@ public class mysqlController {
     	
     	PreparedStatement stmt;
     	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
-    	String query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assginedWorker)"
+    	String query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assignedWorker)"
     			+ " VALUES (?, ?, ?, ?)";
     	try {
     		stmt = conn.prepareStatement(query);
     		stmt.setString(1, date);
     		stmt.setInt(2, machineId);
-    		stmt.setString(3, models.TaskStatus.OPENED.toString());
+    		stmt.setString(3, models.TaskStatus.OPENED.dbName());
     		stmt.setInt(4, workerId);
     		stmt.executeUpdate();
     		ServerGui.serverGui.printToConsole("setting open task successfully");
