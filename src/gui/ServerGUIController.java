@@ -128,6 +128,8 @@ public class ServerGUIController implements Initializable {
                     port, dbScheme, dbUserName, dbPassword);
             // trying to connect to server
             Server.initServer(serverConf);
+            importDataBtn.setDisable(true);
+            importDataBtn.setOpacity(0.5);
         } else {
             setAllUsersLoggedOut();
         }
