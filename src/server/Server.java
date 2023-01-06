@@ -322,9 +322,7 @@ public class Server extends AbstractServer {
 			if (requestMethod == Method.PUT) {
 				mysqlController.changeSaleStatus(response, (String) requestBody.get(0), (String) requestBody.get(1));
 			}
-
 			break;
-
 		}
 			case "/users/allPendingUsers":
 				if (requestMethod == Method.GET) {
@@ -376,6 +374,16 @@ public class Server extends AbstractServer {
 			case "/operationalWorker/getOpenedTasks":
 				if (requestMethod == Method.GET) {
 					mysqlController.getOpenInventoryFillTasks(response, (Integer) requestBody.get(0));
+				}
+				break;
+			case "/operationalWorker/fillInventory":
+				if (requestMethod == Method.POST) {
+					mysqlController.updateInventoryInDB(response, requestBody);
+				}
+				break;
+			case "/operationalWorker/setInventoryTask":
+				if (requestMethod == Method.PUT) {
+					mysqlController.setInventoryTaskStatus(response, requestBody);
 				}
 				break;
 			default:
@@ -448,10 +456,4 @@ public class Server extends AbstractServer {
 		String dbPassword = "1234";
 		return new ServerConf(ip, port, dbScheme, dbUserName, dbPassword);
 	}
-
-
-
-
-
-
 }

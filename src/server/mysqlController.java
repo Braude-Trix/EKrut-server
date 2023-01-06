@@ -986,38 +986,37 @@ public class mysqlController {
      */
     
     public void setOpenTaskForOpWorker(Response response, Integer workerId, Integer machineId) {
-    	// first we will get the current max id from all tasks
-    	PreparedStatement stmtForMax;
-        ResultSet rs;
-        Integer maxId=0;
-
-        String queryGetMaxId = "SELECT MAX(id) FROM inventory_fill_tasks";
-        try {
-            stmtForMax = conn.prepareStatement(queryGetMaxId);
-            rs = stmtForMax.executeQuery();
-            while (rs.next()) {
-                maxId = rs.getInt(1);
-            }
-
-        } catch (SQLException e1) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
-            e1.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-            return;
-        }
-
+    	PreparedStatement stmt1;
+    	ResultSet rs;
+    	String query1 = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assignedWorker = ? AND status != ?";
+    	try {
+    		stmt1 = conn.prepareStatement(query1);
+    		stmt1.setInt(1, machineId);
+    		stmt1.setInt(2, workerId);
+    		stmt1.setString(3, models.TaskStatus.CLOSED.dbName());
+    		rs = stmt1.executeQuery();
+    		if(rs.next()) {
+    			ServerGui.serverGui.printToConsole("task for worker and machine already open/in progress");
+        		editResponse(response, ResponseCode.DB_ERROR, "task for worker and machine already open/in progress", null);
+        		return;
+    		}
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error reading from DB", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    		return;
+    	}
     	
     	PreparedStatement stmt;
     	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
-    	String query = "INSERT INTO inventory_fill_tasks (id, creationDate, machineId, status, assginedWorker)"
-    			+ " VALUES (?, ?, ?, ?, ?)";
+    	String query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assignedWorker)"
+    			+ " VALUES (?, ?, ?, ?)";
     	try {
     		stmt = conn.prepareStatement(query);
-    		stmt.setInt(1, maxId+1);
-    		stmt.setString(2, date);
-    		stmt.setInt(3, machineId);
-    		stmt.setString(4, models.TaskStatus.OPENED.toString());
-    		stmt.setInt(5, workerId);
+    		stmt.setString(1, date);
+    		stmt.setInt(2, machineId);
+    		stmt.setString(3, models.TaskStatus.OPENED.dbName());
+    		stmt.setInt(4, workerId);
     		stmt.executeUpdate();
     		ServerGui.serverGui.printToConsole("setting open task successfully");
     		editResponse(response, ResponseCode.OK, "setting open task successfully", null);
@@ -1071,13 +1070,14 @@ public class mysqlController {
                 stmt.setString(4, productInMachineCasted.getMachineId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                editResponse(response, ResponseCode.DB_ERROR,
+                        "There was an error while updating products in machine", null);
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             }
         }
-        ServerGui.serverGui.printToConsole("Subscriber update done successfully");
-        editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
+        ServerGui.serverGui.printToConsole("Inventory in machine has been updated successfully");
+        editResponse(response, ResponseCode.OK, "Inventory in machine has been updated successfully", null);
     }
 
     /**
@@ -1171,7 +1171,10 @@ public class mysqlController {
 
             while (rs.next()) {
                 Integer id = rs.getInt("customerId");
-                if(id.equals(customerId))
+                String orderId = rs.getString("orderId");
+                char firstDigit = orderId.charAt(0);
+
+                if(id.equals(customerId) && firstDigit == '1')
                 {
                     idExist = true;
                 }
@@ -2180,6 +2183,27 @@ public class mysqlController {
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR,
                     "There was an error while trying to get all machines data", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    public void setInventoryTaskStatus(Response response, List<Object> body) {
+        PreparedStatement stmt;
+        InventoryFillTask task = (InventoryFillTask) body.get(0);
+
+        String query = "UPDATE inventory_fill_tasks SET status = ? WHERE machineId = ? AND assignedWorker = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, task.getStatus().dbName());
+            stmt.setInt(2, task.getMachineId());
+            stmt.setInt(3, task.getAssignedWorker());
+            stmt.executeUpdate();
+            ServerGui.serverGui.printToConsole("Inventory task status has been changed successfully");
+            editResponse(response, ResponseCode.OK, "Successfully changed inventory task status", null);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to set inventory task status", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
