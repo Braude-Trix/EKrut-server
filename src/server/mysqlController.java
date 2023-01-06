@@ -985,38 +985,37 @@ public class mysqlController {
      */
     
     public void setOpenTaskForOpWorker(Response response, Integer workerId, Integer machineId) {
-    	// first we will get the current max id from all tasks
-    	PreparedStatement stmtForMax;
-        ResultSet rs;
-        Integer maxId=0;
-
-        String queryGetMaxId = "SELECT MAX(id) FROM inventory_fill_tasks";
-        try {
-            stmtForMax = conn.prepareStatement(queryGetMaxId);
-            rs = stmtForMax.executeQuery();
-            while (rs.next()) {
-                maxId = rs.getInt(1);
-            }
-
-        } catch (SQLException e1) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
-            e1.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-            return;
-        }
-
+    	PreparedStatement stmt1;
+    	ResultSet rs;
+    	String query1 = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assginedWorker = ? AND status != ?";
+    	try {
+    		stmt1 = conn.prepareStatement(query1);
+    		stmt1.setInt(1, machineId);
+    		stmt1.setInt(2, workerId);
+    		stmt1.setString(3, models.TaskStatus.CLOSED.toString());
+    		rs = stmt1.executeQuery();
+    		if(rs.next()) {
+    			ServerGui.serverGui.printToConsole("task for worker and machine already open/in progress");
+        		editResponse(response, ResponseCode.DB_ERROR, "task for worker and machine already open/in progress", null);
+        		return;
+    		}
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error reading from DB", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    		return;
+    	}
     	
     	PreparedStatement stmt;
     	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
-    	String query = "INSERT INTO inventory_fill_tasks (id, creationDate, machineId, status, assginedWorker)"
-    			+ " VALUES (?, ?, ?, ?, ?)";
+    	String query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assginedWorker)"
+    			+ " VALUES (?, ?, ?, ?)";
     	try {
     		stmt = conn.prepareStatement(query);
-    		stmt.setInt(1, maxId+1);
-    		stmt.setString(2, date);
-    		stmt.setInt(3, machineId);
-    		stmt.setString(4, models.TaskStatus.OPENED.toString());
-    		stmt.setInt(5, workerId);
+    		stmt.setString(1, date);
+    		stmt.setInt(2, machineId);
+    		stmt.setString(3, models.TaskStatus.OPENED.toString());
+    		stmt.setInt(4, workerId);
     		stmt.executeUpdate();
     		ServerGui.serverGui.printToConsole("setting open task successfully");
     		editResponse(response, ResponseCode.OK, "setting open task successfully", null);
