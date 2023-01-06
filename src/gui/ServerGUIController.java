@@ -14,6 +14,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import models.Response;
 import ocsf.server.ConnectionToClient;
@@ -87,6 +89,8 @@ public class ServerGUIController implements Initializable {
     @FXML
     private ImageView refresh;
 
+    private Stage currentStage;
+
     /**
      * This method handles the ConnectorDisBTN, and handling its properties according to the status of Server and SQL.
      * i.e. Server connected and SQL couldn't will result the server to shut down and the button will enable connection.
@@ -112,6 +116,15 @@ public class ServerGUIController implements Initializable {
             controller.ConnectorDisBTN.setText(textBtn);
             controller.ConnectorDisBTN.setStyle(btnStyle);
             controller.ConnectorDisBTN.setDisable(false);
+            if(textBtn.equals("Connect")){
+                controller.importDataBtn.setDisable(false);
+                controller.importDataBtn.setOpacity(1);
+            }
+            else{
+                controller.importDataBtn.setDisable(true);
+                controller.importDataBtn.setOpacity(0.5);
+            }
+
         });
     }
 
@@ -128,8 +141,8 @@ public class ServerGUIController implements Initializable {
                     port, dbScheme, dbUserName, dbPassword);
             // trying to connect to server
             Server.initServer(serverConf);
-            importDataBtn.setDisable(true);
-            importDataBtn.setOpacity(0.5);
+            controller.importDataBtn.setDisable(true);
+            controller.importDataBtn.setOpacity(0.5);
         } else {
             setAllUsersLoggedOut();
         }
@@ -160,6 +173,7 @@ public class ServerGUIController implements Initializable {
      * @param primaryStage javafx main stage
      */
     public void start(Stage primaryStage) {
+        currentStage = primaryStage;
         AnchorPane pane;
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -344,9 +358,15 @@ public class ServerGUIController implements Initializable {
         alertImportDataDialog.setTitle("Import data confirmation");
         alertImportDataDialog.setHeaderText("Are you sure ?");
         alertImportDataDialog.setContentText("NOTE: This operation will overwrite your current [users, workers, customers] tables !");
+        alertImportDataDialog.getDialogPane().getButtonTypes().clear();
+        alertImportDataDialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        Node closeButton = alertImportDataDialog.getDialogPane().lookupButton(ButtonType.CLOSE);
+        closeButton.managedProperty().bind(closeButton.visibleProperty());
+        closeButton.setVisible(false);
         ButtonType proceedButtonType = new ButtonType("Proceed");
         ButtonType cancelButtonType = new ButtonType("Cancel");
-        alertImportDataDialog.getButtonTypes().setAll(proceedButtonType, cancelButtonType);
+        alertImportDataDialog.getDialogPane().getButtonTypes().add(proceedButtonType);
+        alertImportDataDialog.getDialogPane().getButtonTypes().add(cancelButtonType);
         Optional<ButtonType> userChoice = alertImportDataDialog.showAndWait();
         if(userChoice.get() == proceedButtonType)
             return true;

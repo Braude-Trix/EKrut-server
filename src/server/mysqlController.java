@@ -78,6 +78,7 @@ public class mysqlController {
                 conn.close();
                 try {
                     externalDBSchemeConn.close();
+                    externalDBSchemeConn = null;
                 }
                 catch(Exception e){
 
