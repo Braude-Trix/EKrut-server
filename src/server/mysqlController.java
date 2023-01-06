@@ -945,7 +945,10 @@ public class mysqlController {
 
             while (rs.next()) {
                 Integer id = rs.getInt("customerId");
-                if(id.equals(customerId))
+                String orderId = rs.getString("orderId");
+                char firstDigit = orderId.charAt(0);
+
+                if(id.equals(customerId) && firstDigit == '1')
                 {
                     idExist = true;
                 }
