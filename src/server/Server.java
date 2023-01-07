@@ -173,10 +173,17 @@ public class Server extends AbstractServer {
 			}
 			break;
 			
+		case "/workers/getRegionalManagerIdByRegion":
+			String region = ((Regions) requestBody.get(0)).name();
+			if(requestMethod == Method.GET) {
+				mysqlController.getRegionalIdByRegion(response, region);
+			}
+			break;
+			
 		case "/workers/setOpenTask":
 			Integer taskWorkerId = (Integer) requestBody.get(0);
 			Integer taskMachineId = (Integer) requestBody.get(1);
-			if(requestMethod == Method.PUT) {
+			if(requestMethod == Method.POST) {
 				mysqlController.setOpenTaskForOpWorker(response, taskWorkerId, taskMachineId);
 			}
 			break;

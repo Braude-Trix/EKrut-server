@@ -918,8 +918,28 @@ public class mysqlController {
         }
     }
     
+    public void getRegionalIdByRegion(Response response, String region) {
+    	List<Object> managerIdByRegion = new ArrayList<>();
+    	ResultSet rs;
+    	PreparedStatement stmt;
+    	String query = "SELECT * FROM workers WHERE workerType = ? AND region = ?";
+    	try {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setString(1, WorkerType.RegionalManager.name());
+    		stmt.setString(2, region);
+    		rs = stmt.executeQuery();
+    		if (rs.next()) {
+    			managerIdByRegion.add(rs.getInt("id"));
+    			editResponse(response, ResponseCode.OK, "Successfully get manager ID", managerIdByRegion);
+    		}
+    		rs.close();
+    	} catch (SQLException e) {
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    	}
+    }
     
- // => fishhhhh
+    
     /**
      * function that gets list of workers from DB accurding to a WorkerType.  edit the response accordingly.
      * @param response - Response object for the user
@@ -986,19 +1006,19 @@ public class mysqlController {
      */
     
     public void setOpenTaskForOpWorker(Response response, Integer workerId, Integer machineId) {
-    	PreparedStatement stmt1;
+    	PreparedStatement stmt;
     	ResultSet rs;
-    	String query1 = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assignedWorker = ? AND status != ?";
+    	String query = "SELECT * FROM inventory_fill_tasks WHERE machineId = ? AND assignedWorker = ? AND status != ?";
     	try {
-    		stmt1 = conn.prepareStatement(query1);
-    		stmt1.setInt(1, machineId);
-    		stmt1.setInt(2, workerId);
-    		stmt1.setString(3, models.TaskStatus.CLOSED.dbName());
-    		rs = stmt1.executeQuery();
-    		if(rs.next()) {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setInt(1, machineId);
+    		stmt.setInt(2, workerId);
+    		stmt.setString(3, models.TaskStatus.CLOSED.dbName());
+    		rs = stmt.executeQuery();
+    		if(rs.next()) { // only if we have in DB a task in status OPEN or IN_PROGRESS
     			ServerGui.serverGui.printToConsole("task for worker and machine already open/in progress");
         		editResponse(response, ResponseCode.DB_ERROR, "task for worker and machine already open/in progress", null);
-        		return;
+        		return; 
     		}
     	}catch(SQLException e) {
     		editResponse(response, ResponseCode.DB_ERROR, "Error reading from DB", null);
@@ -1006,10 +1026,30 @@ public class mysqlController {
     		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
     		return;
     	}
-    	
-    	PreparedStatement stmt;
     	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
-    	String query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assignedWorker)"
+    	query = "SELECT * FROM inventory_fill_tasks WHERE creationDate = ? AND machineId = ? AND assignedWorker = ? AND status = ?";
+    	try {
+    		stmt = conn.prepareStatement(query);
+    		stmt.setString(1, date);
+    		stmt.setInt(2, machineId);
+    		stmt.setInt(3, workerId);
+    		stmt.setString(4, models.TaskStatus.CLOSED.dbName());
+    		rs = stmt.executeQuery();
+    		if(rs.next()) { // only if we have in DB a task in status CLOSED on the same day
+    			InventoryFillTask myTask = new InventoryFillTask(date, machineId, models.TaskStatus.OPENED, workerId);
+    			List<Object> taskList = new ArrayList<>();
+    			taskList.add(myTask);
+    			setInventoryTaskStatus(response, taskList);
+    			return;
+    		}
+    	}catch(SQLException e) {
+    		editResponse(response, ResponseCode.DB_ERROR, "Error setting closed task to open", null);
+    		e.printStackTrace();
+    		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+    	}
+    	
+    	// we have a task for this machine & worker that is CLOSE (not on this day) or not existing at all
+    	query = "INSERT INTO inventory_fill_tasks (creationDate, machineId, status, assignedWorker)"
     			+ " VALUES (?, ?, ?, ?)";
     	try {
     		stmt = conn.prepareStatement(query);
@@ -2192,12 +2232,13 @@ public class mysqlController {
         PreparedStatement stmt;
         InventoryFillTask task = (InventoryFillTask) body.get(0);
 
-        String query = "UPDATE inventory_fill_tasks SET status = ? WHERE machineId = ? AND assignedWorker = ?";
+        String query = "UPDATE inventory_fill_tasks SET status = ? WHERE machineId = ? AND assignedWorker = ? AND creationDate = ?";
         try {
             stmt = conn.prepareStatement(query);
             stmt.setString(1, task.getStatus().dbName());
             stmt.setInt(2, task.getMachineId());
             stmt.setInt(3, task.getAssignedWorker());
+            stmt.setString(4, task.getCreationDate());
             stmt.executeUpdate();
             ServerGui.serverGui.printToConsole("Inventory task status has been changed successfully");
             editResponse(response, ResponseCode.OK, "Successfully changed inventory task status", null);
