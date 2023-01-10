@@ -350,7 +350,7 @@ public class ServerGUIController implements Initializable {
     @FXML
     void importDataClicked(ActionEvent event) {
         if(importDataConfirmationDialog()) {
-            if (mysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName)) {
+            if (mysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName, DBField.getText())) {
                 importDataBtn.setDisable(true);
                 importDataBtn.setOpacity(0.5);
             }

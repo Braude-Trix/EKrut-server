@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/lib" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/production" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/OCSF/src" isTestSource="false" />
+    </content>
+    <orderEntry type="jdk" jdkName="liberica-1.8" jdkType="JavaSDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/mysql-connector-java-8.0.13.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/ArcTest" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/BarChart" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/Blink" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/CardTest" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/Clock" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/DitherTest" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/DrawTest" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/Fractal" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/GraphicsTest" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/MoleculeViewer" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/NervousText" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/SimpleGraph" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/SortDemo" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/SpreadSheet" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/applets/WireFrame" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/demo/nio/zipfs" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/annotations/DependencyChecker/PluginChecker/src" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/annotations/DependencyChecker/Plugins/src" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/annotations/Validator/src" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/forkjoin/mergesort" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/jmx/jmx-scandir/src" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/jmx/jmx-scandir/test" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/lambda/BulkDataOperations/src" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/lambda/DefaultMethods" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/nio/chatserver" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/nio/file" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/nio/multicast" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/nio/server" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/scripting/scriptpad/src" />
+          <root url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full/sample/try-with-resources/src" />
+        </SOURCES>
+        <jarDirectory url="file://C:/Program Files/BellSoft/LibericaJDK-8-Full" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
+  </component>
+</module>

@@ -17,6 +17,7 @@ import models.*;
 //import sun.misc.IOUtils;
 
 public class mysqlController {
+    public static boolean loggedOnce = false;
     public static Connection conn;
     public static Connection externalDBSchemeConn = null;
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
@@ -38,6 +39,7 @@ public class mysqlController {
                     String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", dbScheme),
                     dbUserName,
                     dbPassword);
+            loggedOnce = true;
             ServerGui.serverGui.setConnected(true);
         } catch (SQLException ex) { // handle any errors
             ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
@@ -47,7 +49,7 @@ public class mysqlController {
         }
     }
 
-    private static boolean connectExternalDB(String externalDBSchemeName, String dbUserName, String dbPassword){
+    private static boolean connectExternalDB(String externalDBSchemeName, String dbUserName, String dbPassword, String DBName){
         try {
             Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
             ServerGui.serverGui.printToConsole("Driver definition succeed");
@@ -56,6 +58,20 @@ public class mysqlController {
         }
 
         try {
+            if(!loggedOnce){
+                try {
+                    conn = DriverManager.getConnection(
+                            String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", DBName),
+                            dbUserName,
+                            dbPassword);
+                    loggedOnce = true;
+                } catch (SQLException ex) { // handle any errors
+                    ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
+                    ServerGui.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
+                    ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
+                }
+            }
+
             externalDBSchemeConn = DriverManager.getConnection(
                     String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", externalDBSchemeName),
                     dbUserName,
@@ -66,6 +82,16 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
             ServerGui.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
             ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
+        }
+        try{
+            if(!loggedOnce) {
+                conn.close();
+                conn = null;
+                loggedOnce = true;
+            }
+        }
+        catch (Exception e){
+            System.out.println(e.getMessage());
         }
         return false;
 
@@ -98,7 +124,7 @@ public class mysqlController {
      * @param externalDBSchemeName - the name of the external scheme
      * @return true/false accordingly if everything succeed or not
      */
-    public static boolean importUsersDataFromExternalDB(String dbSchemeName, String externalDBSchemeName){
+    public static boolean importUsersDataFromExternalDB(String dbSchemeName, String externalDBSchemeName, String DBName){
         String queryUsers = "INSERT INTO " + dbSchemeName + "." + "users" + " SELECT * FROM " + externalDBSchemeName + "." + "users";
         String queryWorkers = "INSERT INTO " + dbSchemeName + "." + "workers" + " SELECT * FROM " + externalDBSchemeName + "." + "workers";
         String queryCustomers = "INSERT INTO " + dbSchemeName + "." + "customers" + " SELECT * FROM " + externalDBSchemeName + "." + "customers";
@@ -107,7 +133,7 @@ public class mysqlController {
         String deleteUsersQuery = "DELETE FROM " + dbSchemeName + ".users";
         try {
             if(externalDBSchemeConn == null) {
-                if (!connectExternalDB(externalDBSchemeName, ServerConf.dbUserName, ServerConf.dbPassword))
+                if (!connectExternalDB(externalDBSchemeName, ServerConf.dbUserName, ServerConf.dbPassword, DBName))
                     return false;
             }
             Statement stmtDeleteCustomers = externalDBSchemeConn.createStatement();
