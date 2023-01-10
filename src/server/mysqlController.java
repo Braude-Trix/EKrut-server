@@ -466,6 +466,13 @@ public class mysqlController {
 		}
 	}
 
+    /**
+     * edit reponse with given params
+     * @param response - Response object
+     * @param code - ResponseCode enum
+     * @param description - description of the Response
+     * @param body - the body for the client
+     */
     static void editResponse(Response response, ResponseCode code, String description, List<Object> body) {
         response.setBody(body);
         response.setCode(code);
@@ -2109,7 +2116,11 @@ public class mysqlController {
     }
 
 
-
+    /**
+     * get the region of machine by the machineId
+     * @param response - Response object
+     * @param machineId - machine id
+     */
     public void getRegionByMachineId(Response response, Integer machineId) {
         List<Object> res = new ArrayList<>();
         ResultSet rs;
@@ -2129,6 +2140,11 @@ public class mysqlController {
         }
     }
 
+    /**
+     * get the regional managers ids by the region
+     * @param response Response object
+     * @param region Regions enum
+     */
     public void getRegionalManagersIds(Response response, Regions region){
         List<Object> res = new ArrayList<>();
         ResultSet rs;

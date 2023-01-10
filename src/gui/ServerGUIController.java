@@ -343,6 +343,10 @@ public class ServerGUIController implements Initializable {
         ConnectorDisBTN.setDisable(false);
     }
 
+    /**
+     * handle when import data button click
+     * @param event - ActionEvent object
+     */
     @FXML
     void importDataClicked(ActionEvent event) {
         if(importDataConfirmationDialog()) {
