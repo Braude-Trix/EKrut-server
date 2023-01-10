@@ -564,7 +564,10 @@ public class mysqlController {
             stmt = conn.prepareStatement(query);
             stmt.setString(1, order.getOrderId());
             stmt.setString(2, order.getPickUpMethod().toString());
-            stmt.setString(3, order.getDate());
+            //change in order to set date from server side.
+            //stmt.setString(3, order.getDate());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(StyleConstants.DATE_FORMAT);
+            stmt.setString(3, LocalDate.now().format(formatter));
             stmt.setDouble(4, order.getPrice());
             stmt.setString(5, order.getMachineId());
             stmt.setString(6, getStringStatus(order.getStatus()));
