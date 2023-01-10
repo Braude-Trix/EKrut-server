@@ -98,7 +98,7 @@ public class mysqlController {
      * @param externalDBSchemeName - the name of the external scheme
      * @return true/false accordingly if everything succeed or not
      */
-    public static boolean importUsersDataFromExternalDB(String dbSchemeName, String externalDBSchemeName){
+    public static boolean importUsersDataFromExternalDB(String dbSchemeName, String externalDBSchemeName, String DBPassword){
         String queryUsers = "INSERT INTO " + dbSchemeName + "." + "users" + " SELECT * FROM " + externalDBSchemeName + "." + "users";
         String queryWorkers = "INSERT INTO " + dbSchemeName + "." + "workers" + " SELECT * FROM " + externalDBSchemeName + "." + "workers";
         String queryCustomers = "INSERT INTO " + dbSchemeName + "." + "customers" + " SELECT * FROM " + externalDBSchemeName + "." + "customers";
@@ -107,7 +107,7 @@ public class mysqlController {
         String deleteUsersQuery = "DELETE FROM " + dbSchemeName + ".users";
         try {
             if(externalDBSchemeConn == null) {
-                if (!connectExternalDB(externalDBSchemeName, ServerConf.dbUserName, ServerConf.dbPassword))
+                if (!connectExternalDB(externalDBSchemeName, ServerConf.dbUserName, DBPassword))
                     return false;
             }
             Statement stmtDeleteCustomers = externalDBSchemeConn.createStatement();
