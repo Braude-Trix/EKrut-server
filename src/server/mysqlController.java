@@ -1989,6 +1989,12 @@ public class mysqlController {
 
 
     }
+    
+    
+    /**
+     * This method creates a mysql query, the query logs out all the users.
+     * @param response - the response built for the client side.
+     */
     public static void disconnectServer(Response response) {
         PreparedStatement stmt;
         String query = "UPDATE users SET isLoggedIn = ? WHERE isLoggedIn = ?";
