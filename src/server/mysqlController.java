@@ -531,6 +531,7 @@ public class mysqlController {
     	editResponse(response, ResponseCode.OK, "Successfully import all products", proudctsAmount);
     }
 
+
     /**
      * function that get all the products from table product in DB. edit the response accordingly.
      * @param response - Response object for the user
@@ -547,46 +548,37 @@ public class mysqlController {
             rs = stmt.executeQuery();
             while (rs.next()) {
                 String productName = rs.getString("productName");
-                FileInputStream input = null;
+                InputStream input = null;
                 try {
 
-                    input = new FileInputStream("src/styles/" + productName +".png");
+                    // input = new FileInputStream("/styles/" + productName +".png");
+                    input = this.getClass().getResourceAsStream("/styles/" + productName +".png");
                 } catch (Exception e) {
-                    input = new FileInputStream("src/styles/defultProductImage.png");
+                    //input = new FileInputStream("/styles/defaultProductImage.png");
+                    System.out.println(e);
+                    input = this.getClass().getResourceAsStream("/styles/defaultProductImage.png");
+
+                }
+                if(input == null)
+                {
+                    input = this.getClass().getResourceAsStream("/styles/defaultProductImage.png");
                 }
 
-
-               // OPTION 1
-                //BufferedInputStream buffer = new BufferedInputStream(input);
-                //DataInputStream image = new DataInputStream(buffer);
-//                int numBytes = image.available();
-//                byte[] imageBytes = buffer.readNBytes(numBytes);
-
-                // OPTION 2
-                //BufferedInputStream buffer = new BufferedInputStream(input);
-                //DataInputStream image = new DataInputStream(buffer);
-                //      byte[] imageBytes = buffer.readAllBytes();
-
-                // OPTION 3
-                //BufferedInputStream buffer = new BufferedInputStream(input);
-                //DataInputStream image = new DataInputStream(buffer);
-             //   byte[] imageBytes = IOUtils.readAllBytes(buffer);
-
-                //OPTION 4 - working for java 1.8
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 byte[] buffer = new byte[1024];
                 int n = 0;
                 while (-1 != (n = input.read(buffer))) {
-                   output.write(buffer, 0, n);
+                    output.write(buffer, 0, n);
                 }
                 byte[] imageBytes = output.toByteArray();
-//code continues here:
+
                 product = new Product(
                         productName, rs.getString("productId"),
                         rs.getString("information"),
                         rs.getDouble("price"),
-                                imageBytes);
+                        imageBytes);
                 products.add(product);
+
 
             }
             editResponse(response, ResponseCode.OK, "Successfully import all products", products);
@@ -1208,8 +1200,10 @@ public class mysqlController {
         List<Object> OrderedIds = new ArrayList<>();
         PreparedStatement stmt;
         ResultSet rs;
-        String query = "SELECT * FROM orders WHERE customerId = ?";
+        // String query = "SELECT * FROM orders WHERE customerId = ?";
+        String query = "SELECT * FROM orders JOIN customers ON orders.customerId = customers.id WHERE orders.customerId = ?";
         Boolean idExist = false;
+
 
         try {
             stmt = conn.prepareStatement(query);
@@ -1219,10 +1213,12 @@ public class mysqlController {
             while (rs.next()) {
                 Integer id = rs.getInt("customerId");
                 String orderId = rs.getString("orderId");
-                char firstDigit = orderId.charAt(0);
+                String customerType = rs.getString("customerType");
 
-                if(id.equals(customerId) && firstDigit == '1')
+                char firstDigit = orderId.charAt(0);
+                if((id.equals(customerId) && firstDigit == '1')|| customerType.equals("Client"))
                 {
+                    System.out.println(customerId);
                     idExist = true;
                 }
 
