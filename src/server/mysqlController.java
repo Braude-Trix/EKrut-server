@@ -855,7 +855,6 @@ public class mysqlController {
                 editResponse(response, ResponseCode.OK, "Successfully save products in order", null);
                 ServerGui.serverGui.printToConsole("Successfully save products in order");
             } catch (SQLException e) {
-                System.out.println("XXX");
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             }
@@ -1203,6 +1202,7 @@ public class mysqlController {
         // String query = "SELECT * FROM orders WHERE customerId = ?";
         String query = "SELECT * FROM orders JOIN customers ON orders.customerId = customers.id WHERE orders.customerId = ?";
         Boolean idExist = false;
+        Boolean beenFlag = false;
 
 
         try {
@@ -1211,6 +1211,7 @@ public class mysqlController {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
+                beenFlag = true;
                 Integer id = rs.getInt("customerId");
                 String orderId = rs.getString("orderId");
                 String customerType = rs.getString("customerType");
@@ -1218,10 +1219,27 @@ public class mysqlController {
                 char firstDigit = orderId.charAt(0);
                 if((id.equals(customerId) && firstDigit == '1')|| customerType.equals("Client"))
                 {
-                    System.out.println(customerId);
                     idExist = true;
+                    break;
                 }
 
+            }
+            if(!beenFlag)
+            {
+                idExist = true;
+                String query2 = "SELECT * FROM customers WHERE customers.id = ?";
+                stmt = conn.prepareStatement(query2);
+                stmt.setInt(1, customerId);
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    String customerType = rs.getString("customerType");
+                    if(customerType.equals("Subscriber"))
+                    {
+                        idExist = false;
+                        break;
+                    }
+
+                }
             }
             OrderedIds.add(idExist);
             editResponse(response, ResponseCode.OK, "Successfully import all products from machine",OrderedIds);
