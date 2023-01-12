@@ -1,19 +1,28 @@
 package server;
 
 import gui.ServerGui;
+import serverModels.ProductInMachineHistory;
 import serverModels.ServerConf;
 import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.Year;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import models.*;
+
+import static logic.EndOfMonthTask.NEW_REPORTS_CREATED;
+import static logic.EndOfMonthTask.REPORTS_ALREADY_EXISTS;
 //import sun.misc.IOUtils;
 
 public class mysqlController {
@@ -607,7 +616,7 @@ public class mysqlController {
         String query = "SELECT * FROM ProductInMachine WHERE machineId = ?";
         try {
             stmt = conn.prepareStatement(query);
-            stmt.setInt(1, Integer.valueOf(machineId));
+            stmt.setInt(1, Integer.parseInt(machineId));
             rs = stmt.executeQuery();
             while (rs.next()) {
                 productInMachine = new ProductInMachine(
@@ -1095,9 +1104,11 @@ public class mysqlController {
      * @param updatedInventory - list of ProductInMachine objects
      */
     public void updateInventoryInDB(Response response, List<Object> updatedInventory) {
+        boolean isUpdateFailed = false;
+        Response responseForHistory = new Response();
         ProductInMachine productInMachineCasted;
         for(Object productInMachine : updatedInventory) {
-            productInMachineCasted = (ProductInMachine)productInMachine;
+            productInMachineCasted = (ProductInMachine) productInMachine;
             PreparedStatement stmt;
             String query = "UPDATE ProductInMachine SET amountInMachine= ?, statusInMachine= ? WHERE productId = ? AND machineId = ?";
             try {
@@ -1107,22 +1118,98 @@ public class mysqlController {
                 stmt.setString(3, productInMachineCasted.getProductId());
                 stmt.setString(4, productInMachineCasted.getMachineId());
                 stmt.executeUpdate();
+
+                updateInventoryHistoryInDB(responseForHistory, productInMachineCasted);
+                if (responseForHistory.getCode() != ResponseCode.OK) { // an error occurred in updating history
+                    isUpdateFailed = true;
+                }
             } catch (SQLException e) {
+                isUpdateFailed = true;
                 editResponse(response, ResponseCode.DB_ERROR,
                         "There was an error while updating products in machine", null);
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             }
         }
-        ServerGui.serverGui.printToConsole("Inventory in machine has been updated successfully");
-        editResponse(response, ResponseCode.OK, "Inventory in machine has been updated successfully", null);
+        String msg;
+        if (isUpdateFailed) {
+            msg = "Inventory in machine has been done, at least one product was failed to update";
+            ServerGui.serverGui.printToConsole(msg, true);
+            editResponse(response, ResponseCode.DB_ERROR, msg, null);
+        } else {
+            msg = "Inventory in machine has been updated successfully";
+            ServerGui.serverGui.printToConsole(msg);
+            editResponse(response, ResponseCode.OK, msg, null);
+        }
     }
 
     /**
-     * function that get the customerId by the given orderId from DB.  edit the response accordingly.
+     * function that update in inventory history in DB after a new order. edit the response accordingly.
      * @param response - Response object for the user
-     * @param orderId - Order Id
+     * @param productInMachine - productInMachine object
      */
+    private void updateInventoryHistoryInDB(Response response, ProductInMachine productInMachine) {
+        boolean isExists = checkIfInventoryHistoryHasCurrentDay(response, productInMachine);
+        if (response.getCode() != ResponseCode.OK) { // an error occurred
+            return;
+        }
+        if (isExists) {
+            PreparedStatement stmt;
+            String query = "UPDATE product_in_machine_history " +
+                    "SET amountInMachine = ?, statusInMachine = ? updated_month = ? updated_day = ? " +
+                    "WHERE productId = ? AND machineId = ?";
+            try {
+                stmt = conn.prepareStatement(query);
+                stmt.setInt(1, productInMachine.getAmount());
+                stmt.setString(2, productInMachine.getStatusInMachine().toString());
+                stmt.setInt(3, getCurrentMonth());
+                stmt.setInt(4, getCurrentDay());
+                stmt.setInt(5, Integer.parseInt(productInMachine.getProductId()));
+                stmt.setInt(6, Integer.parseInt(productInMachine.getMachineId()));
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                editResponse(response, ResponseCode.DB_ERROR,
+                        "There was an error while updating history products in machine", null);
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            }
+        } else {
+            insertProductInMachineToHistory(response, productInMachine);
+        }
+    }
+
+    private boolean checkIfInventoryHistoryHasCurrentDay(Response response, ProductInMachine productInMachine) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Object> resList = new ArrayList<>();
+        String query = "SELECT * FROM product_in_machine_history " +
+                "WHERE productId = ? AND machineId = ? AND updated_month = ? updated_day = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, Integer.parseInt(productInMachine.getProductId()));
+            stmt.setInt(2, Integer.parseInt(productInMachine.getMachineId()));
+            stmt.setInt(3, getCurrentMonth());
+            stmt.setInt(4, getCurrentDay());
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return true;
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole("There was an error while checkIfInventoryHistoryHasCurrentDay", true);
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while checkIfInventoryHistoryHasCurrentDay", null);
+        }
+        return false;
+    }
+
+        /**
+         * function that get the customerId by the given orderId from DB.  edit the response accordingly.
+         * @param response - Response object for the user
+         * @param orderId - Order Id
+         */
     public void getCustomerIdByOrderIdFromDB(Response response, String orderId) {
         PreparedStatement stmt;
         ResultSet rs;
@@ -1892,8 +1979,6 @@ public class mysqlController {
             rs = stmt.executeQuery();
             while (rs.next()) {
                 status = rs.getString("customerType");
-
-
                 statusList.add(status);
             }
             if(statusList.isEmpty())
@@ -1907,8 +1992,6 @@ public class mysqlController {
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-
-
     }
     /**
      * this method get a user id and request to upgrade him to client
@@ -2264,6 +2347,10 @@ public class mysqlController {
         }
     }
 
+    /**
+     * @param response response to return to client if the request was done successfully
+     * @param body body the has InventoryFillTask in it's first value
+     */
     public void setInventoryTaskStatus(Response response, List<Object> body) {
         PreparedStatement stmt;
         InventoryFillTask task = (InventoryFillTask) body.get(0);
@@ -2285,6 +2372,870 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+
+    /**
+     * Finding the requested report and returning it (response.body)
+     * @param response response to return to client if the request was done successfully and the report instance
+     * @param reportRequest the report to search for in DB
+     */
+    public void getReport(Response response, SavedReportRequest reportRequest) {
+        PreparedStatement stmt;
+        ResultSet rs;
+
+        String query = "SELECT * FROM saved_reports WHERE year_creation = ? AND month_creation = ? AND report_type = ? AND region = ? AND machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, reportRequest.getYear());
+            stmt.setInt(2, reportRequest.getMonth());
+            stmt.setString(3, reportRequest.getReportType().name());
+            stmt.setString(4, reportRequest.getRegion().name());
+            if (reportRequest.getReportType() == ReportType.INVENTORY)
+                stmt.setInt(5, reportRequest.getMachineId());
+            else
+                stmt.setInt(5, -1); // default value for orderReport and usersReport
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                byte[] bytes = rs.getBytes("report_data");
+                List<Object> responseBody = new ArrayList<>();
+                responseBody.add(getReportObject(bytes));
+                editResponse(response, ResponseCode.OK, "Report data was fetched successfully", responseBody);
+            } else {
+                editResponse(response, ResponseCode.INVALID_DATA,
+                        "Couldn't find report for the specified parameters",null);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to fetch report data", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    /**
+     * Generating All types of reports and saves them in DB, with timestamp of current year + month
+     * @param response response to return to client if the request was done successfully
+     */
+    public void generateAllReports(Response response) {
+        // Checking if reports are already exists
+        Boolean isReportsAlreadyCreated = checkIfReportsAreAlreadyCreated();
+        if (isReportsAlreadyCreated == null) {
+            editResponse(response, ResponseCode.DB_ERROR, "Failed while checking if reports are exists", null);
+            return;
+        }
+        if (isReportsAlreadyCreated) {
+            editResponse(response, ResponseCode.OK, REPORTS_ALREADY_EXISTS, null);
+            return;
+        }
+
+        boolean isReportCreationFailed = false;
+        List<ReportType> failedReports = new ArrayList<>();
+        if (!generateInventoryReport(response)) {
+            isReportCreationFailed = true;
+            failedReports.add(ReportType.INVENTORY);
+            ServerGui.serverGui.printToConsole(
+                    "Failed Generating Report because of " + response.getDescription(), true);
+        }
+        if (!generateOrdersReport(response)) {
+            isReportCreationFailed = true;
+            failedReports.add(ReportType.ORDERS);
+            ServerGui.serverGui.printToConsole(
+                    "Failed Generating Report because of " + response.getDescription(), true);
+        }
+        if (!generateUsersReport(response)) {
+            isReportCreationFailed = true;
+            failedReports.add(ReportType.USERS);
+            ServerGui.serverGui.printToConsole(
+                    "Failed Generating Report because of " + response.getDescription(), true);
+        }
+
+        if (!isReportCreationFailed) {
+            editResponse(response, ResponseCode.OK, NEW_REPORTS_CREATED, null);
+        } else {
+            StringBuilder failedString = new StringBuilder();
+            for (ReportType failedReport : failedReports) {
+                failedString.append(failedReport.name()).append(" | ");
+            }
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while trying to generate all reports", null);
+            System.out.println("Generating Reports: " + failedString);
+            ServerGui.serverGui.printToConsole("Failed Generating Reports: " + failedString, true);
+        }
+    }
+
+    private Object getReportObject(byte[] bytes) {
+        ByteArrayInputStream byteInputStream = new ByteArrayInputStream(bytes);
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream);
+            return objectInputStream.readObject();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean generateInventoryReport(Response response) {
+        boolean isReportOfARegionFailed = false;
+        // map that holds key: machineId, value: it's Region (as String)
+        Map<Integer, String> regionByMachineId = new HashMap<>();
+        // map that holds key: machineId, value: it's Name (as String)
+        Map<Integer, String> nameByMachineId = new HashMap<>();
+        // map that holds key: productId, value: it's Name (as String)
+        Map<Integer, String> nameByProductId = new HashMap<>();
+        // map that holds key: region, value: it's productsInMachine
+        Map<String, List<Integer>> machineIdsByRegion = new HashMap<>();
+        // map that holds key: machineId, value: it's productsInMachine
+        Map<Integer, List<ProductInMachineHistory>> productsInMachineByMachineId = new HashMap<>();
+
+        List<ProductInMachineHistory> filteredByDateProducts = getAllProductsHistory();
+        if (filteredByDateProducts == null) {
+            response.setDescription("failed in getAllProductsHistory");
+            return false;
+        }
+
+        // mapping product ids to their names
+        Set<Integer> productIdsSet = filteredByDateProducts.stream()
+                .map(ProductInMachineHistory::getProductId)
+                .map(Integer::parseInt).collect(Collectors.toSet());
+
+        for (Integer productId : productIdsSet) {
+            Response responseToName = new Response();
+            getNameByProductId(responseToName, productId);
+            if (responseToName.getCode() != ResponseCode.OK) {
+                response.setDescription("failed in getNameByProductId");
+                return false;
+            }
+            String productName = responseToName.getBody().get(0).toString();
+            nameByProductId.put(productId, productName);
+        }
+
+        // mapping machine ids to their names
+        Set<Integer> machineIdsSet = filteredByDateProducts.stream()
+                .map(ProductInMachineHistory::getMachineId)
+                .map(Integer::parseInt).collect(Collectors.toSet());
+
+        // mapping all machines to their regions and names
+        for (Integer machineId : machineIdsSet) {
+            Response responseToRegion = new Response();
+            getRegionAndNameByMachineId(responseToRegion, machineId);
+            if (responseToRegion.getCode() != ResponseCode.OK) {
+                response.setDescription("failed in getRegionByMachineId");
+                return false;
+            }
+            String machineRegion = responseToRegion.getBody().get(0).toString();
+            String machineName = responseToRegion.getBody().get(1).toString();
+            regionByMachineId.put(machineId, machineRegion);
+            nameByMachineId.put(machineId, machineName);
+        }
+
+        // init all machine ids by region
+        machineIdsByRegion.put(Regions.North.name(), new ArrayList<>());
+        machineIdsByRegion.put(Regions.South.name(), new ArrayList<>());
+        machineIdsByRegion.put(Regions.UAE.name(), new ArrayList<>());
+        // iterating over all machine ids and mapping them to their region
+        for (Map.Entry<Integer, String> regionMachineId : regionByMachineId.entrySet()) {
+            Integer mappedMachineId = regionMachineId.getKey();
+            String mappedRegion = regionMachineId.getValue();
+            // adding machineId to it's region
+            machineIdsByRegion.get(mappedRegion).add(mappedMachineId);
+        }
+
+        for (ProductInMachineHistory productHistory : filteredByDateProducts) {
+            Integer machineId = Integer.valueOf(productHistory.getMachineId());
+            if (!productsInMachineByMachineId.containsKey(machineId)) {
+                productsInMachineByMachineId.put(machineId, new ArrayList<>());
+            }
+            productsInMachineByMachineId.get(machineId).add(productHistory);
+        }
+
+        int daysInMonth = getDaysInMonthOfReport();
+        // ---- Generating Reports ----
+        // Iterating over all regions and filling relevant data
+        for (Map.Entry<String, List<Integer>> machineIdsOfARegion : machineIdsByRegion.entrySet()) {
+            for (Map.Entry<Integer, List<ProductInMachineHistory>> productsOfAMachineId : productsInMachineByMachineId.entrySet()) {
+                // excluding all non-current region machines
+                if (!machineIdsOfARegion.getValue().contains(productsOfAMachineId.getKey()))
+                    continue;
+
+                // List of days with map that holds <key: ProductName, value: amount>
+                List<Map<String, Integer>> dailyInventory = new ArrayList<>();
+                // List of days with map that holds amount of products below threshold
+                List<Integer> belowThresholdAmount = new ArrayList<>();
+                // List of days with map that holds amount of unavailable products
+                List<Integer> unavailableAmount = new ArrayList<>();
+
+                // init lists with default values
+                for (int iteratedDay = 1; iteratedDay <= daysInMonth; iteratedDay++) {
+                    dailyInventory.add(new HashMap<>());
+                    belowThresholdAmount.add(0);
+                    unavailableAmount.add(0);
+                }
+
+                // iterating over all days in current month and filling with actual values
+                for (int iteratedDay = 1; iteratedDay <= daysInMonth; iteratedDay++) {
+                    int finalIteratedDay = iteratedDay;
+                    List<ProductInMachineHistory> dailyProductsHistory = productsOfAMachineId.getValue().stream()
+                            .filter(productInMachineHistory -> productInMachineHistory.getDay() == finalIteratedDay)
+                            .collect(Collectors.toList());
+                    fillInventoryOfCurrentAndFollowingDays(dailyProductsHistory, nameByProductId,
+                            iteratedDay, daysInMonth,
+                            dailyInventory, belowThresholdAmount, unavailableAmount);
+                }
+
+                String machineName = nameByMachineId.get(productsOfAMachineId.getKey());
+                InventoryReport inventoryReport = new InventoryReport(
+                        machineName, String.valueOf(getReportsMonth()), String.valueOf(getReportsYear()),
+                        dailyInventory, belowThresholdAmount, unavailableAmount);
+
+                byte[] reportBytes = getSerializedObject(inventoryReport);
+                Response responseForSaveReport = new Response();
+                saveReportInDB(responseForSaveReport, ReportType.INVENTORY,
+                        Regions.valueOf(machineIdsOfARegion.getKey()), productsOfAMachineId.getKey(), reportBytes);
+                if (responseForSaveReport.getCode() != ResponseCode.OK) {
+                    appendDescription(responseForSaveReport, response);
+                    isReportOfARegionFailed = true;
+                }
+            }
+        }
+        if (!isReportOfARegionFailed) {
+            Response responseForCleaning = new Response();
+            deleteLastMonthFromTable(responseForCleaning);
+            if (responseForCleaning.getCode() != ResponseCode.OK) {
+                appendDescription(responseForCleaning, response);
+                isReportOfARegionFailed = true;
+            }
+
+            transferDataFromProductInMachineToHistory(responseForCleaning);
+            if (responseForCleaning.getCode() != ResponseCode.OK) {
+                appendDescription(responseForCleaning, response);
+                isReportOfARegionFailed = true;
+            }
+        }
+        return !isReportOfARegionFailed;
+    }
+
+    private boolean generateOrdersReport(Response response) {
+        boolean isReportOfARegionFailed = false;
+        // map that holds key: region, value: it's orders
+        Map<String, List<Order>> ordersByRegion = new HashMap<>();
+        // map that holds key: machineId, value: it's Region (as String)
+        Map<Integer, String> regionByMachineId = new HashMap<>();
+        // map that holds key: machineId, value: it's Name (as String)
+        Map<Integer, String> nameByMachineId = new HashMap<>();
+        List<Order> filteredByDateOrder = getAllNonDeliveryOrders();
+        if (filteredByDateOrder == null) {
+            response.setDescription("failed in getAllNonDeliveryOrders");
+            return false;
+        }
+        Set<Integer> machineIdsSet = filteredByDateOrder.stream()
+                .map(Order::getMachineId)
+                .map(Integer::parseInt).collect(Collectors.toSet());
+
+        // mapping all machines to their regions and names
+        for (Integer integer : machineIdsSet) {
+            Response responseToRegion = new Response();
+            getRegionAndNameByMachineId(responseToRegion, integer);
+            if (responseToRegion.getCode() != ResponseCode.OK) {
+                response.setDescription("failed in getRegionByMachineId");
+                return false;
+            }
+            String machineRegion = responseToRegion.getBody().get(0).toString();
+            String machineName = responseToRegion.getBody().get(1).toString();
+            regionByMachineId.put(integer, machineRegion);
+            nameByMachineId.put(integer, machineName);
+        }
+        // init all orders by region
+        ordersByRegion.put(Regions.North.name(), new ArrayList<>());
+        ordersByRegion.put(Regions.South.name(), new ArrayList<>());
+        ordersByRegion.put(Regions.UAE.name(), new ArrayList<>());
+
+        for (Order order : filteredByDateOrder) {
+            String orderRegion = regionByMachineId.get(Integer.parseInt(order.getMachineId()));
+            ordersByRegion.get(orderRegion).add(order);
+        }
+
+        // ---- Generating Reports ----
+        // Iterating over all regions and filling relevant data
+        for (Map.Entry<String,List<Order>> orderOfRegion : ordersByRegion.entrySet()) {
+            // List of days with map that holds <key: MachineName, value: amountOfOrders in EK>
+            List<Map<String, Integer>> ekOrders = new ArrayList<>();
+            // List of days with map that holds <key: MachineName, value: amountOfOrders in latePickup>
+            List<Map<String, Integer>> latePickupOrders = new ArrayList<>();
+
+            // init maps with default values
+            for (int i = 1; i <= getDaysInMonthOfReport(); i++) {
+                Map<String, Integer> ekMap = new HashMap<>();
+                Map<String, Integer> latePickupMap = new HashMap<>();
+                for (Map.Entry<Integer, String> machineNameById : nameByMachineId.entrySet()) {
+                    String regionOfMachine = regionByMachineId.get(machineNameById.getKey());
+                    if (orderOfRegion.getKey().equals(regionOfMachine)) {
+                        ekMap.put(machineNameById.getValue(), 0);
+                        latePickupMap.put(machineNameById.getValue(), 0);
+                    }
+                }
+                ekOrders.add(ekMap);
+                latePickupOrders.add(latePickupMap);
+            }
+            // iterating over all days in current month and filling with actual values
+            for (int iteratedDay = 1; iteratedDay <= getDaysInMonthOfReport(); iteratedDay++) {
+                int dayIndex = iteratedDay-1;
+
+                // filling with actual values
+                for (Order order : orderOfRegion.getValue()) {
+                    // excluding orders that was done in day != to iterated day
+                    if (!isDayInDate(iteratedDay, order.getDate()))
+                        continue;
+                    if (order.getPickUpMethod() == PickUpMethod.selfPickUp) {
+                        String machineName = nameByMachineId.get(Integer.parseInt(order.getMachineId()));
+                        Map<String, Integer> dayMap = ekOrders.get(dayIndex);
+                        dayMap.put(machineName, dayMap.get(machineName) + 1); // increment counter of orders
+                    }
+                    else if (order.getPickUpMethod() == PickUpMethod.latePickUp) {
+                        String machineName = nameByMachineId.get(Integer.parseInt(order.getMachineId()));
+                        Map<String, Integer> dayMap = latePickupOrders.get(dayIndex);
+                        dayMap.put(machineName, dayMap.get(machineName) + 1); // increment counter of orders
+                    }
+                }
+            }
+
+            OrdersReport ordersReport = new OrdersReport(
+                    orderOfRegion.getKey(),
+                    String.valueOf(getReportsMonth()),
+                    String.valueOf(getReportsYear()),
+                    ekOrders,
+                    latePickupOrders);
+            byte[] reportBytes = getSerializedObject(ordersReport);
+            Response responseForSaveReport = new Response();
+            saveReportInDB(
+                    responseForSaveReport, ReportType.ORDERS, Regions.valueOf(orderOfRegion.getKey()), reportBytes);
+            if (responseForSaveReport.getCode() != ResponseCode.OK) {
+                appendDescription(responseForSaveReport, response);
+                isReportOfARegionFailed = true;
+            }
+        }
+
+        return !isReportOfARegionFailed;
+    }
+
+    private boolean generateUsersReport(Response response) {
+        boolean isReportOfARegionFailed = false;
+        // map that holds key: machineId, value: it's Region (as String)
+        Map<Integer, String> regionByMachineId = new HashMap<>();
+        // map that holds key: region, value: it's orders
+        Map<String, List<Order>> ordersByRegion = new HashMap<>();
+        List<Order> filteredByDateOrder = getAllNonDeliveryOrders();
+        if (filteredByDateOrder == null) {
+            response.setDescription("failed in getAllNonDeliveryOrders");
+            return false;
+        }
+
+        // init set of all machineIds from all orders
+        Set<Integer> machineIdsSet = filteredByDateOrder.stream()
+                .map(Order::getMachineId)
+                .map(Integer::parseInt).collect(Collectors.toSet());
+
+        // mapping all machines to their regions
+        for (Integer integer : machineIdsSet) {
+            Response responseToRegion = new Response();
+            getRegionAndNameByMachineId(responseToRegion, integer);
+            if (responseToRegion.getCode() != ResponseCode.OK) {
+                response.setDescription("failed in getRegionByMachineId");
+                return false;
+            }
+            String machineRegion = responseToRegion.getBody().get(0).toString();
+            regionByMachineId.put(integer, machineRegion);
+        }
+
+        // init all orders by region
+        ordersByRegion.put(Regions.North.name(), new ArrayList<>());
+        ordersByRegion.put(Regions.South.name(), new ArrayList<>());
+        ordersByRegion.put(Regions.UAE.name(), new ArrayList<>());
+
+        for(Order currentOrder : filteredByDateOrder) {
+            Integer currentMachineId = Integer.parseInt(currentOrder.getMachineId());
+            String region = regionByMachineId.get(currentMachineId);
+            ordersByRegion.get(region).add(currentOrder);
+        }
+        // now we have the orders based on the region
+
+        // ---- Generating Reports ----
+        // Iterating over all regions and filling relevant data
+        for (Map.Entry<String,List<Order>> orderOfRegion : ordersByRegion.entrySet()) {
+            // map of all orders of clients that holds <key: clientId, value: amountOfOrders>
+            Map<String, Integer> clientsOrders = new HashMap<>();
+            // map of all orders of subscribers that holds <key: clientId, value: amountOfOrders>
+            Map<String, Integer> subscribersOrders = new HashMap<>();
+
+            // filling with actual values
+            for (Order order : orderOfRegion.getValue()) {
+                // checking of orderId starts with "0" or "1"
+                if (order.getOrderId().startsWith("0")) {
+                    String currentClientId = order.getCustomerId().toString();
+                    if(!clientsOrders.containsKey(currentClientId))
+                        clientsOrders.put(currentClientId, 0);
+                    int newValue = clientsOrders.get(currentClientId) + 1;
+                    clientsOrders.put(currentClientId, newValue);
+                } else { // starts with "1"
+                    String currentSubscriberId = order.getCustomerId().toString();
+                    if(!subscribersOrders.containsKey(currentSubscriberId))
+                        subscribersOrders.put(currentSubscriberId, 0);
+                    int newValue = subscribersOrders.get(currentSubscriberId) + 1;
+                    subscribersOrders.put(currentSubscriberId, newValue);
+                }
+            }
+
+            UsersReport usersReport = new UsersReport(orderOfRegion.getKey(),
+                    String.valueOf(getReportsMonth()),
+                    String.valueOf(getReportsYear()),
+                    clientsOrders,
+                    subscribersOrders,
+                    new ArrayList<>());
+
+            // this map has for key: userId, and for value: amount of orders
+            // map is organized from most to least orders
+            Map<String, Integer> top3UserIdAndAmount = usersReport.getTop3UserIdAndAmount();
+            List<String> top3Names = new LinkedList<>();
+            for (String Id : top3UserIdAndAmount.keySet()) {
+                Response userDataResponse = new Response();
+                User currentUser = getUserDatabyId(userDataResponse, Integer.parseInt(Id));
+                if (currentUser == null) {
+                    isReportOfARegionFailed = true;
+                    break;
+                }
+                top3Names.add(currentUser.getFirstName() + " " + currentUser.getLastName());
+            }
+            // if there is an error importing data of top3clients
+            if (isReportOfARegionFailed)
+                continue;
+
+            usersReport.setTop3ClientNames(top3Names);
+
+            byte[] reportBytes = getSerializedObject(usersReport);
+            Response responseForSaveReport = new Response();
+            saveReportInDB(
+                    responseForSaveReport, ReportType.USERS, Regions.valueOf(orderOfRegion.getKey()), reportBytes);
+            if (responseForSaveReport.getCode() != ResponseCode.OK) {
+                appendDescription(responseForSaveReport, response);
+                isReportOfARegionFailed = true;
+            }
+        }
+
+        return !isReportOfARegionFailed;
+    }
+
+    /**
+     * Saves the Requested report (in bytes - blob) in save_reports table in DB
+     * @param response holds status of the perform function
+     * @param type Report type to save
+     * @param region Region area the report to save relate to
+     * @param machineId MachineId the report to save relate to (if not
+     * @param blobBytes Byte of the Report Object to save
+     */
+    private void saveReportInDB(Response response, ReportType type, Regions region, int machineId, byte[] blobBytes) {
+        PreparedStatement stmt;
+        String query = "INSERT into " +
+                "saved_reports (year_creation, month_creation, report_type, region, machineId, report_data) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, getReportsYear());
+            stmt.setInt(2, getReportsMonth());
+            stmt.setString(3, type.name());
+            stmt.setString(4, region.name());
+            stmt.setInt(5, machineId);
+            stmt.setBytes(6, blobBytes);
+
+            stmt.executeUpdate();
+            String msg = String.format("Successfully saved report %s of region %s", type.name(), region.name());
+            if (machineId != -1)
+                msg = String.format("%s of machine %s", msg, machineId);
+            editResponse(response, ResponseCode.OK, msg, null);
+            ServerGui.serverGui.printToConsole(msg);
+        } catch (SQLException e) {
+            String msg = String.format("There was an error in saving report %s of region %s", type.name(), region.name());
+            if (machineId != -1)
+                msg = String.format("%s of machine %s", msg, machineId);
+            editResponse(response, ResponseCode.DB_ERROR, msg, null);
+            ServerGui.serverGui.printToConsole(msg);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    /**
+     * Calls the actual saveReportInDB with default machineId value of -1 (not relevant to that reports)
+     */
+    private void saveReportInDB(Response response, ReportType type, Regions region, byte[] blobBytes) {
+        saveReportInDB(response, type, region, -1, blobBytes);
+    }
+
+    /**
+     * @return True if reports are already been created earlier (they are saved in DB)
+     */
+    private Boolean checkIfReportsAreAlreadyCreated() {
+        PreparedStatement stmt;
+        ResultSet rs;
+
+        String query = "SELECT * FROM saved_reports WHERE year_creation = ? AND month_creation = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, getReportsYear());
+            stmt.setInt(2, getReportsMonth());
+            rs = stmt.executeQuery();
+            boolean hasReport = rs.next();
+            rs.close();
+            return hasReport;
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Filling dailyInventory & belowThresholdAmount & unavailableAmount
+     * in indexes of fromDay to toDay by dailyProductsHistory data
+     * @param dailyProductsHistory The product in machine of a specific day (=fromDay)
+     * @param nameByProductId All Names of products mapped by their ID
+     * @param fromDay the day to start filling all result lists
+     * @param toDay day number to stop filling list
+     * @param dailyInventory List of days with map that holds -> key: ProductId, value: amount
+     * @param belowThresholdAmount List of days with map that holds amount of products below threshold
+     * @param unavailableAmount List of days with map that holds amount of unavailable products
+     */
+    private void fillInventoryOfCurrentAndFollowingDays(List<ProductInMachineHistory> dailyProductsHistory,
+                                                        Map<Integer, String> nameByProductId,
+                                                        int fromDay,
+                                                        int toDay,
+                                                        List<Map<String, Integer>> dailyInventory,
+                                                        List<Integer> belowThresholdAmount,
+                                                        List<Integer> unavailableAmount) {
+        for (int day = fromDay; day <= toDay; day++) {
+            int dayIndex = day - 1;
+            Map<String, Integer> inventoryOfADay = dailyInventory.get(dayIndex);
+            for (ProductInMachineHistory product : dailyProductsHistory) {
+                Integer productId = Integer.parseInt(product.getProductId());
+                // if productId already exists, it's replacing its amount
+                inventoryOfADay.put(nameByProductId.get(productId), product.getAmount());
+                if (product.getStatusInMachine() == StatusInMachine.Below)
+                    belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) + 1);
+                else if (product.getStatusInMachine() == StatusInMachine.Not_Available) {
+                    belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) + 1);
+                    unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex) + 1);
+                }
+            }
+        }
+    }
+
+    private List<Order> getOrdersByUserType(String typeOfClient) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Order> orders = new ArrayList<>();
+
+        String query = "SELECT * FROM orders WHERE orderId LIKE '?%' AND pickUpMethod != ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, typeOfClient);
+            stmt.setString(2, PickUpMethod.delivery.toString());
+            rs = stmt.executeQuery();
+            while(rs.next()) {
+                String orderDate = rs.getString("orderDate");
+                if (!isInCurrentMonth(orderDate))
+                    continue;
+                Order order = new Order(
+                        rs.getString("orderId"),
+                        orderDate,
+                        rs.getInt("price"),
+                        rs.getString("machineId"),
+                        OrderStatus.valueOf(rs.getString("orderStatus")),
+                        PickUpMethod.valueOf(rs.getString("pickUpMethod")),
+                        rs.getInt("customerId"));
+                orders.add(order);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return null;
+        }
+        return orders;
+    }
+
+    /**
+     * @return List of products in machine of the report's month
+     */
+    private List<ProductInMachineHistory> getAllProductsHistory() {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<ProductInMachineHistory> productInMachineHistories = new ArrayList<>();
+
+        String query = "SELECT * FROM product_in_machine_history WHERE updated_month = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, getReportsMonth());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String machineId = String.valueOf(rs.getInt("machineId"));
+                String productId = String.valueOf(rs.getInt("productId"));
+                StatusInMachine statusInMachine = StatusInMachine.valueOf(rs.getString("statusInMachine"));
+                Integer amount = rs.getInt("amountInMachine");
+                int month = rs.getInt("updated_month");
+                int day = rs.getInt("updated_day");
+                ProductInMachineHistory product = new ProductInMachineHistory(
+                        machineId, productId, statusInMachine, amount, month, day);
+                productInMachineHistories.add(product);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return null;
+        }
+        return productInMachineHistories;
+    }
+
+    /**
+     * @return List of monthly orders excluding delivery orders
+     */
+    private List<Order> getAllNonDeliveryOrders() {
+        PreparedStatement stmt;
+        ResultSet rs;
+        List<Order> orders = new ArrayList<>();
+
+        String query = "SELECT * FROM orders WHERE pickUpMethod != ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, PickUpMethod.delivery.toString());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String orderDate = rs.getString("orderDate");
+                if (!isInCurrentMonth(orderDate))
+                    continue;
+                Order order = new Order(
+                        rs.getString("orderId"),
+                        orderDate,
+                        rs.getInt("price"),
+                        rs.getString("machineId"),
+                        OrderStatus.valueOf(rs.getString("orderStatus")),
+                        PickUpMethod.valueOf(rs.getString("pickUpMethod")),
+                        rs.getInt("customerId"));
+                orders.add(order);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return null;
+        }
+        return orders;
+    }
+
+    /**
+     * Retrieve Machine's region and Name by its ID
+     */
+    private void getRegionAndNameByMachineId(Response response, Integer machineId) {
+        List<Object> res = new ArrayList<>();
+        ResultSet rs;
+        PreparedStatement stmt;
+        String query = "SELECT * FROM machine WHERE machineId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, machineId);
+            rs = stmt.executeQuery();
+            if(rs.next()) {
+                res.add(rs.getString("region"));
+                res.add(rs.getString("machineName"));
+            }
+            editResponse(response, ResponseCode.OK, "Successfully get region by machine id", res);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    /**
+     * Retrieve Machine's region and Name by its ID
+     */
+    private void getNameByProductId(Response response, Integer productId) {
+        List<Object> res = new ArrayList<>();
+        ResultSet rs;
+        PreparedStatement stmt;
+        String query = "SELECT * FROM products WHERE productId = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, productId);
+            rs = stmt.executeQuery();
+            if(rs.next()) {
+                res.add(rs.getString("productName"));
+            }
+            editResponse(response, ResponseCode.OK, "Successfully get name by product id", res);
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "There was an error while searching for name of product", null);
+            e.printStackTrace();
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    }
+
+    private void deleteLastMonthFromTable(Response response) {
+        int currentMonth = getCurrentMonth();
+        PreparedStatement stmt;
+        String query = "DELETE FROM product_in_machine_history WHERE updated_month != ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, currentMonth);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "[Report] Failed to delete previous month's inventory data", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+
+        editResponse(response, ResponseCode.OK,
+                "[Report] Successfully deleted previous month's inventory data", null);
+    }
+
+    private void transferDataFromProductInMachineToHistory(Response response) {
+        PreparedStatement stmt;
+        ResultSet rs;
+
+        String query = "SELECT * FROM productinmachine";
+        try {
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                ProductInMachine productInMachine = new ProductInMachine(
+                        Integer.toString(rs.getInt("machineId")),
+                        Integer.toString(rs.getInt("productId")),
+                        StatusInMachine.valueOf(rs.getString("statusInMachine")),
+                        rs.getInt("amountInMachine"));
+                insertProductInMachineToHistory(response, productInMachine);
+                if (response.getCode() != ResponseCode.OK)
+                    break;
+            }
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            if (response.getCode() != ResponseCode.OK)
+                ServerGui.serverGui.printToConsole(response.getDescription(), true);
+            else
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        editResponse(response, ResponseCode.OK, "[Report] Successfully inserting all of current month's inventory data to table", null);
+    }
+
+    private void insertProductInMachineToHistory(Response response, ProductInMachine productInMachine) {
+        PreparedStatement stmt;
+        String query = "INSERT INTO product_in_machine_history " +
+                "(productId, machineId, amountInMachine, statusInMachine, updated_month, updated_day)"
+                + " VALUES (?, ?, ?, ?, ?, ?)";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, Integer.parseInt(productInMachine.getProductId()));
+            stmt.setInt(2, Integer.parseInt(productInMachine.getMachineId()));
+            stmt.setInt(3, productInMachine.getAmount());
+            stmt.setString(4, productInMachine.getStatusInMachine().name());
+            stmt.setInt(5, getCurrentMonth());
+            stmt.setInt(6, getCurrentDay());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "[Report] Failed to insert current month's inventory data to table", null);
+            System.out.println(e.getMessage());
+            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+        editResponse(response, ResponseCode.OK,
+                "[Report] Successfully inserting current month's inventory data to table", null);
+    }
+
+    private int getDaysInMonthOfReport() {
+        // Get the number of days in that month
+        YearMonth yearMonthObject = YearMonth.of(getReportsYear(), getReportsMonth());
+        return yearMonthObject.lengthOfMonth();
+    }
+
+    /**
+     * @return true if day of dbDate is equal to specified day
+     */
+    private boolean isDayInDate(int day, String dbDate) {
+        return day == extractDay(dbDate);
+    }
+
+    private boolean isInCurrentMonth(String dbDate) {
+        return getReportsYear() == extractYear(dbDate) && getReportsMonth() == extractMonth(dbDate);
+    }
+
+    private int extractYear(String yearByFormat) {
+        // according to the format models.StyleConstants.DATE_FORMAT
+        return Integer.parseInt(yearByFormat.split("-")[2]);
+    }
+
+    private int extractMonth(String monthByFormat) {
+        // according to the format models.StyleConstants.DATE_FORMAT
+        String month = monthByFormat.split("-")[1];
+        if (month.startsWith("0"))
+            month = month.substring(1);
+        return Integer.parseInt(month);
+    }
+
+    private int extractDay(String dayByFormat) {
+        // according to the format models.StyleConstants.DATE_FORMAT
+        String month = dayByFormat.split("-")[0];
+        if (month.startsWith("0"))
+            month = month.substring(1);
+        return Integer.parseInt(month);
+    }
+
+    /**
+     * @return The year of report to be created
+     */
+    private int getReportsYear() {
+        int currentMonth = getCurrentMonth();
+        int currentYear = Year.now().getValue();
+
+        if (currentMonth == 1) {
+            return currentYear - 1;
+        }
+        return currentYear;
+    }
+
+    /**
+     * @return The month of report to be created
+     */
+    private int getReportsMonth() {
+        int currentMonth = getCurrentMonth();
+
+        if (currentMonth == 1) {
+            return 12;
+        }
+        return currentMonth - 1;
+    }
+
+    private int getCurrentMonth() {
+        return Calendar.getInstance().get(Calendar.MONTH) + 1;
+    }
+
+    private int getCurrentDay() {
+        return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+    }
+
+    private void appendDescription(Response fromResponse, Response toResponse) {
+        if (toResponse.getDescription() == null)
+            toResponse.setDescription(fromResponse.getDescription());
+        else
+            toResponse.setDescription(toResponse.getDescription() + " | " + fromResponse.getDescription());
+    }
+
+    private byte[] getSerializedObject(Object object) {
+        ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = null;
+        try {
+            objectOutputStream = new ObjectOutputStream(arrayOutputStream);
+            objectOutputStream.writeObject(object);
+            objectOutputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return arrayOutputStream.toByteArray();
+    }
 }
-
-

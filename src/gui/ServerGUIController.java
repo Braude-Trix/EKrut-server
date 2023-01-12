@@ -17,7 +17,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import logic.EndOfMonthTask;
 import models.Response;
+import models.ResponseCode;
 import ocsf.server.ConnectionToClient;
 import server.Server;
 import server.mysqlController;
@@ -40,6 +42,7 @@ public class ServerGUIController implements Initializable {
     private static ServerGUIController controller;
     private static final ObservableList<ClientConnectionData> connectionDataList =
             FXCollections.observableArrayList();
+    private static Thread reportsThread;
 
     private final String ERROR_STYLE = "-fx-border-color: RED; -fx-border-width: 2; -fx-border-radius: 5;";
     private final String SUCCESS_STYLE = "-fx-border-color: #A9A9A9; -fx-border-width: 2; -fx-border-radius: 5;";
@@ -102,6 +105,16 @@ public class ServerGUIController implements Initializable {
         String textBtn = isConnected ? "Disconnect" : "Connect";
         String btnStyle = isConnected ? ERROR_STYLE_BTN : OK_STYLE_BTN;
         if (!isConnected) {
+            // killing reports creation thread
+            if (reportsThread.isAlive()) {
+                reportsThread.interrupt();
+                try {
+                    reportsThread.join(5000);
+                } catch (InterruptedException e) {
+                    printToConsole("Couldn't close reports generator Thread", true);
+                    printToConsole(e.getMessage(), true);
+                }
+            }
             boolean isServerClosed = Server.server_instance.closeServer();
             boolean isDBClosed = true;
             if (Server.server_instance.mysqlController != null) {
@@ -111,12 +124,16 @@ public class ServerGUIController implements Initializable {
                 printToConsole("One of the resources couldn't close, please reopen the app", true);
                 Platform.runLater(() -> controller.ConnectorDisBTN.setDisable(false));
             }
+        } else {
+            // starting reports creation thread
+            reportsThread = new Thread(new EndOfMonthTask());
+            reportsThread.start();
         }
         Platform.runLater(() -> {
             controller.ConnectorDisBTN.setText(textBtn);
             controller.ConnectorDisBTN.setStyle(btnStyle);
             controller.ConnectorDisBTN.setDisable(false);
-            if(textBtn.equals("Connect")){
+            if(textBtn.equals("Connect")) {
                 controller.importDataBtn.setDisable(false);
                 controller.importDataBtn.setOpacity(1);
             }
@@ -151,15 +168,11 @@ public class ServerGUIController implements Initializable {
     private void setAllUsersLoggedOut() {
 		Response response = new Response();
         mysqlController.disconnectServer(response);
-		switch (response.getCode()) {
-		case OK:
+        if (response.getCode() == ResponseCode.OK) {
             setConnected(false);
-			break;
-		default:
-			String msg = "DB failure updating logout for all users";
-			printToConsole(msg, true);
-			break;
-		}
+        } else {
+            printToConsole("DB failure updating logout for all users", true);
+        }
 	}
 
 	@FXML
@@ -201,8 +214,6 @@ public class ServerGUIController implements Initializable {
     	primaryStage.close();
         System.exit(0);
 	}
-
-
 
 	/**
      * Called before the controller is made
