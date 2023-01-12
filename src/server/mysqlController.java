@@ -1150,13 +1150,13 @@ public class mysqlController {
      */
     private void updateInventoryHistoryInDB(Response response, ProductInMachine productInMachine) {
         boolean isExists = checkIfInventoryHistoryHasCurrentDay(response, productInMachine);
-        if (response.getCode() != ResponseCode.OK) { // an error occurred
+        if (!isExists && response.getCode() == ResponseCode.DB_ERROR) { // an error occurred
             return;
         }
         if (isExists) {
             PreparedStatement stmt;
             String query = "UPDATE product_in_machine_history " +
-                    "SET amountInMachine = ?, statusInMachine = ? updated_month = ? updated_day = ? " +
+                    "SET amountInMachine = ?, statusInMachine = ?, updated_month = ?, updated_day = ? " +
                     "WHERE productId = ? AND machineId = ?";
             try {
                 stmt = conn.prepareStatement(query);
@@ -1183,7 +1183,7 @@ public class mysqlController {
         ResultSet rs;
         List<Object> resList = new ArrayList<>();
         String query = "SELECT * FROM product_in_machine_history " +
-                "WHERE productId = ? AND machineId = ? AND updated_month = ? updated_day = ?";
+                "WHERE productId = ? AND machineId = ? AND updated_month = ? AND updated_day = ?";
         try {
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, Integer.parseInt(productInMachine.getProductId()));
