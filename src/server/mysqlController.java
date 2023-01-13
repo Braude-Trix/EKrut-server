@@ -565,12 +565,12 @@ public class mysqlController {
                 } catch (Exception e) {
                     //input = new FileInputStream("/styles/defaultProductImage.png");
                     System.out.println(e);
-                    input = this.getClass().getResourceAsStream("/styles/defaultProductImage.png");
+                    input = this.getClass().getResourceAsStream("/assets/defaultProductImage.png");
 
                 }
                 if(input == null)
                 {
-                    input = this.getClass().getResourceAsStream("/styles/defaultProductImage.png");
+                    input = this.getClass().getResourceAsStream("/assets/defaultProductImage.png");
                 }
 
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
