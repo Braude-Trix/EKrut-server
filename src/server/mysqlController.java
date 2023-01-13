@@ -479,7 +479,7 @@ public class mysqlController {
                 try {
 
                     // input = new FileInputStream("/styles/" + productName +".png");
-                    input = this.getClass().getResourceAsStream("/styles/" + productName +".png");
+                    input = this.getClass().getResourceAsStream("/assets/" + productName +".png");
                 } catch (Exception e) {
                     //input = new FileInputStream("/styles/defaultProductImage.png");
                     System.out.println(e);
