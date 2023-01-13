@@ -14,8 +14,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import logic.EndOfMonthTask;
 import models.Response;
@@ -32,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -201,6 +200,10 @@ public class ServerGUIController implements Initializable {
         s.getStylesheets().add("styles/worker_table.css");
         s.getStylesheets().add("styles/SideButtons.css");
         primaryStage.setTitle("EKrut Server");
+        Image iconImage = new Image(Objects.requireNonNull(
+                ServerGUIController.class.getResourceAsStream("/assets/serverIcon.png")));
+        primaryStage.getIcons().clear();
+        primaryStage.getIcons().add(iconImage);
         primaryStage.setScene(s);
         primaryStage.setResizable(false);
         primaryStage.show();
