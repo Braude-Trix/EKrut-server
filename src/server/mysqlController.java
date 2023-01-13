@@ -23,7 +23,6 @@ import models.*;
 
 import static logic.EndOfMonthTask.NEW_REPORTS_CREATED;
 import static logic.EndOfMonthTask.REPORTS_ALREADY_EXISTS;
-//import sun.misc.IOUtils;
 
 public class mysqlController {
     public static Connection conn;
@@ -147,30 +146,6 @@ public class mysqlController {
         return true;
     }
 
-    /**
-     * this method get an Subscriber object and save his details to DB.
-     * NOTE: Existing ID Subscriber OR null value except from subscriberNumber will raise an exception!
-     */
-//    public void saveSubscriberToDB(Subscriber subscriber) {
-//        PreparedStatement stmt;
-//        ServerGui.serverGui.printToConsole("Inserting Subscriber to DB");
-//        String query = "INSERT into Subscriber VALUES (?, ?, ?, ?, ?, ?, ?)";
-//        try {
-//            stmt = conn.prepareStatement(query);
-//            stmt.setString(1, subscriber.getFirstName());
-//            stmt.setString(2, subscriber.getLastName());
-//            stmt.setString(3, subscriber.getId());
-//            stmt.setString(4, subscriber.getPhoneNumber());
-//            stmt.setString(5, subscriber.getEmailAddress());
-//            stmt.setString(6, subscriber.getCreditCardNumber());
-//            stmt.setString(7, subscriber.getSubscriberNumber());
-//            stmt.executeUpdate();
-//            ServerGui.serverGui.printToConsole("Subscriber update done successfully");
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-//        }
-//    }
 
 	public void updateSubscriberNumberAndCreditCard(String id, String newSubscriberNumber, String newCreditCardNumber,
 			Response response) {
@@ -189,39 +164,12 @@ public class mysqlController {
 			ServerGui.serverGui.printToConsole("Subscriber update done successfully");
 			editResponse(response, ResponseCode.OK, "Successfully updated subscriber credentials", null);
 		} catch (SQLException e) {
-			editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+			editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
 			e.printStackTrace();
 			ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
 		}
 	}
-
-//    public Subscriber getSubscriberDetails(String id) {
-//        /**
-//         * this method get a subscriber id and return Subscriber object with all his details from the DB.
-//         * NOTE: method will return null if subscriber ID isn't exists in DB.
-//         */
-//        //return null if Subscriber id does not exists
-//        PreparedStatement stmt;
-//        ResultSet rs;
-//        String query = "SELECT * FROM Subscriber WHERE id = ?";
-//        try {
-//            stmt = conn.prepareStatement(query);
-//            stmt.setString(1, id);
-//            rs = stmt.executeQuery();
-//            if (rs.next()) {
-//                return new Subscriber(
-//                        rs.getString("firstName"), rs.getString("lastName"),
-//                        rs.getString("id"), rs.getString("phoneNumber"),
-//                        rs.getString("emailAddress"), rs.getString("creditCardNumber"),
-//                        rs.getString("subscriberNumber"));
-//            }
-//            rs.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-//        }
-//        return null; //Subscriber id does not exists
-//    }
+    
 
 
     public boolean isSubscriberExistInDB(String id) {
@@ -245,36 +193,6 @@ public class mysqlController {
         }
         return false;
     }
-
-//    public List<Object> getAllSubscribersFromDB(Response response) {
-//        /**
-//         * this method get a subscriber id and return true/false if he is exists in DB or not
-//         */
-//        Subscriber subscriber;
-//        List<Object> subscribersList = new ArrayList<>();
-//        PreparedStatement stmt;
-//        ResultSet rs;
-//        String query = "SELECT * FROM Subscriber";
-//        try {
-//            stmt = conn.prepareStatement(query);
-//            rs = stmt.executeQuery();
-//            while (rs.next()) {
-//                subscriber = new Subscriber(
-//                        rs.getString("firstName"), rs.getString("lastName"),
-//                        rs.getString("id"), rs.getString("phoneNumber"),
-//                        rs.getString("emailAddress"), rs.getString("creditCardNumber"),
-//                        rs.getString("subscriberNumber"));
-//                subscribersList.add(subscriber);
-//            }
-//            editResponse(response, ResponseCode.OK, "Successfully sent all subscribers", subscribersList);
-//            rs.close();
-//        } catch (SQLException e) {
-//            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
-//            e.printStackTrace();
-//            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-//        }
-//        return subscribersList;
-//    }
     
     
     /**
@@ -317,7 +235,7 @@ public class mysqlController {
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -352,7 +270,7 @@ public class mysqlController {
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -381,7 +299,7 @@ public class mysqlController {
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -410,7 +328,7 @@ public class mysqlController {
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -593,7 +511,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all products", products);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         } catch (FileNotFoundException e) {
@@ -628,7 +546,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all products from machine", ProductsInMachine);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -684,7 +602,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully query messages", messages);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -736,7 +654,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully get all deliveries orders", deliveriesOrders);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -764,7 +682,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully get all waiting approve deliveries orders", resList);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -791,7 +709,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully get all waiting approve deliveries orders", resList);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -975,7 +893,7 @@ public class mysqlController {
     		ServerGui.serverGui.printToConsole("Successfully got user details");
             editResponse(response, ResponseCode.OK, "Successfully got user details", workersByType);
         }catch(SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -998,7 +916,7 @@ public class mysqlController {
             rs.close();
             return user;
         }catch (SQLException e) {
-                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1332,7 +1250,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all products from machine",OrderedIds);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1356,7 +1274,7 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole("update Monthly Bill successfully");
             editResponse(response, ResponseCode.OK, "Successfully update Monthly Bill successfully", null);
             } catch (SQLException e) {
-                editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+                editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1380,7 +1298,7 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole("update order status successfully");
             editResponse(response, ResponseCode.OK, "Successfully update order status", null);
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1805,7 +1723,7 @@ public class mysqlController {
             rs.close();
 
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1956,7 +1874,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all", users);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -1988,7 +1906,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all", statusList);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -2007,7 +1925,7 @@ public class mysqlController {
             stmt.setString(2,region);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -2033,7 +1951,7 @@ public class mysqlController {
             }
 
         } catch (SQLException e1) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e1.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             return;}
@@ -2048,7 +1966,7 @@ public class mysqlController {
             stmt.setInt(3,userId);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -2079,7 +1997,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all", statusList);
             rs.close();
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error (FIX ACCORDING TO SPECIFIC EXCEPTION", null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
