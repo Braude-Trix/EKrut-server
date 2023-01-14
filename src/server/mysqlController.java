@@ -546,11 +546,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all products from machine", ProductsInMachine);
             rs.close();
         } catch (SQLException e) {
-<<<<<<< Updated upstream
-            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
-=======
             editResponse(response, ResponseCode.DB_ERROR, "Failed fetching all products in machine", null);
->>>>>>> Stashed changes
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
