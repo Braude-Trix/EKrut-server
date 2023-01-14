@@ -105,7 +105,7 @@ public class ServerGUIController implements Initializable {
         String btnStyle = isConnected ? ERROR_STYLE_BTN : OK_STYLE_BTN;
         if (!isConnected) {
             // killing reports creation thread
-            if (reportsThread.isAlive()) {
+            if (reportsThread != null && reportsThread.isAlive()) {
                 reportsThread.interrupt();
                 try {
                     reportsThread.join(5000);
