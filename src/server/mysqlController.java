@@ -885,7 +885,7 @@ public class mysqlController {
             while (rs.next()) {
             	Regions tempRegion = (rs.getString("region") == null)? null: Regions.valueOf(rs.getString("region"));
             	currentId = rs.getInt("id");
-            	currentUser = getUserDatabyId(response, currentId);
+            	currentUser = getUserDataById(response, currentId);
             	currentWorker = new Worker(currentUser, WorkerType.valueOf(wantedType), tempRegion);
             	workersByType.add(currentWorker);
             }
@@ -899,7 +899,7 @@ public class mysqlController {
         }
     }
     
-    private User getUserDatabyId(Response response, Integer id) {
+    private User getUserDataById(Response response, Integer id) {
         User user = null;
         PreparedStatement stmt;
         ResultSet rs;
@@ -2425,11 +2425,15 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(
                     "Failed Generating Report because of " + response.getDescription(), true);
         }
-        if (!generateUsersReport(response)) {
-            isReportCreationFailed = true;
-            failedReports.add(ReportType.USERS);
-            ServerGui.serverGui.printToConsole(
-                    "Failed Generating Report because of " + response.getDescription(), true);
+        try {
+            if (!generateUsersReport(response)) {
+                isReportCreationFailed = true;
+                failedReports.add(ReportType.USERS);
+                ServerGui.serverGui.printToConsole(
+                        "Failed Generating Report because of " + response.getDescription(), true);
+            }
+        } catch (Exception e) {
+            System.out.println();
         }
 
         if (!isReportCreationFailed) {
@@ -2506,6 +2510,8 @@ public class mysqlController {
             }
             String machineRegion = responseToRegion.getBody().get(0).toString();
             String machineName = responseToRegion.getBody().get(1).toString();
+            if (Regions.valueOf(machineRegion) == Regions.All)
+                continue;
             regionByMachineId.put(machineId, machineRegion);
             nameByMachineId.put(machineId, machineName);
         }
@@ -2541,6 +2547,8 @@ public class mysqlController {
 
                 // List of days with map that holds <key: ProductName, value: amount>
                 List<Map<String, Integer>> dailyInventory = new ArrayList<>();
+                // List of days with map that holds <key: ProductId, value: StatusInMachine>
+                List<Map<Integer, StatusInMachine>> dailyProductsStatus = new ArrayList<>();
                 // List of days with map that holds amount of products below threshold
                 List<Integer> belowThresholdAmount = new ArrayList<>();
                 // List of days with map that holds amount of unavailable products
@@ -2549,6 +2557,7 @@ public class mysqlController {
                 // init lists with default values
                 for (int iteratedDay = 1; iteratedDay <= daysInMonth; iteratedDay++) {
                     dailyInventory.add(new HashMap<>());
+                    dailyProductsStatus.add(new HashMap<>());
                     belowThresholdAmount.add(0);
                     unavailableAmount.add(0);
                 }
@@ -2559,7 +2568,7 @@ public class mysqlController {
                     List<ProductInMachineHistory> dailyProductsHistory = productsOfAMachineId.getValue().stream()
                             .filter(productInMachineHistory -> productInMachineHistory.getDay() == finalIteratedDay)
                             .collect(Collectors.toList());
-                    fillInventoryOfCurrentAndFollowingDays(dailyProductsHistory, nameByProductId,
+                    fillInventoryOfCurrentAndFollowingDays(dailyProductsHistory, nameByProductId, dailyProductsStatus,
                             iteratedDay, daysInMonth,
                             dailyInventory, belowThresholdAmount, unavailableAmount);
                 }
@@ -2569,10 +2578,18 @@ public class mysqlController {
                         machineName, String.valueOf(getReportsMonth()), String.valueOf(getReportsYear()),
                         dailyInventory, belowThresholdAmount, unavailableAmount);
 
-                byte[] reportBytes = getSerializedObject(inventoryReport);
+                byte[] inventoryBytes;
                 Response responseForSaveReport = new Response();
+                try {
+                    inventoryBytes = getSerializedObject(inventoryReport);
+                } catch (Exception e) {
+                    responseForSaveReport.setDescription("There was an error in serializing InventoryReport object");
+                    appendDescription(responseForSaveReport, response);
+                    isReportOfARegionFailed = true;
+                    continue;
+                }
                 saveReportInDB(responseForSaveReport, ReportType.INVENTORY,
-                        Regions.valueOf(machineIdsOfARegion.getKey()), productsOfAMachineId.getKey(), reportBytes);
+                        Regions.valueOf(machineIdsOfARegion.getKey()), productsOfAMachineId.getKey(), inventoryBytes);
                 if (responseForSaveReport.getCode() != ResponseCode.OK) {
                     appendDescription(responseForSaveReport, response);
                     isReportOfARegionFailed = true;
@@ -2623,6 +2640,8 @@ public class mysqlController {
             }
             String machineRegion = responseToRegion.getBody().get(0).toString();
             String machineName = responseToRegion.getBody().get(1).toString();
+            if (Regions.valueOf(machineRegion) == Regions.All)
+                continue;
             regionByMachineId.put(integer, machineRegion);
             nameByMachineId.put(integer, machineName);
         }
@@ -2686,10 +2705,19 @@ public class mysqlController {
                     String.valueOf(getReportsYear()),
                     ekOrders,
                     latePickupOrders);
-            byte[] reportBytes = getSerializedObject(ordersReport);
+
+            byte[] ordersBytes;
             Response responseForSaveReport = new Response();
+            try {
+                ordersBytes = getSerializedObject(ordersReport);
+            } catch (Exception e) {
+                responseForSaveReport.setDescription("There was an error in serializing OrdersReport object");
+                appendDescription(responseForSaveReport, response);
+                isReportOfARegionFailed = true;
+                continue;
+            }
             saveReportInDB(
-                    responseForSaveReport, ReportType.ORDERS, Regions.valueOf(orderOfRegion.getKey()), reportBytes);
+                    responseForSaveReport, ReportType.ORDERS, Regions.valueOf(orderOfRegion.getKey()), ordersBytes);
             if (responseForSaveReport.getCode() != ResponseCode.OK) {
                 appendDescription(responseForSaveReport, response);
                 isReportOfARegionFailed = true;
@@ -2725,6 +2753,8 @@ public class mysqlController {
                 return false;
             }
             String machineRegion = responseToRegion.getBody().get(0).toString();
+            if (Regions.valueOf(machineRegion) == Regions.All)
+                continue;
             regionByMachineId.put(integer, machineRegion);
         }
 
@@ -2779,7 +2809,7 @@ public class mysqlController {
             List<String> top3Names = new LinkedList<>();
             for (String Id : top3UserIdAndAmount.keySet()) {
                 Response userDataResponse = new Response();
-                User currentUser = getUserDatabyId(userDataResponse, Integer.parseInt(Id));
+                User currentUser = getUserDataById(userDataResponse, Integer.parseInt(Id));
                 if (currentUser == null) {
                     isReportOfARegionFailed = true;
                     break;
@@ -2792,8 +2822,16 @@ public class mysqlController {
 
             usersReport.setTop3ClientNames(top3Names);
 
-            byte[] reportBytes = getSerializedObject(usersReport);
             Response responseForSaveReport = new Response();
+            byte[] reportBytes;
+            try {
+                reportBytes = getSerializedObject(usersReport);
+            } catch (Exception e) {
+                responseForSaveReport.setDescription("There was an error in serializing UsersReport object");
+                appendDescription(responseForSaveReport, response);
+                isReportOfARegionFailed = true;
+                continue;
+            }
             saveReportInDB(
                     responseForSaveReport, ReportType.USERS, Regions.valueOf(orderOfRegion.getKey()), reportBytes);
             if (responseForSaveReport.getCode() != ResponseCode.OK) {
@@ -2886,6 +2924,7 @@ public class mysqlController {
      */
     private void fillInventoryOfCurrentAndFollowingDays(List<ProductInMachineHistory> dailyProductsHistory,
                                                         Map<Integer, String> nameByProductId,
+                                                        List<Map<Integer, StatusInMachine>> dailyProductsStatus,
                                                         int fromDay,
                                                         int toDay,
                                                         List<Map<String, Integer>> dailyInventory,
@@ -2893,16 +2932,57 @@ public class mysqlController {
                                                         List<Integer> unavailableAmount) {
         for (int day = fromDay; day <= toDay; day++) {
             int dayIndex = day - 1;
+            Map<Integer, StatusInMachine> productsStatusOfADay = dailyProductsStatus.get(dayIndex);
             Map<String, Integer> inventoryOfADay = dailyInventory.get(dayIndex);
+
+            if (day > fromDay) {
+                productsStatusOfADay.putAll(dailyProductsStatus.get(dayIndex - 1));
+                inventoryOfADay.putAll(dailyInventory.get(dayIndex - 1));
+                belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex - 1));
+                unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex - 1));
+                continue;
+            }
+
             for (ProductInMachineHistory product : dailyProductsHistory) {
                 Integer productId = Integer.parseInt(product.getProductId());
+                // if productId already exists, it's replacing its status
+                productsStatusOfADay.put(productId, product.getStatusInMachine());
                 // if productId already exists, it's replacing its amount
                 inventoryOfADay.put(nameByProductId.get(productId), product.getAmount());
-                if (product.getStatusInMachine() == StatusInMachine.Below)
+
+                // --- if first iteration of day (i.e. day == fromDay) ---
+                if (dayIndex == 0) { // if is first call of fillInventoryOfCurrentAndFollowingDays
+                    if (product.getStatusInMachine() == StatusInMachine.Below)
+                        belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) + 1);
+                    else if (product.getStatusInMachine() == StatusInMachine.Not_Available) {
+                        belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) + 1);
+                        unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex) + 1);
+                    }
+                    continue;
+                }
+
+                // not first call of fillInventoryOfCurrentAndFollowingDays and first iteration of days (outer for)
+                StatusInMachine todayStatus = productsStatusOfADay.get(productId);
+                StatusInMachine yesterdayStatus = dailyProductsStatus.get(dayIndex - 1).get(productId);
+                if (todayStatus == yesterdayStatus) {
+                    continue;
+                }
+
+                // checking the status differences
+                if (yesterdayStatus == StatusInMachine.Above && todayStatus == StatusInMachine.Below) {
                     belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) + 1);
-                else if (product.getStatusInMachine() == StatusInMachine.Not_Available) {
+                } else if (yesterdayStatus == StatusInMachine.Above && todayStatus == StatusInMachine.Not_Available) {
                     belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) + 1);
                     unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex) + 1);
+                } else if (yesterdayStatus == StatusInMachine.Below && todayStatus == StatusInMachine.Not_Available) {
+                    unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex) + 1);
+                } else if (yesterdayStatus == StatusInMachine.Below && todayStatus == StatusInMachine.Above) {
+                    belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) - 1);
+                } else if (yesterdayStatus == StatusInMachine.Not_Available && todayStatus == StatusInMachine.Below) {
+                    unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex) - 1);
+                } else if (yesterdayStatus == StatusInMachine.Not_Available && todayStatus == StatusInMachine.Above) {
+                    belowThresholdAmount.set(dayIndex, belowThresholdAmount.get(dayIndex) - 1);
+                    unavailableAmount.set(dayIndex, unavailableAmount.get(dayIndex) - 1);
                 }
             }
         }
