@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/EKrut-server.iml" filepath="$PROJECT_DIR$/.idea/EKrut-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OCSF/OCSF.iml" filepath="$PROJECT_DIR$/OCSF/OCSF.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ekrutServer.iml" filepath="$PROJECT_DIR$/ekrutServer.iml" />
     </modules>
   </component>
 </project>

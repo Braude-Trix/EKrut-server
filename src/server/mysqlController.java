@@ -546,7 +546,11 @@ public class mysqlController {
             editResponse(response, ResponseCode.OK, "Successfully import all products from machine", ProductsInMachine);
             rs.close();
         } catch (SQLException e) {
+<<<<<<< Updated upstream
             editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
+=======
+            editResponse(response, ResponseCode.DB_ERROR, "Failed fetching all products in machine", null);
+>>>>>>> Stashed changes
             System.out.println(e.getMessage());
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
@@ -996,23 +1000,87 @@ public class mysqlController {
      * function that update threshold of machine in DB.  edit the response accordingly.
      * @param response - Response object for the user
      * @param machineId - machine ID
-     * @param newthreshold - the threshold to change
+     * @param newThreshold - the threshold to change
      */
-    public void setMachineThreshold(Response response, Integer machineId, Integer newthreshold) {
+    public void setMachineThreshold(Response response, Integer machineId, Integer newThreshold) {
     	PreparedStatement stmt;
-    	String query = "UPDATE machine SET threshold= ? WHERE machineId= ?";
+    	String query = "UPDATE machine SET threshold = ? WHERE machineId = ?";
     	try {
     		stmt = conn.prepareStatement(query);
-    		stmt.setInt(1, newthreshold);
+    		stmt.setInt(1, newThreshold);
     		stmt.setInt(2, machineId);
     		stmt.executeUpdate();
     		ServerGui.serverGui.printToConsole("update threshold successfully");
     		editResponse(response, ResponseCode.OK, "Successfully updated threshold", null);
-    	}catch(SQLException e) {
+
+            updateProductsInMachineStatus(response, machineId, newThreshold);
+    	} catch(SQLException e) {
     		editResponse(response, ResponseCode.DB_ERROR, "Error updating threshold", null);
     		e.printStackTrace();
     		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
     	}
+    }
+
+    /**
+     * function that update threshold of machine in DB.  edit the response accordingly.
+     * @param response - Response object for the user
+     * @param machineId - machine ID
+     * @param newThreshold - the threshold to change
+     */
+    public void updateProductsInMachineStatus(Response response, Integer machineId, Integer newThreshold) {
+        getAllProductsInMachine(machineId.toString(), response);
+
+        if (response.getCode() != ResponseCode.OK) {
+            return;
+        }
+        boolean isAtLeastOneUpdateFailed = false;
+        boolean isAtLeastOneHistoryUpdateFailed = false;
+        List<ProductInMachine> notUpdatedProducts = response.getBody().stream()
+                .map(productObject -> (ProductInMachine) productObject)
+                .collect(Collectors.toList());
+
+        for (ProductInMachine notUpdatedProduct : notUpdatedProducts) {
+            StatusInMachine newStatusInMachine;
+            if (notUpdatedProduct.getAmount() == 0) {
+                newStatusInMachine = StatusInMachine.Not_Available;
+            } else if (notUpdatedProduct.getAmount() >= newThreshold) {
+                newStatusInMachine = StatusInMachine.Above;
+            } else {
+                newStatusInMachine = StatusInMachine.Below;
+            }
+            if (newStatusInMachine == notUpdatedProduct.getStatusInMachine())
+                continue;
+
+            notUpdatedProduct.setStatusInMachine(newStatusInMachine);
+
+            PreparedStatement stmt;
+            String query = "UPDATE productinmachine SET statusInMachine = ? WHERE productId = ? AND machineId = ?";
+            try {
+                stmt = conn.prepareStatement(query);
+                stmt.setString(1, notUpdatedProduct.getStatusInMachine().name());
+                stmt.setInt(2, Integer.parseInt(notUpdatedProduct.getProductId()));
+                stmt.setInt(3, Integer.parseInt(notUpdatedProduct.getMachineId()));
+                stmt.executeUpdate();
+                editResponse(response, ResponseCode.OK,
+                        "Successfully updated status of ProductInMachine", null);
+            } catch(SQLException e) {
+                isAtLeastOneUpdateFailed = true;
+                e.printStackTrace();
+                ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            }
+
+            updateInventoryHistoryInDB(response, notUpdatedProduct);
+            if (response.getCode() != ResponseCode.OK) {
+                isAtLeastOneHistoryUpdateFailed = true;
+            }
+        }
+
+        if (isAtLeastOneUpdateFailed)
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "Error updating status of ProductInMachine", null);
+        if (isAtLeastOneHistoryUpdateFailed)
+            editResponse(response, ResponseCode.DB_ERROR,
+                    "Error updating status of ProductInMachineHistory", null);
     }
     
 
@@ -1073,9 +1141,8 @@ public class mysqlController {
         }
         if (isExists) {
             PreparedStatement stmt;
-            String query = "UPDATE product_in_machine_history " +
-                    "SET amountInMachine = ?, statusInMachine = ?, updated_month = ?, updated_day = ? " +
-                    "WHERE productId = ? AND machineId = ?";
+            String query = "UPDATE product_in_machine_history SET amountInMachine = ?, statusInMachine = ? " +
+                    "WHERE updated_month = ? AND updated_day = ? AND productId = ? AND machineId = ?";
             try {
                 stmt = conn.prepareStatement(query);
                 stmt.setInt(1, productInMachine.getAmount());
@@ -1091,6 +1158,8 @@ public class mysqlController {
                 e.printStackTrace();
                 ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             }
+            editResponse(response, ResponseCode.OK,
+                    "Inventory in machine history has been updated successfully", null);
         } else {
             insertProductInMachineToHistory(response, productInMachine);
         }
