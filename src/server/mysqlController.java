@@ -1537,7 +1537,7 @@ public class mysqlController {
         String query = "UPDATE pickupOrder SET dateReceived= ? WHERE orderId= ? and pickupCode = ?";
         try {
         	stmt = conn.prepareStatement(query);
-        	stmt.setString(1, LocalDate.now().toString());
+        	stmt.setString(1, LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT)));
         	stmt.setString(2, orderId);
         	stmt.setString(3, pickupCode);
     		stmt.executeUpdate();
