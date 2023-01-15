@@ -1860,8 +1860,6 @@ public class mysqlController {
                 return "Sale2Plus2";
             case PercentageDiscount:
                 return "PercentageDiscount";
-            case GetSecondOneAtDiscount:
-                return "GetSecondOneAtDiscount";
         }
         return "null";
     }
