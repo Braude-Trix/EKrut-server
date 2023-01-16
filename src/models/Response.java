@@ -6,8 +6,6 @@ import java.util.List;
 public class Response implements Serializable, IResponse {
     private static final long serialVersionUID = 1L;
     private ResponseCode code;
-    private String path;
-
     private String description;
     private List<Object> body;
 
@@ -36,13 +34,5 @@ public class Response implements Serializable, IResponse {
 
     public void setBody(List<Object> body) {
         this.body = body;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
     }
 }

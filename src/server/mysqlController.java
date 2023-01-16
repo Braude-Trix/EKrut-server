@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import models.*;
+import utils.Constants;
 
 import static logic.EndOfMonthTask.NEW_REPORTS_CREATED;
 import static logic.EndOfMonthTask.REPORTS_ALREADY_EXISTS;
@@ -566,7 +567,7 @@ public class mysqlController {
             stmt.setString(2, order.getPickUpMethod().toString());
             //change in order to set date from server side.
             //stmt.setString(3, order.getDate());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(StyleConstants.DATE_FORMAT);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.DATE_FORMAT);
             stmt.setString(3, LocalDate.now().format(formatter));
             stmt.setDouble(4, order.getPrice());
             stmt.setString(5, order.getMachineId());
@@ -954,7 +955,7 @@ public class mysqlController {
     		ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
     		return;
     	}
-    	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT));
+    	String date = LocalDate.now().format(DateTimeFormatter.ofPattern(Constants.DATE_FORMAT));
     	query = "SELECT * FROM inventory_fill_tasks WHERE creationDate = ? AND machineId = ? AND assignedWorker = ? AND status = ?";
     	try {
     		stmt = conn.prepareStatement(query);
@@ -1605,7 +1606,7 @@ public class mysqlController {
         String query = "UPDATE pickupOrder SET dateReceived= ? WHERE orderId= ? and pickupCode = ?";
         try {
         	stmt = conn.prepareStatement(query);
-        	stmt.setString(1, LocalDate.now().format(DateTimeFormatter.ofPattern(models.StyleConstants.DATE_FORMAT)));
+        	stmt.setString(1, LocalDate.now().format(DateTimeFormatter.ofPattern(Constants.DATE_FORMAT)));
         	stmt.setString(2, orderId);
         	stmt.setString(3, pickupCode);
     		stmt.executeUpdate();
@@ -3230,12 +3231,12 @@ public class mysqlController {
     }
 
     private int extractYear(String yearByFormat) {
-        // according to the format models.StyleConstants.DATE_FORMAT
+        // according to the format utils.StyleConstants.DATE_FORMAT
         return Integer.parseInt(yearByFormat.split("-")[2]);
     }
 
     private int extractMonth(String monthByFormat) {
-        // according to the format models.StyleConstants.DATE_FORMAT
+        // according to the format utils.StyleConstants.DATE_FORMAT
         String month = monthByFormat.split("-")[1];
         if (month.startsWith("0"))
             month = month.substring(1);
@@ -3243,7 +3244,7 @@ public class mysqlController {
     }
 
     private int extractDay(String dayByFormat) {
-        // according to the format models.StyleConstants.DATE_FORMAT
+        // according to the format utils.StyleConstants.DATE_FORMAT
         String month = dayByFormat.split("-")[0];
         if (month.startsWith("0"))
             month = month.substring(1);
