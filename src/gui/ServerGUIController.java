@@ -36,6 +36,10 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 
+/**
+ * @author gal
+ * This class manages all the functionality enabled in the server's GUI - connecting to the server, importing data and more
+ */
 public class ServerGUIController implements Initializable {
     private static boolean isConnected;
     private static ServerGUIController controller;
@@ -144,6 +148,10 @@ public class ServerGUIController implements Initializable {
         });
     }
 
+    /**
+     * This method describes clicking on connect and trying to connect to the server
+     * @param event - clicking on connect
+     */
     @FXML
     void ToggleConnect(ActionEvent event) {
         ConnectorDisBTN.setDisable(true);
@@ -272,6 +280,10 @@ public class ServerGUIController implements Initializable {
         DBPasswordField.setTooltip(new Tooltip(password));
     }
 
+    /**
+     * Prints messages into the console of the Gui server
+     * @param msg - The message displayed on the console
+     */
     public void printToConsole(String msg) {
         printToConsole(msg, false);
     }
@@ -327,6 +339,9 @@ public class ServerGUIController implements Initializable {
         }
     }
 
+    /**
+     * refresh the connected client
+     */
     public void checkConnectedClients() {
         controller.refreshBtn.fire();
     }

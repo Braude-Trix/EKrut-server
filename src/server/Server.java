@@ -82,6 +82,12 @@ public class Server extends AbstractServer {
 		}
 	}
 
+	/**
+	 * This method receives a request from the client and performs the desired action accordingly - this request is sent to the db,
+	 * and returns a response according to the request
+	 * @param request - A request brought from the client
+	 * @return - response from mySqlController
+	 */
 	public Response parseClientRequest(IRequest request) {
 		String requestPath = request.getPath();
 		Method requestMethod = request.getMethod();
@@ -457,6 +463,10 @@ public class Server extends AbstractServer {
 		}
 	}
 
+	/**
+	 * Default of the data that allows connection to the server
+	 * @return - New configuration of the server
+	 */
 	public static ServerConf getDefaultServerConf() {
 		// default params
 		String ip = "127.0.0.1";

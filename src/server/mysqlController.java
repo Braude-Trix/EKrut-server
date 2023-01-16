@@ -25,12 +25,20 @@ import utils.Constants;
 import static logic.EndOfMonthTask.NEW_REPORTS_CREATED;
 import static logic.EndOfMonthTask.REPORTS_ALREADY_EXISTS;
 
+/**
+ * @author gal
+ * This class describes the communication with db including updating, deleting, adding, searching, etc
+ */
 public class mysqlController {
     public static Connection conn;
     public static Connection externalDBSchemeConn = null;
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
 
+    /**
+     * This method connects to the db
+     * @param serverConf - Connection data to the server
+     */
     public mysqlController(ServerConf serverConf) {
         String dbScheme = serverConf.getDbScheme();
         String dbUserName = serverConf.getDbUserName();
@@ -81,6 +89,10 @@ public class mysqlController {
 
     }
 
+    /**
+     * Closes connection to db
+     * @return - true if close connection successfully, false if not
+     */
     public boolean closeConnection() {
         if (conn != null) {
             try {
@@ -172,11 +184,10 @@ public class mysqlController {
 	}
     
 
-
+    /**
+     * this method get a subscriber id and return true/false if he is exists in DB or not
+     */
     public boolean isSubscriberExistInDB(String id) {
-        /**
-         * this method get a subscriber id and return true/false if he is exists in DB or not
-         */
         PreparedStatement stmt;
         ResultSet rs;
         String query = "SELECT * FROM Subscriber WHERE id = ?";
@@ -364,10 +375,10 @@ public class mysqlController {
         }
     }
 	
-	public void setStatusDeliveryOrderInDB(Response response, String orderId, OrderStatus status, String dateReceived) {
 	/*
 	this method get id of subscriber and update his subscriberNumber to 'newSubscriberNumber' in DB.
 	*/
+	public void setStatusDeliveryOrderInDB(Response response, String orderId, OrderStatus status, String dateReceived) {
 		PreparedStatement stmt;
 		String query = "UPDATE orders SET orderStatus= ? WHERE orderId= ?";
 		try {
@@ -407,6 +418,11 @@ public class mysqlController {
         response.setDescription(description);
     }
     
+    /**
+     * get products from db in specific machine that recieved from client
+     * @param response - Response object for the user
+     * @param machineId - recieved from client the number of machine
+     */
     public void getProductsInMachineData(Response response, String machineId) {
     	List<Object> machineIdList = new ArrayList<>();
     	List<Object> productsList = new ArrayList<>();
@@ -433,6 +449,11 @@ public class mysqlController {
     	editResponse(response, ResponseCode.OK, "Successfully import all products", newProductsList);
     }
     
+    /**
+     * get products amount from db in specific machine that recieved from client
+     * @param response - Response object for the user
+     * @param machineId - recieved from client the number of machine
+     */
     public void getProductsInMachineAmount(Response response, String machineId) {
     	List<Object> machineIdList = new ArrayList<>();
     	List<Object> productsList = new ArrayList<>();
@@ -847,6 +868,11 @@ public class mysqlController {
         }
     }
     
+    /**
+     * function that get regional id by region that recieved from client
+     * @param response - Response object for the user
+     * @param region - region that recieved from client
+     */
     public void getRegionalIdByRegion(Response response, String region) {
     	List<Object> managerIdByRegion = new ArrayList<>();
     	ResultSet rs;
@@ -1269,6 +1295,11 @@ public class mysqlController {
         }
     }
 
+    /**
+     *  get completed orders from db to the specific customer id
+     * @param response - Response object for the user
+     * @param customerId - customer id that received from client side
+     */
     public void getCompletedOrders(Response response, Integer customerId) {
         List<Object> OrderedIds = new ArrayList<>();
         PreparedStatement stmt;

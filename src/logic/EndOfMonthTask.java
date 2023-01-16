@@ -9,6 +9,11 @@ import java.util.Calendar;
 import java.util.Objects;
 
 
+/**
+ * A class that contains a thread that runs every hour 
+ * and checks if the month is over - produces new reports if so
+ *
+ */
 public class EndOfMonthTask implements Runnable {
     public static final String REPORTS_ALREADY_EXISTS = "Reports are already exists";
     public static final String NEW_REPORTS_CREATED = "Generating All Reports has done successfully";
