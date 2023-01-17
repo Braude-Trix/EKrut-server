@@ -117,6 +117,7 @@ public class mysqlController {
      * function for 'import simulation', import all users, workers and customers tables from external scheme to our scheme
      * @param dbSchemeName - the name of our scheme
      * @param externalDBSchemeName - the name of the external scheme
+     * @param DBPassword - the password to our DB
      * @return true/false accordingly if everything succeed or not
      */
     public static boolean importUsersDataFromExternalDB(String dbSchemeName, String externalDBSchemeName, String DBPassword){
@@ -186,6 +187,8 @@ public class mysqlController {
 
     /**
      * this method get a subscriber id and return true/false if he is exists in DB or not
+     * @param id - a subscriber id
+     * @return bool value if the subscriber is/isn't in DB
      */
     public boolean isSubscriberExistInDB(String id) {
         PreparedStatement stmt;
@@ -1534,7 +1537,8 @@ public class mysqlController {
 	/**
 	 * This method creates a query to the db and calls two more methods inside it.
 	 * The query created by this method requests the id of not collected order set to be picked up from the given machine with the given pickup code.
-	 * Then, after making sure that the order exists and valid, it calls another method to update the status of the order to be collected(by changing the collect time-> time=now).
+	 * After making sure that the order exists and valid.
+	 * It calls another method to update the status of the order to be collected(by changing the collect time to time=now).
 	 * @param response - the response object to build and send back to the client.
 	 * @param userId - the id of the user with the pickup order
 	 * @param pickupCode - the code generated after pickup order was created
@@ -1950,8 +1954,9 @@ public class mysqlController {
     }
     /**
      * this method return all the users from the DB
+     * @param response - the response built for the client side.
      */
-    public void getUsersWithTheirStatus(Response response) { // BADIHI
+    public void getUsersWithTheirStatus(Response response) {
         User user;
         List<Object> users = new ArrayList<>();
         PreparedStatement stmt;
@@ -1981,8 +1986,10 @@ public class mysqlController {
     }
     /**
      * this method get a user id check if he is client or subscriber
+     * @param response - the response built for the client side.
+     * @param id - the id we send to check if client or subscriber.
      */
-    public void getUsersStatus(Response response, Integer id) { // BADIHI
+    public void getUsersStatus(Response response, Integer id) { 
         String status;
         List<Object> statusList = new ArrayList<>();
         PreparedStatement stmt;
@@ -2011,9 +2018,11 @@ public class mysqlController {
     }
     /**
      * this method get a user id and request to upgrade him to client
+     * @param response - the response built for the client side.
+     * @param userId - the id of user we want to upgrade.
+     * @param region - the region we assined the user.
      */
-
-    public void UpgradeUserToClient(Response response, Integer userId,String region) { // Badhi
+    public void UpgradeUserToClient(Response response, Integer userId,String region) { 
 
         PreparedStatement stmt;
         String query = "INSERT into pending_users_for_upgrade (id,region) VALUES (?,?)";
@@ -2033,8 +2042,10 @@ public class mysqlController {
     }
     /**
      * this method get a client id and upgrade him to subscriber
+     * @param response - the response built for the client side.
+     * @param userId - the id of client we want to upgrade to subscriber.
      */
-    public void UpgradeClientToSubscriber(Response response, Integer userId) { // Badihi
+    public void UpgradeClientToSubscriber(Response response, Integer userId) {
 
         PreparedStatement stmtForMax;
         ResultSet rs;
@@ -2073,8 +2084,10 @@ public class mysqlController {
     }
     /**
      * this method get a user id and return true/false if he is pending to upgrade or not
+     * @param response - the response built for the client side.
+     * @param id - the id we are checking
      */
-    public void checkIfUserPending(Response response, Integer id) { // BADIHI
+    public void checkIfUserPending(Response response, Integer id) { 
         List<Object> statusList = new ArrayList<>();
         PreparedStatement stmt;
         ResultSet rs;
@@ -2124,6 +2137,7 @@ public class mysqlController {
 
     /**
      * this method returns all users that are pending to upgrade to customer or not
+     * @param response - the response built for the client side.
      */
     public void getAllPendingUsers(Response response) {
         List<Integer> usersIdList = new ArrayList<>();
