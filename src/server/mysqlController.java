@@ -2287,14 +2287,15 @@ public class mysqlController {
      * this method returns all users that are pending to upgrade to customer or not
      * @param response - the response built for the client side.
      */
-    public void getAllPendingUsers(Response response) {
+    public void getAllPendingUsers(Response response, Regions ofRegion) {
         List<Integer> usersIdList = new ArrayList<>();
         List<Object> usersList = new ArrayList<>();
         PreparedStatement stmt;
         ResultSet rs;
-        String query = "SELECT * FROM pending_users_for_upgrade";
+        String query = "SELECT * FROM pending_users_for_upgrade WHERE region = ?";
         try {
             stmt = conn.prepareStatement(query);
+            stmt.setString(1, ofRegion.name());
             rs = stmt.executeQuery();
             while (rs.next()) {
                 usersIdList.add(rs.getInt("id"));

@@ -303,7 +303,8 @@ public class Server extends AbstractServer {
 			break;
 		case "/users/allPendingUsers":
 			if (requestMethod == Method.GET) {
-				mysqlController.getAllPendingUsers(response);
+				Regions ofRegion = (Regions) requestBody.get(0);
+				mysqlController.getAllPendingUsers(response, ofRegion);
 			}
 			break;
 		case "/users/upgradeToCostumer":
