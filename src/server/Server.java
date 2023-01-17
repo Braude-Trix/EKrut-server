@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class overrides some methods in the abstract superclass in order to give
@@ -143,15 +144,6 @@ public class Server extends AbstractServer {
 				mysqlController.getProductsInMachineAmount(response, idOfMachine);
 			}
 			break;
-			
-		case "/saveProductsInOrder":
-			String orderId = (String) requestBody.get(0);
-			List<Object> productsList = (List<Object>) requestBody.get(1);
-			if (requestMethod == Method.POST) {
-				mysqlController.saveProductsInOrder(response, orderId, productsList);
-			}
-			break;
-
 		case "/getMachineThreshold":
 			Integer getMachineId = (Integer) requestBody.get(0);
 			if (requestMethod == Method.GET) {
@@ -186,35 +178,16 @@ public class Server extends AbstractServer {
 				mysqlController.setOpenTaskForOpWorker(response, taskWorkerId, taskMachineId);
 			}
 			break;
-			
-		case "/updateInventory":
-			List<Object> updatedInventory = (List<Object>) requestBody.get(0);
-			if (requestMethod == Method.PUT) {
-				mysqlController.updateInventoryInDB(response, updatedInventory);
-			}
-			break;
 		case "/getCustomerIdByOrderId":
 			String OrderIdFromCustomerId = requestBody.get(0).toString();
 			if (requestMethod == Method.GET) {
 				mysqlController.getCustomerIdByOrderIdFromDB(response, OrderIdFromCustomerId);
 			}
 			break;
-		case "/saveDeliveryOrder":
-			DeliveryOrder deliveryOrder = (DeliveryOrder) requestBody.get(0);
-			if (requestMethod == Method.POST) {
-				mysqlController.saveDeliveryOrder(response, deliveryOrder);
-			}
-			break;
 		case "/getMachineName":
 			Integer machineIdForName = Integer.parseInt((String) requestBody.get(0));
 			if (requestMethod == Method.GET) {
 				mysqlController.getMachineName(response, machineIdForName);
-			}
-			break;
-		case "/saveLatePickUpOrder":
-			PickupOrder pickupOrder = (PickupOrder) requestBody.get(0);
-			if (requestMethod == Method.POST) {
-				mysqlController.saveLatePickUpOrder(response, pickupOrder);
 			}
 			break;
 		case "/getMonthlyBill":
@@ -365,16 +338,6 @@ public class Server extends AbstractServer {
 				mysqlController.checkIfUserPending(response, (Integer)requestBody.get(0));
 			}
 			break;
-		case "/requestRegionalManagersIds":
-			if (requestMethod == Method.GET) {
-				mysqlController.getRegionalManagersIds(response, (Regions)requestBody.get(0));
-			}
-			break;
-		case "/requestRegionByMachineId":
-			if (requestMethod == Method.GET) {
-				mysqlController.getRegionByMachineId(response, (Integer)requestBody.get(0));
-			}
-			break;
 		case "/operationalWorker/getOpenedTasks":
 			if (requestMethod == Method.GET) {
 				mysqlController.getOpenInventoryFillTasks(response, (Integer) requestBody.get(0));
@@ -382,7 +345,10 @@ public class Server extends AbstractServer {
 			break;
 		case "/operationalWorker/fillInventory":
 			if (requestMethod == Method.POST) {
-				mysqlController.updateInventoryInDB(response, requestBody);
+				List<ProductInMachine> productsInMachine = requestBody.stream()
+						.map(product -> (ProductInMachine) product)
+						.collect(Collectors.toList());
+				mysqlController.updateInventoryInDB(response, productsInMachine);
 			}
 			break;
 		case "/operationalWorker/setInventoryTask":

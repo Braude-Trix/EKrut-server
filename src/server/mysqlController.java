@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -604,6 +605,12 @@ public class mysqlController {
      * @param response - Response object for the user
      */
     public void saveOrderToDB(Order order, Response response) {
+    	boolean isOk = validateProductsInInventory(response, order);
+    	if (!isOk) {
+    		editResponse(response, ResponseCode.INVALID_DATA, "Not enouth product in machine, please retry", null);
+    		return;
+    	}
+    	
         PreparedStatement stmt;
         String query = "INSERT into orders (orderId, pickUpMethod, orderDate, price, machineId, orderStatus, customerId) VALUES (?,?, ?, ?, ?, ?, ?)";
         try {
@@ -611,7 +618,6 @@ public class mysqlController {
             stmt.setString(1, order.getOrderId());
             stmt.setString(2, order.getPickUpMethod().toString());
             //change in order to set date from server side.
-            //stmt.setString(3, order.getDate());
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.DATE_FORMAT);
             stmt.setString(3, LocalDate.now().format(formatter));
             stmt.setDouble(4, order.getPrice());
@@ -625,7 +631,130 @@ public class mysqlController {
         } catch (SQLException e) {
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            editResponse(response, ResponseCode.INVALID_DATA, "Successfully save order", null);
         }
+        
+        saveProductsInOrder(response, order.getOrderId(), order.getProductsInOrder());
+        
+        if (response.getCode() != ResponseCode.OK) {
+        	return;
+        }
+        
+        List<ProductInMachine> productsInMachine = getUpdatedInventory(response, order);
+        if (productsInMachine == null) {
+        	return;
+        }
+        updateInventoryInDB(response, productsInMachine);
+        if (response.getCode() != ResponseCode.OK) {
+        	return;
+        }
+        
+        if (order.getPickUpMethod() == PickUpMethod.delivery) {
+        	saveDeliveryOrder(response, (DeliveryOrder) order);
+        } else if (order.getPickUpMethod() == PickUpMethod.latePickUp) {
+        	saveLatePickUpOrder(response, (PickupOrder) order);
+        } 
+    }
+    
+    private List<ProductInMachine> getUpdatedInventory(Response response, Order order) {
+        boolean postMsg;
+        int currentlyAmount, newAmount;
+        String machineName;
+        String machineId = order.getMachineId();
+        List<ProductInMachine> updatedMachineList = new ArrayList<>();
+        getAllProductsInMachine(machineId, response);
+        
+        if (response.getCode() != ResponseCode.OK) {
+        	return null;
+        }
+        
+        List<ProductInMachine> productsInMachineList = response.getBody().stream()
+        		.map(arg0 -> (ProductInMachine) arg0)
+        		.collect(Collectors.toList());
+        
+        StatusInMachine newStatusInMachine;
+        getMachineThreshold(response, Integer.parseInt(machineId));
+        
+        if (response.getCode() != ResponseCode.OK) {
+        	return null;
+        }
+        Integer getMachineThreshold = (Integer) response.getBody().get(0);        
+        ProductInMachine productInMachine;
+        for (ProductInOrder productInOrder : order.getProductsInOrder()) {
+            postMsg = false;
+            currentlyAmount = getProductMachineAmountFromList(
+            		productsInMachineList, 
+            		Integer.parseInt(machineId), 
+            		Integer.valueOf(productInOrder.getProduct().getProductId()));
+            newAmount = currentlyAmount - productInOrder.getAmount();
+            if (currentlyAmount > getMachineThreshold && newAmount < getMachineThreshold && Integer.parseInt(machineId) != 1)
+                postMsg = true;
+            if (newAmount == 0) newStatusInMachine = StatusInMachine.Not_Available;
+            else if (newAmount < getMachineThreshold) {
+                newStatusInMachine = StatusInMachine.Below;
+            } else {
+                newStatusInMachine = StatusInMachine.Above;
+            }
+            
+            getMachineName(response, Integer.parseInt(machineId));
+            
+            if (response.getCode() != ResponseCode.OK) {
+            	return null;
+            }
+            machineName = response.getBody().get(0).toString();
+        	String msg = "Inventory status:\nMachine id: " + machineId + "\nMachine name: " + machineName + "\nProduct id: " + Integer.valueOf(productInOrder.getProduct().getProductId()) +
+                    "\nProduct name: " + productInOrder.getProduct().getName() + "\nStatus in machine: " + newStatusInMachine.toString() + "\nProduct amount: " + newAmount;
+            boolean isOk = updateManagerAboutProductsStatus(response, postMsg, msg, order);
+            
+            if (!isOk || response.getCode() != ResponseCode.OK) {
+            	return null;
+            }
+            
+            productInMachine = new ProductInMachine(machineId, productInOrder.getProduct().getProductId(), newStatusInMachine, newAmount);
+            updatedMachineList.add(productInMachine);
+        }
+        return updatedMachineList;
+    }
+    
+    private boolean updateManagerAboutProductsStatus(Response response, boolean isToPostMsg, 
+    		String message, Order order) {
+        if (isToPostMsg) {
+        	Regions region = getRegionByMachineId(Integer.parseInt(order.getMachineId()));
+        	if (region == null)
+        		return false;
+            List<Integer> managersIds = getRegionalManagersIds(region);
+        	if (managersIds == null)
+        		return false;
+            for (Integer managerId : managersIds) {
+            	postMsg(response, message, order.getCustomerId(), managerId);
+            }
+        }
+        return true;
+    }
+    
+    private Integer getProductMachineAmountFromList(List<ProductInMachine> productsInMachineList, Integer machineId, Integer productId) {
+        for (ProductInMachine productInMachine : productsInMachineList) {
+            if ((machineId.toString()).equals(productInMachine.getMachineId()) && Objects.equals(productId, Integer.valueOf(productInMachine.getProductId())))
+                return productInMachine.getAmount();
+        }
+        return -1;
+    }
+    
+    private boolean validateProductsInInventory(Response response, Order order) {
+        getAllProductsInMachine(order.getMachineId().toString(), response);
+        if (response.getCode() != ResponseCode.OK) {
+        	return false;
+        }
+        List<ProductInMachine> machineProducts = response.getBody().stream()
+        		.map(arg0 -> (ProductInMachine) arg0)
+        		.collect(Collectors.toList());
+        for (ProductInOrder productInOrder : order.getProductsInOrder()) {
+            for (ProductInMachine productInMachine : machineProducts) {
+                if (productInOrder.getProduct().getProductId().equals(productInMachine.getProductId()) && productInOrder.getAmount() > productInMachine.getAmount())
+                    return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -818,15 +947,15 @@ public class mysqlController {
      * @param orderId - Order id
      * @param productsList - list of products in the order
      */
-    public void saveProductsInOrder(Response response, String orderId, List<Object> productsList) {
+    public void saveProductsInOrder(Response response, String orderId, List<ProductInOrder> productsList) {
         PreparedStatement stmt;
-        for (Object product : productsList) {
+        for (ProductInOrder product : productsList) {
             String query = "INSERT into product_in_order VALUES (?, ?, ?)";
             try {
                 stmt = conn.prepareStatement(query);
                 stmt.setString(1, orderId);
-                stmt.setString(2, ((ProductInOrder) product).getProduct().getProductId());
-                stmt.setInt(3, ((ProductInOrder) product).getAmount());
+                stmt.setString(2, product.getProduct().getProductId());
+                stmt.setInt(3, product.getAmount());
                 stmt.executeUpdate();
                 editResponse(response, ResponseCode.OK, "Successfully save products in order", null);
                 ServerGui.serverGui.printToConsole("Successfully save products in order");
@@ -1139,23 +1268,21 @@ public class mysqlController {
      * @param response - Response object for the user
      * @param updatedInventory - list of ProductInMachine objects
      */
-    public void updateInventoryInDB(Response response, List<Object> updatedInventory) {
+    public void updateInventoryInDB(Response response, List<ProductInMachine> updatedInventory) {
         boolean isUpdateFailed = false;
         Response responseForHistory = new Response();
-        ProductInMachine productInMachineCasted;
-        for(Object productInMachine : updatedInventory) {
-            productInMachineCasted = (ProductInMachine) productInMachine;
+        for(ProductInMachine productInMachine : updatedInventory) {
             PreparedStatement stmt;
             String query = "UPDATE ProductInMachine SET amountInMachine= ?, statusInMachine= ? WHERE productId = ? AND machineId = ?";
             try {
                 stmt = conn.prepareStatement(query);
-                stmt.setInt(1, productInMachineCasted.getAmount());
-                stmt.setString(2, productInMachineCasted.getStatusInMachine().toString());
-                stmt.setString(3, productInMachineCasted.getProductId());
-                stmt.setString(4, productInMachineCasted.getMachineId());
+                stmt.setInt(1, productInMachine.getAmount());
+                stmt.setString(2, productInMachine.getStatusInMachine().toString());
+                stmt.setString(3, productInMachine.getProductId());
+                stmt.setString(4, productInMachine.getMachineId());
                 stmt.executeUpdate();
 
-                updateInventoryHistoryInDB(responseForHistory, productInMachineCasted);
+                updateInventoryHistoryInDB(responseForHistory, productInMachine);
                 if (responseForHistory.getCode() != ResponseCode.OK) { // an error occurred in updating history
                     isUpdateFailed = true;
                 }
@@ -2275,7 +2402,7 @@ public class mysqlController {
      * @param response - Response object
      * @param machineId - machine id
      */
-    public void getRegionByMachineId(Response response, Integer machineId) {
+    public Regions getRegionByMachineId(Integer machineId) {
         List<Object> res = new ArrayList<>();
         ResultSet rs;
         PreparedStatement stmt;
@@ -2285,13 +2412,12 @@ public class mysqlController {
             stmt.setInt(1, machineId);
             rs = stmt.executeQuery();
             if(rs.next())
-                res.add(rs.getString("region"));
-            editResponse(response, ResponseCode.OK, "Successfully get region by machine id", res);
+                return Regions.valueOf(rs.getString("region"));
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
+        return null;
     }
 
     /**
@@ -2299,8 +2425,8 @@ public class mysqlController {
      * @param response Response object
      * @param region Regions enum
      */
-    public void getRegionalManagersIds(Response response, Regions region){
-        List<Object> res = new ArrayList<>();
+    public List<Integer> getRegionalManagersIds(Regions region){
+        List<Integer> res = new ArrayList<>();
         ResultSet rs;
         PreparedStatement stmt;
         String query = "SELECT * FROM workers WHERE region = ? and workerType = ?";
@@ -2311,12 +2437,12 @@ public class mysqlController {
             rs = stmt.executeQuery();
             while(rs.next())
                 res.add(rs.getInt("id"));
-            editResponse(response, ResponseCode.OK, "Successfully get regional manager ids", res);
             rs.close();
+            return res;
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            return null;
         }
     }
 
