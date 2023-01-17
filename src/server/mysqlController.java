@@ -2286,6 +2286,7 @@ public class mysqlController {
     /**
      * this method returns all users that are pending to upgrade to customer or not
      * @param response - the response built for the client side.
+     * @param ofRegion - region of the requested pending users
      */
     public void getAllPendingUsers(Response response, Regions ofRegion) {
         List<Integer> usersIdList = new ArrayList<>();
@@ -2400,8 +2401,8 @@ public class mysqlController {
 
     /**
      * get the region of machine by the machineId
-     * @param response - Response object
      * @param machineId - machine id
+     * @return Region of specifed machine id
      */
     public Regions getRegionByMachineId(Integer machineId) {
         List<Object> res = new ArrayList<>();
@@ -2423,10 +2424,10 @@ public class mysqlController {
 
     /**
      * get the regional managers ids by the region
-     * @param response Response object
      * @param region Regions enum
+     * @return List of manager IDs
      */
-    public List<Integer> getRegionalManagersIds(Regions region){
+    public List<Integer> getRegionalManagersIds(Regions region) {
         List<Integer> res = new ArrayList<>();
         ResultSet rs;
         PreparedStatement stmt;
