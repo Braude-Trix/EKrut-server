@@ -261,7 +261,6 @@ public class mysqlController {
 	 * @param response - the method edits this response in order to show the user the result of the query
 	 * @param customerId - users id.
 	 */
-
 	public void getMyOrdersFromDB(Response response, Integer customerId) {
     	List<Object> MyOrders= new ArrayList<>();
 
@@ -275,6 +274,19 @@ public class mysqlController {
             while (rs.next()) {
             	MyOrders order = new MyOrders(rs.getString("orderId"), rs.getString("orderDate"), rs.getString("orderDate"), rs.getInt("price"), rs.getString("machineId"),
             			OrderStatus.valueOf(rs.getString("orderStatus")), PickUpMethod.valueOf(rs.getString("pickUpMethod")), rs.getInt("customerId"));
+            	if (order.getPickUpMethod() == PickUpMethod.delivery || order.getPickUpMethod() == PickUpMethod.latePickUp) {
+    		    	if (order.getPickUpMethod() == PickUpMethod.delivery) {
+    		    		getReceivedDateDeliveryFromDB(response, order);
+    		    	}
+    		    	else {
+    		    		getReceivedDatePickupFromDB(response, order);
+    		    	}
+            	}
+            	if (response.getCode() == ResponseCode.DB_ERROR) {
+                    editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
+                    ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+                    return;
+            	}
             	MyOrders.add(order);
             }
             
@@ -294,60 +306,69 @@ public class mysqlController {
 	/**
 	 * This method creates a query to the db, the query asks the date of a specific received delivery order. 
 	 * @param response - the method edits this response in order to show the user the result of the query
-	 * @param orderId - the id of the order wanted to be checked.
+	 * @param order - the order wanted to be checked.
 	 */
 
-	public void getReceivedDateDeliveryFromDB(Response response, String orderId) {
-    	List<Object> RecivedDate= new ArrayList<>();
+	public void getReceivedDateDeliveryFromDB(Response response, MyOrders order) {
 
         PreparedStatement stmt;
         ResultSet rs ;
         String query = "SELECT dateReceived FROM deliveryOrder WHERE orderId = ?";
         try {
         	stmt = conn.prepareStatement(query);
-        	stmt.setString(1, orderId);
+        	stmt.setString(1, order.getOrderId());
             rs = stmt.executeQuery();
             if (rs.next()) {
-            	RecivedDate.add(rs.getString("dateReceived"));
+				if (rs.getString("dateReceived") == null)
+				{
+					order.setReceivedDate("-----");
+				}
+				else {
+					order.setReceivedDate(rs.getString("dateReceived"));
+				}
             }
-            editResponse(response, ResponseCode.OK, "Successfully sent the time of receiving the delivery order", RecivedDate);
+            //editResponse(response, ResponseCode.OK, "Successfully sent the time of receiving the delivery order", RecivedDate);
             rs.close();
-
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, response.getBody());
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-    }
+	}
 	
 	/**
 	 * This method creates a query to the db, the query asks the date for a specific received Pickup order.
 	 * @param response - the method edits this response in order to show the user the result of the query
-	 * @param orderId - the id of the order wanted to be checked. 
+	 * @param order - the order wanted to be checked. 
 	 */
 
-	public void getReceivedDatePickupFromDB(Response response, String orderId) {
-    	List<Object> RecivedDate= new ArrayList<>();
+	public void getReceivedDatePickupFromDB(Response response, MyOrders order) {
 
         PreparedStatement stmt;
         ResultSet rs ;
         String query = "SELECT dateReceived FROM pickupOrder WHERE orderId = ?";
         try {
         	stmt = conn.prepareStatement(query);
-        	stmt.setString(1, orderId);
+        	stmt.setString(1, order.getOrderId());
             rs = stmt.executeQuery();
             if (rs.next()) {
-            	RecivedDate.add(rs.getString("dateReceived"));
+				if (rs.getString("dateReceived") == null)
+				{
+					order.setReceivedDate("-----");
+				}
+				else {
+					order.setReceivedDate(rs.getString("dateReceived"));
+				}
             }
-            editResponse(response, ResponseCode.OK, "Successfully sent the time of receiving the pickup order", RecivedDate);
             rs.close();
-
         } catch (SQLException e) {
-            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
+            editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, response.getBody());
             e.printStackTrace();
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
-    }
+	}
+
+
 	
 	/**
 	 * This method creates a query to the db, the query asks for a pickUp code for a specific pickup order.

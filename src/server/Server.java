@@ -104,16 +104,6 @@ public class Server extends AbstractServer {
 				mysqlController.getMyOrdersFromDB(response, (Integer) requestBody.get(0));
 			}
 			break;
-		case "/order/ReceivedDateDelivery":
-			if (requestMethod == Method.GET) {
-				mysqlController.getReceivedDateDeliveryFromDB(response, (String) requestBody.get(0));
-			}
-			break;
-		case "/order/ReceivedDatePickup":
-			if (requestMethod == Method.GET) {
-				mysqlController.getReceivedDatePickupFromDB(response, (String) requestBody.get(0));
-			}
-			break;
 		case "/newOrder":
 			Order order = (Order) requestBody.get(0);
 			if (requestMethod == Method.POST) {
