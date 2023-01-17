@@ -2327,7 +2327,7 @@ public class mysqlController {
     void checkOutDatedSales() {
     	 PreparedStatement stmt;
 
-         String query = "UPDATE sales SET saleStatus= ? WHERE STR_TO_DATE(saleEndDate, '%d-%m-%Y') < NOW()";
+         String query = "UPDATE sales SET saleStatus= ? WHERE STR_TO_DATE(saleEndDate, '%d-%m-%Y') < NOW()- INTERVAL 1 DAY";
          try {
              stmt = conn.prepareStatement(query);
              stmt.setString(1, "Outdated");
