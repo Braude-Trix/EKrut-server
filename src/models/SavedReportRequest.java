@@ -1,6 +1,7 @@
 package models;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class SavedReportRequest implements Serializable {
     private final int year;
@@ -35,5 +36,18 @@ public class SavedReportRequest implements Serializable {
 
     public Integer getMachineId() {
         return machineId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SavedReportRequest that = (SavedReportRequest) o;
+        return year == that.year && month == that.month && reportType == that.reportType && region == that.region && Objects.equals(machineId, that.machineId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(year, month, reportType, region, machineId);
     }
 }
