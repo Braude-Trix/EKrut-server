@@ -1,5 +1,6 @@
 package server;
 
+import gui.IServerGui;
 import gui.ServerGui;
 import serverModels.ProductInMachineHistory;
 import serverModels.ServerConf;
@@ -35,20 +36,48 @@ public class mysqlController {
     public static Connection externalDBSchemeConn = null;
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
+    private IServerGui iServerGui;
+    public class ServerGuiService implements IServerGui{
+		@Override
+		public void setPrintToConsole(String msg, boolean isError) {
+			ServerGui.serverGui.printToConsole(msg, isError);
+		}
 
+		@Override
+		public void setPrintToConsole(String msg) {
+			ServerGui.serverGui.printToConsole(msg);
+		}
+		
+
+		@Override
+		public void setConnected(boolean isConnected) {
+			ServerGui.serverGui.setConnected(isConnected);
+		}
+    	
+    }
+    public mysqlController(ServerConf serverConf, IServerGui iServerGui) {
+    	this.iServerGui =  iServerGui;
+    	setServerConf(serverConf);
+    }
+    
     /**
      * This method connects to the db
      * @param serverConf - Connection data to the server
      */
     public mysqlController(ServerConf serverConf) {
+    	this.iServerGui = new ServerGuiService();
+    	setServerConf(serverConf);
+    }
+    
+    private void setServerConf(ServerConf serverConf) {
         String dbScheme = serverConf.getDbScheme();
         String dbUserName = serverConf.getDbUserName();
         String dbPassword = serverConf.getDbPassword();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-            ServerGui.serverGui.printToConsole("Driver definition succeed");
+            iServerGui.setPrintToConsole("Driver definition succeed");
         } catch (Exception ex) { // handle the error
-            ServerGui.serverGui.printToConsole("Driver definition failed", true);
+        	iServerGui.setPrintToConsole("Driver definition failed", true);
         }
 
         try {
@@ -56,12 +85,12 @@ public class mysqlController {
                     String.format("jdbc:mysql://localhost/%s?serverTimezone=IST&useSSL=false", dbScheme),
                     dbUserName,
                     dbPassword);
-            ServerGui.serverGui.setConnected(true);
+            iServerGui.setConnected(true);
         } catch (SQLException ex) { // handle any errors
-            ServerGui.serverGui.printToConsole("SQLException: " + ex.getMessage(), true);
-            ServerGui.serverGui.printToConsole("SQLState: " + ex.getSQLState(), true);
-            ServerGui.serverGui.printToConsole("VendorError: " + ex.getErrorCode(), true);
-            ServerGui.serverGui.setConnected(false);
+        	iServerGui.setPrintToConsole("SQLException: " + ex.getMessage(), true);
+        	iServerGui.setPrintToConsole("SQLState: " + ex.getSQLState(), true);
+        	iServerGui.setPrintToConsole("VendorError: " + ex.getErrorCode(), true);
+        	iServerGui.setConnected(false);
         }
     }
 
@@ -105,9 +134,9 @@ public class mysqlController {
                 catch(Exception e){
 
                 }
-                ServerGui.serverGui.printToConsole("SQL connection was closed");
+                iServerGui.setPrintToConsole("SQL connection was closed");
             } catch (SQLException e) {
-                ServerGui.serverGui.printToConsole("Couldn't close SQL connection", true);
+            	iServerGui.setPrintToConsole("Couldn't close SQL connection", true);
                 return false;
             }
         }
@@ -252,8 +281,8 @@ public class mysqlController {
 
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+           // e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
 	
@@ -1827,8 +1856,8 @@ public class mysqlController {
             rs.close();
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            //e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
 	}
 	
@@ -1850,10 +1879,9 @@ public class mysqlController {
         	editResponse(response, ResponseCode.OK, response.getDescription(), response.getBody());
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
-        }
-        
+            //e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        } 
 	}
 	
 	/**
@@ -1886,7 +1914,7 @@ public class mysqlController {
 		}
 	}
 	
-	
+
 	private Worker getWorker(Response response, User user) {
 		Worker worker = null;
 		PreparedStatement stmt;
@@ -1904,8 +1932,8 @@ public class mysqlController {
             return worker;
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+           // e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
         return null;
 	}
@@ -1931,8 +1959,8 @@ public class mysqlController {
         	editResponse(response, ResponseCode.OK, "Successfully sent all subscribers id",subscribersId);
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, "Error loading data (DB)", null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+           // e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
 	}
 	
@@ -1942,7 +1970,7 @@ public class mysqlController {
 	 * @param response - the response object to build and send back to the client.
 	 * @param id - the id of wanted user.
 	 */
-	public void getUserById(Response response, Integer id) {
+	public void getCustomerById(Response response, Integer id) {
 
     	List<Object> userDetails= new ArrayList<>();
 
@@ -1958,8 +1986,10 @@ public class mysqlController {
                 user = new User(rs.getString("firstName"), rs.getString("lastName"), rs.getInt("id"),
                 		rs.getString("email"), rs.getString("phoneNumber"), rs.getString("username"), rs.getString("userPassword"),
                 		rs.getBoolean("isLoggedIn"), rs.getString("creditCardNumber"));
+  
                 if (user.isLoggedIn()) {
                     editResponse(response, ResponseCode.INVALID_DATA, "The user is already logged in", null);
+
                 }
                 else {
                     userDetails.add(user);
@@ -1976,8 +2006,8 @@ public class mysqlController {
 
         } catch (SQLException e) {
             editResponse(response, ResponseCode.DB_ERROR, EXECUTE_UPDATE_ERROR_MSG, null);
-            e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+           // e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
     /**

@@ -287,7 +287,7 @@ public class Server extends AbstractServer {
 			break;
 		case "/login/getCustomerById":
 			if (requestMethod == Method.GET) {
-				mysqlController.getUserById(response, (Integer) requestBody.get(0));
+				mysqlController.getCustomerById(response, (Integer) requestBody.get(0));
 			}
 			break;
 		case "/sales":
