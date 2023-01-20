@@ -69,7 +69,6 @@ class mysqlControllerTest {
 		//Opening a mysql connection:
 		serverGuiDummy = new ServerGuiServiceTest();
 		conf = Server.getDefaultServerConf();
-		conf.setDbPassword("99663366p");
 		mySql = new mysqlController(conf,serverGuiDummy);
 		res = new Response();
 		mysqlController.disconnectServer(res);
