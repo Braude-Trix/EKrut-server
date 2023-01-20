@@ -97,7 +97,7 @@ public class Server extends AbstractServer {
 		switch (requestPath) {
 		case "/login/getUser":
 			if (requestMethod == Method.GET) {
-				mysqlController.getUserFromDB(response, (String) requestBody.get(0), (String) requestBody.get(1));
+				mysqlController.getAndLoginUserFromDB(response, (String) requestBody.get(0), (String) requestBody.get(1));
 			}
 			break;
 		case "/user/myOrders":

@@ -98,7 +98,7 @@ class mysqlControllerTest {
 	
 	////////////////////////////////getUserTest & change logged in/////////////////////////////////
 
-	// Functionality: successfully getting correct user with "getUserFromDB" method.
+	// Functionality: successfully getting correct user with "getAndLoginUserFromDB" method.
 	// input data:String username(customer2), String password(1234), mysqlController (mySql), Response(res), User user(Mr. "Din Til" Info), String expectedDescription.
 	// expected result:correct user achieved. response changed correctly: (response code = OK, response Description = successfully got user msg).
 	@Test
@@ -106,7 +106,7 @@ class mysqlControllerTest {
 		String username="customer2";
 		String password="1234";
 		String expectedDescription = "Successfully got user details";
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		assertEquals(ResponseCode.OK, res.getCode());
 		compareBetweenTwoUsers(user, (User)res.getBody().get(0));
 		assertEquals(1, res.getBody().size());
@@ -115,7 +115,7 @@ class mysqlControllerTest {
 	}
 	
 	
-	// Functionality: invoking "getUserFromDB" method with invalid login details.
+	// Functionality: invoking "getAndLoginUserFromDB" method with invalid login details.
 	// input data:String username(Toly), String password(Ro), mysqlController (mySql), Response(res),String expectedDescription.
 	// expected result:Failure - No such user, response changed correctly: (response code = INVALID_DATA, response body = empty(null), response Description = incorrect password msg).
 	@Test
@@ -123,24 +123,24 @@ class mysqlControllerTest {
 		String username="Toly";
 		String password="Ro";
 		String expectedDescription ="The username or password are incorrect";
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		assertEquals(ResponseCode.INVALID_DATA, res.getCode());
 		assertEquals(null, res.getBody());
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, null);
 	}
 
-	// Functionality: invoking "getUserFromDB" method with an already logged in user details.
+	// Functionality: invoking "getAndLoginUserFromDB" method with an already logged in user details.
 	// input data:String username(customer2), String password(1234), mysqlController (mySql), Response(res),String expectedDescription.
-	// expected result:Failure - Can't login (getUserFromDB), response changed correctly: (response code = INVALID_DATA, response body = empty(null), response Description = user already logged in msg).
+	// expected result:Failure - Can't login (getAndLoginUserFromDB), response changed correctly: (response code = INVALID_DATA, response body = empty(null), response Description = user already logged in msg).
 	@Test
 	void getUser_isALreadyLoggedIn() {
 		String username="customer2";
 		String password="1234";
 		String expectedDescription ="The user is already logged in";
 
-		mySql.getUserFromDB(res, username, password);
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		assertEquals(ResponseCode.INVALID_DATA, res.getCode());
 		assertEquals(null, res.getBody());
 		assertEquals(expectedDescription, res.getDescription());
@@ -148,7 +148,7 @@ class mysqlControllerTest {
 	}
 	
 	
-	// Functionality: invoking "getUserFromDB" method without an open connection.
+	// Functionality: invoking "getAndLoginUserFromDB" method without an open connection.
 	// input data:String username(customer2), String password(1234), mysqlController (mySql), Response(res),String expectedDescription.
 	// expected result:Failure - DB Error , response changed correctly: (response code = DB_ERROR, response body = empty(null), response Description = mysql error msg).
 	@Test
@@ -157,7 +157,7 @@ class mysqlControllerTest {
 		String password="1234";
 		String expectedDescription =EXECUTE_UPDATE_ERROR_MSG;
 		mySql.closeConnection();
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		assertEquals(ResponseCode.DB_ERROR, res.getCode());
 		assertEquals(null, res.getBody());
 		assertEquals(expectedDescription, res.getDescription());
@@ -192,7 +192,7 @@ class mysqlControllerTest {
 		String expectedDescription ="Registered customer successfully accepted";
 		String username="customer2";
 		String password="1234";
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		mySql.getCustomer(res, (User)res.getBody().get(0));
 		assertEquals(ResponseCode.OK, res.getCode());
 		compareBetweenTwoCustomers(customer, (Customer)res.getBody().get(0));
@@ -258,7 +258,7 @@ class mysqlControllerTest {
 		String expectedDescription ="Registered customer successfully accepted";
 		String username="customer2";
 		String password="1234";
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		mySql.getUserForOL(res, (User)res.getBody().get(0));
 		assertEquals(ResponseCode.OK, res.getCode());
 		compareBetweenTwoCustomers(customer, (Customer)res.getBody().get(0));
@@ -275,7 +275,7 @@ class mysqlControllerTest {
 		String expectedDescription ="The employee has successfully logged in";
 		String username="marWorkerSouth";
 		String password="1234";
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		mySql.getUserForOL(res, (User)res.getBody().get(0));
 		assertEquals(ResponseCode.OK, res.getCode());
 		compareBetweenTwoWorker(worker, (Worker)res.getBody().get(0));	
@@ -293,7 +293,7 @@ class mysqlControllerTest {
 		String expectedDescription ="The user is both a customer and an employee";
 		String username="ceo";
 		String password="1234";
-		mySql.getUserFromDB(res, username, password);
+		mySql.getAndLoginUserFromDB(res, username, password);
 		mySql.getUserForOL(res, (User)res.getBody().get(0));
 		assertEquals(ResponseCode.OK, res.getCode());
 		compareBetweenTwoCustomers(ceo_customerAndWorker_CustomerSide, (Customer)res.getBody().get(0));
@@ -303,7 +303,7 @@ class mysqlControllerTest {
 		assertEquals(msgToConsole, null);
 
 	}
-	
+
 	// Functionality:Successfully getting Worker using private method "getWorker".
 	// input data: mysqlController (mySql), Response(res),String expectedDescription, User user1/Worker worker - (Mrs. "Tali Manachem" Info).
 	// expected result:Worker achieved correctly , response changed correctly: (response code = OK, response body = correct Worker info, response Description = successfully got Worker msg).

@@ -247,7 +247,7 @@ public class mysqlController {
 	 * @param password - user's password
 	 */
 
-	public void getUserFromDB(Response response, String username, String password) {
+	public void getAndLoginUserFromDB(Response response, String username, String password) {
 
     	List<Object> userDetails= new ArrayList<>();
 
