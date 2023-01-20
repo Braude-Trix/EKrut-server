@@ -211,6 +211,9 @@ class ServerTest {
 		verify(mysqlMockito, times(1)).getSubscribersForFastLogin(any());
 	}
 	
+	// Functionality: Failure when entering the incorrect method with a request
+	// input data:Request req(Path /login/getAllSubscriberForFastLogin, Method PUT, Body user)
+	// expected result:Failure -no such request (expected only Get). (Expected to not enter the method)
 	@Test
 	void getAllSubscribersForFastLoginServerPath_ForOL_methodFail() {
 		Request req = getRequest("/login/getAllSubscriberForFastLogin",Method.PUT, null);
@@ -228,6 +231,9 @@ class ServerTest {
 		verify(mysqlMockito, times(1)).getCustomerById(any(), any());
 	}
 	
+	// Functionality: Failure when entering the incorrect method with a request
+	// input data:Request req(Path /login/getCustomerById, Method PUT, Body user)
+	// expected result:Failure -no such request (expected only Get). (Expected to not enter the method)
 	@Test
 	void getCustomerById_ForEKFastLogin_methodFail() {
 		Request req = getRequest("/login/getCustomerById",Method.PUT, new ArrayList<>(Arrays.asList(user.getId())));
@@ -235,7 +241,9 @@ class ServerTest {
 		verify(mysqlMockito, times(0)).getCustomerById(any(), any());
 	}
 	
-	
+	// Functionality: Failure when calling a getUser request with bad body (null)
+	// input data:Request req(Path /login/getCustomerById, Method GET, Body null)
+	// expected result:Failure - no such request (expected different body).(Expected to not enter the method)
 	@Test
 	void getCustomerById_ForEKFastLogin_bodyNullFail() {
 		Request req = getRequest("/login/getCustomerById",Method.GET, null);
@@ -243,6 +251,9 @@ class ServerTest {
 		verify(mysqlMockito, times(0)).getCustomerById(any(), any());
 	}
 	
+	// Functionality: Failure when calling a getUser request with bad body (not a Integer)
+	// input data:Request req(Path /login/getCustomerById, Method GET, Body String "1234")
+	// expected result:Failure - no such request (expected different body).(Expected to not enter the method)
 	@Test
 	void getCustomerById_ForEKFastLogin_bodyNotIntegerFail() {
 		Request req = getRequest("/login/getCustomerById",Method.GET, new ArrayList<>(Arrays.asList("1234")));
@@ -250,6 +261,9 @@ class ServerTest {
 		verify(mysqlMockito, times(0)).getCustomerById(any(), any());
 	}
 	
+	// Functionality: Failure when calling a getUser request with bad body (contains not correct amount of objects)
+	// input data:Request req(Path /login/getCustomerById, Method GET, Body user id,String "1234" )
+	// expected result:Failure - no such request (expected different body). (Expected to not enter the method)
 	@Test
 	void getCustomerById_ForEKFastLogin_bodyBiggerSizeFail() {
 		Request req = getRequest("/login/getCustomerById",Method.GET, new ArrayList<>(Arrays.asList(user.getId(),"1234")));
