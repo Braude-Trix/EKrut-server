@@ -2,6 +2,7 @@ package models;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 public class Response implements Serializable, IResponse {
     private static final long serialVersionUID = 1L;
@@ -34,5 +35,18 @@ public class Response implements Serializable, IResponse {
 
     public void setBody(List<Object> body) {
         this.body = body;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Response response = (Response) o;
+        return code == response.code && Objects.equals(description, response.description) && Objects.equals(body, response.body);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(code, description, body);
     }
 }

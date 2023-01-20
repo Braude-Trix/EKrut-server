@@ -364,8 +364,8 @@ public class Server extends AbstractServer {
 		case "/reports":
 			if (requestMethod == Method.GET) {
 				mysqlController.getReport(response, (SavedReportRequest) requestBody.get(0));
+				break;
 			}
-			break;
 		default:
 			mysqlController.editResponse(response, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 			ServerGui.serverGui.printToConsole("Operation doesn't exist", true);

@@ -56,7 +56,7 @@ public class mysqlController {
     	
     }
     public mysqlController(ServerConf serverConf, IServerGui iServerGui) {
-    	this.iServerGui =  iServerGui;
+    	this.iServerGui = iServerGui;
     	setServerConf(serverConf);
     }
     
@@ -2639,7 +2639,7 @@ public class mysqlController {
             editResponse(response, ResponseCode.DB_ERROR,
                     "There was an error while trying to fetch report data", null);
             e.printStackTrace();
-            ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
 
