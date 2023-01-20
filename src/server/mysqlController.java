@@ -286,6 +286,27 @@ public class mysqlController {
         }
     }
 	
+	private boolean isLoggedIn(User user) {
+        PreparedStatement stmt;
+        ResultSet rs;
+        String query = "SELECT * FROM users WHERE id = ?";
+        try {
+            stmt = conn.prepareStatement(query);
+            stmt.setInt(1, user.getId());
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                if (rs.getBoolean("isLoggedIn")) {
+                	return true;
+                }
+            }           	
+            rs.close();
+        } catch (SQLException e) {
+           // e.printStackTrace();
+            iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
+        }
+    	return false;
+	}
+	
 	/**
 	 * This method creates a query to the db, the query requests all the orders related to a specific customer.
 	 * @param response - the method edits this response in order to show the user the result of the query
@@ -332,6 +353,7 @@ public class mysqlController {
             ServerGui.serverGui.printToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
         }
     }
+	
 	
 	/**
 	 * This method creates a query to the db, the query asks the date of a specific received delivery order. 

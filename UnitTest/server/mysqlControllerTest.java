@@ -1,5 +1,6 @@
 package server;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -34,6 +35,7 @@ class mysqlControllerTest {
 	private Worker ceo_customerAndWorker_WorkerSide;
 
 	private java.lang.reflect.Method privateGetWorker;
+	private java.lang.reflect.Method privateIsLoggedIn;
 
 	
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
@@ -67,6 +69,7 @@ class mysqlControllerTest {
 		//Opening a mysql connection:
 		serverGuiDummy = new ServerGuiServiceTest();
 		conf = Server.getDefaultServerConf();
+		conf.setDbPassword("99663366p");
 		mySql = new mysqlController(conf,serverGuiDummy);
 		res = new Response();
 		mysqlController.disconnectServer(res);
@@ -91,8 +94,10 @@ class mysqlControllerTest {
 		//allowing access to private method.
 		privateGetWorker = mysqlController.class.getDeclaredMethod("getWorker",Response.class, User.class);
 		privateGetWorker.setAccessible(true);
-
-
+		
+		//allowing access to private method.
+		privateIsLoggedIn = mysqlController.class.getDeclaredMethod("isLoggedIn", User.class);
+		privateIsLoggedIn.setAccessible(true);
 	}
 
 	
@@ -102,7 +107,7 @@ class mysqlControllerTest {
 	// input data:String username(customer2), String password(1234), mysqlController (mySql), Response(res), User user(Mr. "Din Til" Info), String expectedDescription.
 	// expected result:correct user achieved. response changed correctly: (response code = OK, response Description = successfully got user msg).
 	@Test
-	void getUser_ValidUser() {
+	void getUser_ValidUser() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String username="customer2";
 		String password="1234";
 		String expectedDescription = "Successfully got user details";
@@ -112,6 +117,8 @@ class mysqlControllerTest {
 		assertEquals(1, res.getBody().size());
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, null);
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, user);
+		assertTrue(actualIsLoggedIn);
 	}
 	
 	
@@ -134,12 +141,14 @@ class mysqlControllerTest {
 	// input data:String username(customer2), String password(1234), mysqlController (mySql), Response(res),String expectedDescription.
 	// expected result:Failure - Can't login (getAndLoginUserFromDB), response changed correctly: (response code = INVALID_DATA, response body = empty(null), response Description = user already logged in msg).
 	@Test
-	void getUser_isALreadyLoggedIn() {
+	void getUser_isALreadyLoggedIn() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String username="customer2";
 		String password="1234";
 		String expectedDescription ="The user is already logged in";
 
 		mySql.getAndLoginUserFromDB(res, username, password);
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, user);
+		assertTrue(actualIsLoggedIn);
 		mySql.getAndLoginUserFromDB(res, username, password);
 		assertEquals(ResponseCode.INVALID_DATA, res.getCode());
 		assertEquals(null, res.getBody());
@@ -152,7 +161,7 @@ class mysqlControllerTest {
 	// input data:String username(customer2), String password(1234), mysqlController (mySql), Response(res),String expectedDescription.
 	// expected result:Failure - DB Error , response changed correctly: (response code = DB_ERROR, response body = empty(null), response Description = mysql error msg).
 	@Test
-	void getUser_DbFail() {
+	void getUser_DbFail() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String username="customer2";
 		String password="1234";
 		String expectedDescription =EXECUTE_UPDATE_ERROR_MSG;
@@ -163,6 +172,8 @@ class mysqlControllerTest {
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, EXECUTE_UPDATE_ERROR_MSG);
 		assertEquals(isErrorTest, true);
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, user);
+		assertFalse(actualIsLoggedIn);
 	}
 
 
@@ -188,7 +199,7 @@ class mysqlControllerTest {
 	// input data: mysqlController (mySql), Response(res),String expectedDescription, Customer customer(Mr. "Din Til" Info).
 	// expected result:Customer achieved correctly , response changed correctly: (response code = OK, response body = correct Customer(Mr. "Din Til" Info), response Description = successfully got customer msg).
 	@Test
-	void getCustomer_ValidCustomer() {
+	void getCustomer_ValidCustomer() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String expectedDescription ="Registered customer successfully accepted";
 		String username="customer2";
 		String password="1234";
@@ -199,13 +210,15 @@ class mysqlControllerTest {
 		assertEquals(1, res.getBody().size());
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, null);
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, user);
+		assertTrue(actualIsLoggedIn);
 	}
 	
 	// Functionality:Trying to get an unregistered user (not a customer) with "getCustomer" method.
 	// input data: mysqlController (mySql), Response(res),String expectedDescription, User unregistered1(Mrs.Shoshana Pick).
 	// expected result:No such customer , response changed correctly: (response code = INVALID_DATA, response body = null, response Description = unregistered user msg).
 	@Test
-	void getCustomer_Unregistered_user() {
+	void getCustomer_Unregistered_user() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		mySql.getCustomer(res, unregistered1);
 		String expectedDescription ="Unregistered user";
 
@@ -374,7 +387,7 @@ class mysqlControllerTest {
 	// input data: mysqlController (mySql), Response(res),String expectedDescription, int customer.getId() - Din Til id.
 	// expected result:Correct customer achieved , response changed correctly: (response code = OK, response body = correct customer info, response Description = successfully got customer msg).
 	@Test
-	void getCustomerByIdSuccess() {
+	void getCustomerByIdSuccess() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String expectedDescription ="Registered customer successfully accepted";
 
 		mySql.getCustomerById(res,customer.getId());
@@ -383,14 +396,15 @@ class mysqlControllerTest {
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(1, res.getBody().size());
 		assertEquals(msgToConsole, null);
-
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, customer);
+		assertTrue(actualIsLoggedIn);
 	}
 	
 	// Functionality:Failing to get customer ids using 'getSubscribersForFastLogin' method without open mysql connection.
 	// input data: mysqlController (mySql), Response(res),String expectedDescription int user.getId() - user's id.
 	// expected result:Failure - DB Error , response changed correctly: (response code = DB_ERROR, response body = empty (null), response Description = Error getting db msg).
 	@Test
-	void getCustomerByIdFailure_DB_Exception() {
+	void getCustomerByIdFailure_DB_Exception() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String expectedDescription =EXECUTE_UPDATE_ERROR_MSG;
 
 		mySql.closeConnection();
@@ -398,6 +412,8 @@ class mysqlControllerTest {
 		assertEquals(ResponseCode.DB_ERROR, res.getCode());
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, EXECUTE_UPDATE_ERROR_MSG);
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, user);
+		assertFalse(actualIsLoggedIn);
 	}
 	
 	
@@ -421,7 +437,7 @@ class mysqlControllerTest {
 	// input data: mysqlController (mySql), Response(res),String expectedDescription int customer.getId() - din tils id
 	// expected result:Failure - user already logged in , response changed correctly: (response code = INVALID_DATA, response body = empty (null), response Description = already logged in msg).
 	@Test
-	void getCustomerByIdFailure_user_already_loggedIn() {
+	void getCustomerByIdFailure_user_already_loggedIn() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		String expectedDescription ="The user is already logged in";
 
 		mySql.changeLoggedInUser(res, customer.getId(), true);
@@ -429,7 +445,8 @@ class mysqlControllerTest {
 		assertEquals(ResponseCode.INVALID_DATA, res.getCode());
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, null);
-
+		boolean actualIsLoggedIn = (boolean) privateIsLoggedIn.invoke(mySql, user);
+		assertTrue(actualIsLoggedIn);
 	}
 	
 
