@@ -96,7 +96,8 @@ public class Server extends AbstractServer {
 		Response response = new Response();
 		switch (requestPath) {
 		case "/login/getUser":
-			if (requestMethod == Method.GET) {
+			if (requestMethod == Method.GET && (requestBody!= null) && (requestBody.size() == 2) 
+			&& (requestBody.get(0) instanceof String) && (requestBody.get(1) instanceof String)) {
 				mysqlController.getAndLoginUserFromDB(response, (String) requestBody.get(0), (String) requestBody.get(1));
 			}
 			break;
@@ -237,12 +238,14 @@ public class Server extends AbstractServer {
 			}
 			break;
 		case "/login/getUserForEkConfiguration":
-			if (requestMethod == Method.GET) {
+			if (requestMethod == Method.GET && (requestBody!= null) && (requestBody.size() == 1) 
+					&& (requestBody.get(0) instanceof User)) {
 				mysqlController.getCustomer(response, (User) requestBody.get(0));
 			}
 			break;
 		case "/login/getUserForOLConfiguration":
-			if (requestMethod == Method.GET) {
+			if (requestMethod == Method.GET && (requestBody!= null) && (requestBody.size() == 1) 
+					&& (requestBody.get(0) instanceof User)) {
 				mysqlController.getUserForOL(response, (User) requestBody.get(0));
 			}
 			break;
@@ -286,7 +289,8 @@ public class Server extends AbstractServer {
 			}
 			break;
 		case "/login/getCustomerById":
-			if (requestMethod == Method.GET) {
+			if (requestMethod == Method.GET && (requestBody!= null) && (requestBody.size() == 1) 
+					&& (requestBody.get(0) instanceof Integer)) {
 				mysqlController.getCustomerById(response, (Integer) requestBody.get(0));
 			}
 			break;
