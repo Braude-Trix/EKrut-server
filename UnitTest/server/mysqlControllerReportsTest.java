@@ -3,6 +3,7 @@ package server;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.anyString;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,15 +14,11 @@ import org.junit.jupiter.api.BeforeAll;
 import models.Regions;
 import models.ReportType;
 import models.SavedReportRequest;
-import ocsf.server.ConnectionToClient;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.internal.matchers.Any;
 
 import gui.IServerGui;
-import gui.ServerGUIController;
-import gui.ServerGui;
 import models.Response;
 import models.ResponseCode;
 import serverModels.ServerConf;
@@ -41,6 +38,7 @@ class mysqlControllerReportsTest {
     private final static String REPORT_FOUND_MSG = "Report data was fetched successfully";
     private final static String REPORT_NOT_FOUND_MSG = "Couldn't find report for the specified parameters";
     private final static String REPORT_ERROR_MSG = "There was an error while trying to fetch report data";
+    private final static String ERROR_IN_CHECKING_MSG = "Failed while checking if reports are exists";
     private final static String GET_QUERY = "SELECT * FROM saved_reports WHERE year_creation = ? "
     		+ "AND month_creation = ? AND report_type = ? AND region = ? AND machineId = ?";
 	private boolean isErrorTest;
@@ -66,15 +64,19 @@ class mysqlControllerReportsTest {
 			isConnectedTest = isConnected;
 		}
     }
-    
-	@BeforeAll
-	static void beforeAll() throws Exception {
-		connMock = mock(Connection.class);
-		stmtMock = mock(PreparedStatement.class);
+
+	@SuppressWarnings("unchecked")
+	private void setMockQueryAsError() throws SQLException {
+		mySql.conn = connMock;
+		when(connMock.prepareStatement(anyString())).thenReturn(stmtMock);
+		when(stmtMock.executeQuery()).thenThrow(SQLException.class);
 	}
    
 	@BeforeEach
 	void setUp() throws Exception {
+		connMock = mock(Connection.class);
+		stmtMock = mock(PreparedStatement.class);
+
 		//Opening a mysql connection:
 		serverGuiDummy = new ServerGuiServiceTest();
 		conf = Server.getDefaultServerConf();
@@ -98,8 +100,8 @@ class mysqlControllerReportsTest {
 	}
 
 	@Test
-	void getReportNotFound() {
-		SavedReportRequest expectedRequestBody = new SavedReportRequest(1970, 1, REPORT_TYPE, REGION, 1);
+	void getReportNotFoundInvalidYear() {
+		SavedReportRequest expectedRequestBody = new SavedReportRequest(1970, 12, REPORT_TYPE, REGION, 2);
 
 		mySql.getReport(res, expectedRequestBody);
 
@@ -107,14 +109,68 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getCode(), ResponseCode.INVALID_DATA);
 		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
 	}
-	
-	@SuppressWarnings({ "unchecked", "static-access" })
+
+	@Test
+	void getReportNotFoundInvalidMonth() {
+		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 13, REPORT_TYPE, REGION, 2);
+
+		mySql.getReport(res, expectedRequestBody);
+
+		assertNull(res.getBody());
+		assertEquals(res.getCode(), ResponseCode.INVALID_DATA);
+		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
+	}
+
+	@Test
+	void getReportNotFoundInvalidType() {
+		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, null, REGION, 2);
+
+		try {
+			mySql.getReport(res, expectedRequestBody);
+			fail();
+		} catch (NullPointerException e) {
+			assertTrue(true);
+		}
+	}
+
+	@Test
+	void getReportNotFoundInvalidRegion() {
+		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, null, 2);
+
+		try {
+			mySql.getReport(res, expectedRequestBody);
+			fail();
+		} catch (NullPointerException e) {
+			assertTrue(true);
+		}
+	}
+
+	@Test
+	void getReportNotFoundRegionAll() {
+		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, Regions.All, 2);
+
+		mySql.getReport(res, expectedRequestBody);
+
+		assertNull(res.getBody());
+		assertEquals(res.getCode(), ResponseCode.INVALID_DATA);
+		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
+	}
+
+	@Test
+	void getReportNotFoundInvalidMachine() {
+		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, REGION, 99999);
+
+		mySql.getReport(res, expectedRequestBody);
+
+		assertNull(res.getBody());
+		assertEquals(res.getCode(), ResponseCode.INVALID_DATA);
+		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
+	}
+
 	@Test
 	void getReportThrowsSqlException() throws SQLException {
-		mySql.conn = connMock;
+		setMockQueryAsError();
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(1970, 1, REPORT_TYPE, REGION, 1);
-		when(connMock.prepareStatement(GET_QUERY)).thenReturn(stmtMock);
-		when(stmtMock.executeQuery()).thenThrow(SQLException.class);
 
 		mySql.getReport(res, expectedRequestBody);
 
@@ -124,5 +180,24 @@ class mysqlControllerReportsTest {
 		assertEquals(msgToConsole, EXECUTE_UPDATE_ERROR_MSG);
 		assertTrue(isErrorTest);
 	}
+
+	@Test
+	void generateAllReportsCheckIsCreatedError() throws SQLException {
+		setMockQueryAsError();
+
+		mySql.generateAllReports(res);
+
+		assertNull(res.getBody());
+		assertEquals(res.getCode(), ResponseCode.DB_ERROR);
+		assertEquals(res.getDescription(), ERROR_IN_CHECKING_MSG);
+	}
+
+//	public void generateAllReports(Response response) {
+//		// Checking if reports are already exists
+//		Boolean isReportsAlreadyCreated = checkIfReportsAreAlreadyCreated();
+//		if (isReportsAlreadyCreated == null) {
+//			editResponse(response, ResponseCode.DB_ERROR, "Failed while checking if reports are exists", null);
+//			return;
+//		}
 }
 	
