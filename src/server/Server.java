@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  */
 public class Server extends AbstractServer {
 	public static Server server_instance;
-	public mysqlController mysqlController;
+	public static mysqlController mysqlController;
 	private ServerConf currentConf;
 
 	public static String externalDBSchemeName = "ekrut_external_data_scheme";

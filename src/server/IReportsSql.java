@@ -10,12 +10,23 @@ import java.sql.Connection;
 import java.util.List;
 
 public interface IReportsSql {
-    Boolean checkIfReportsAreAlreadyCreated(); // V
-    List<ProductInMachineHistory> getAllProductsHistory(); // V
-    void getNameByProductId(Response response, Integer productId); // V
-    void getRegionAndNameByMachineId(Response response, Integer machineId); // V
-    boolean saveInventoryReportInDb(Response response, InventoryReport inventoryReport, Regions region, int machineId); // V
-    void saveReportInDB(Response response, ReportType type, Regions region, int machineId, byte[] blobBytes); // V
-    void deleteLastMonthFromTable(Response response); // V
-    void transferDataFromProductInMachineToHistory(Response response); // V
+    Boolean checkIfReportsAreAlreadyCreated();
+
+    List<ProductInMachineHistory> getAllProductsHistory();
+
+    String getNameByProductId(Response response, Integer productId);
+
+    List<String> getRegionAndNameByMachineId(Response response, Integer machineId);
+
+    Boolean saveInventoryReportInDb(Response response, InventoryReport inventoryReport, Regions region, Integer machineId);
+
+    void saveReportInDB(Response response, ReportType type, Regions region, int machineId, byte[] blobBytes);
+
+    Boolean deleteLastMonthFromTable(Response response);
+
+    Boolean transferDataFromProductInMachineToHistory(Response response);
+
+    boolean generateOrdersReport(Response response);
+
+    boolean generateUsersReport(Response response);
 }

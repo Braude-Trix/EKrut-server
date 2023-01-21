@@ -309,7 +309,7 @@ class ServerTest {
 
 	// Functionality: Failure when calling a getReport request with a wrong Method
 	// input data: Request req(Path /reports, Method POST, Body (2022, 12, REPORT_TYPE, REGION, 123))
-	// expected result: Faliure - no such request. when trying to call sendToClient we catch an IOException
+	// expected result: Failure - no such request. when trying to call sendToClient we catch an IOException
 	@Test
 	void getReportsRequestFailInvalidRequest() {
         SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, REGION, 123);

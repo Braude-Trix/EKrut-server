@@ -53,7 +53,7 @@ public class EndOfMonthTask implements Runnable {
     private boolean createAllReports() {
         Response response = new Response();
         try {
-            Server.server_instance.mysqlController.generateAllReports(response);
+            Server.mysqlController.generateAllReports(response);
         } catch (Exception e) {
             ServerGui.serverGui.printToConsole(e.getMessage(), true);
             ServerGui.serverGui.printToConsole("[Reports] Will retry in the next hour", true);

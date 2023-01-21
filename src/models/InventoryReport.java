@@ -3,6 +3,7 @@ package models;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Entity that holds all data related to specific inventory report
@@ -50,5 +51,18 @@ public class InventoryReport implements Serializable {
 
     public List<Integer> getUnavailableAmount() {
         return unavailableAmount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InventoryReport that = (InventoryReport) o;
+        return Objects.equals(machineName, that.machineName) && Objects.equals(month, that.month) && Objects.equals(year, that.year) && Objects.equals(dailyInventory, that.dailyInventory) && Objects.equals(belowThresholdAmount, that.belowThresholdAmount) && Objects.equals(unavailableAmount, that.unavailableAmount);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(machineName, month, year, dailyInventory, belowThresholdAmount, unavailableAmount);
     }
 }
