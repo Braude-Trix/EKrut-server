@@ -32,6 +32,7 @@ class mysqlControllerReportsTest {
 	private mysqlController mySql;
 	private ServerConf conf;
 	private Response res;
+	private IReportsSql reportsSqlMock;
 	
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
@@ -76,18 +77,22 @@ class mysqlControllerReportsTest {
 	void setUp() throws Exception {
 		connMock = mock(Connection.class);
 		stmtMock = mock(PreparedStatement.class);
+		reportsSqlMock = mock(IReportsSql.class);
 
 		//Opening a mysql connection:
 		serverGuiDummy = new ServerGuiServiceTest();
 		conf = Server.getDefaultServerConf();
-		mySql = new mysqlController(conf, serverGuiDummy);
+		mySql = new mysqlController(conf, serverGuiDummy, reportsSqlMock);
 		res = new Response();
 		mysqlController.disconnectServer(res);
 		msgToConsole = null;
 		isConnectedTest = true;
 		isErrorTest = false;
 	}
-
+	// Functionality: successiding in getting a report of a specific Request
+	// input data: a request for a report (YEAR 2022, MONTH 12, 
+	// TYPE ReportType.INVENTORY, REGION Regions.North, 2)
+	// expected result: the Response isn't null and its code and description are valid
 	@Test
 	void getReportSuccessfully() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, REGION, 2);
@@ -98,7 +103,11 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getCode(), ResponseCode.OK);
 		assertEquals(res.getDescription(), REPORT_FOUND_MSG);
 	}
-
+	
+	// Functionality: failing in getting a report of a specific Request
+	// input data: a request for a report (YEAR 1970, MONTH 1, 
+	// TYPE ReportType.INVENTORY, REGION Regions.North, 1)
+	// expected result: fail - we check in DB and wont find report with that date -> respons is INVALID_DATA 
 	@Test
 	void getReportNotFoundInvalidYear() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(1970, 12, REPORT_TYPE, REGION, 2);
@@ -109,6 +118,7 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getCode(), ResponseCode.INVALID_DATA);
 		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
 	}
+
 
 	@Test
 	void getReportNotFoundInvalidMonth() {
@@ -167,6 +177,14 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
 	}
 
+	
+	// Functionality: failing in getting a report of a specific Request, when we'll look
+	// in DB with our mock we will throw an SQLException to get another failed response
+	// input data: a request for a report (YEAR 1970, MONTH 1, 
+	// TYPE ReportType.INVENTORY, REGION Regions.North, 1)
+	// expected result: after using our mock we thorw SQLException, thats edit our response
+	// to hold ResponseCode.DB_ERROR, REPORT_ERROR_MSG and null
+	@SuppressWarnings({ "unchecked", "static-access" })
 	@Test
 	void getReportThrowsSqlException() throws SQLException {
 		setMockQueryAsError();

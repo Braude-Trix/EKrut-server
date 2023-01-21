@@ -289,6 +289,9 @@ class ServerTest {
 		verify(mysqlMock, times(0)).getCustomerById(any(), any());
 	}
 	
+	// Functionality: Successfully entering the correct method with the correct request
+	// input data: Request req(Path /reports, Method GET, Body (2022, 12, REPORT_TYPE, REGION, 123))
+	// expected result: Successfully reached to the correct method.
 	@Test
 	void getReportsRequestSuccessfully() {
         SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, REGION, 123);
@@ -304,6 +307,9 @@ class ServerTest {
 		}
 	}
 
+	// Functionality: Failure when calling a getReport request with a wrong Method
+	// input data: Request req(Path /reports, Method POST, Body (2022, 12, REPORT_TYPE, REGION, 123))
+	// expected result: Faliure - no such request. when trying to call sendToClient we catch an IOException
 	@Test
 	void getReportsRequestFailInvalidRequest() {
         SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, REGION, 123);

@@ -37,6 +37,7 @@ public class mysqlController {
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
             "please check your sql connection configuration in server panel";
     private IServerGui iServerGui;
+    private IReportsSql iReportsSql;
     public class ServerGuiService implements IServerGui{
 		@Override
 		public void setPrintToConsole(String msg, boolean isError) {
@@ -57,6 +58,13 @@ public class mysqlController {
     }
     public mysqlController(ServerConf serverConf, IServerGui iServerGui) {
     	this.iServerGui = iServerGui;
+    	this.iReportsSql = new ReportsSql();
+    	setServerConf(serverConf);
+    }
+    
+    public mysqlController(ServerConf serverConf, IServerGui iServerGui, IReportsSql iReportsSql) {
+    	this.iReportsSql = iReportsSql;
+    	this.iServerGui = iServerGui;
     	setServerConf(serverConf);
     }
     
@@ -66,6 +74,7 @@ public class mysqlController {
      */
     public mysqlController(ServerConf serverConf) {
     	this.iServerGui = new ServerGuiService();
+    	this.iReportsSql = new ReportsSql();
     	setServerConf(serverConf);
     }
     
@@ -2649,7 +2658,7 @@ public class mysqlController {
      */
     public void generateAllReports(Response response) {
         // Checking if reports are already exists
-        Boolean isReportsAlreadyCreated = checkIfReportsAreAlreadyCreated();
+        Boolean isReportsAlreadyCreated = iReportsSql.checkIfReportsAreAlreadyCreated();
         if (isReportsAlreadyCreated == null) {
             editResponse(response, ResponseCode.DB_ERROR, "Failed while checking if reports are exists", null);
             return;
@@ -2721,7 +2730,7 @@ public class mysqlController {
         // map that holds key: machineId, value: it's productsInMachine
         Map<Integer, List<ProductInMachineHistory>> productsInMachineByMachineId = new HashMap<>();
 
-        List<ProductInMachineHistory> filteredByDateProducts = getAllProductsHistory();
+        List<ProductInMachineHistory> filteredByDateProducts = iReportsSql.getAllProductsHistory();
         if (filteredByDateProducts == null) {
             response.setDescription("failed in getAllProductsHistory");
             return false;
@@ -2751,7 +2760,7 @@ public class mysqlController {
         // mapping all machines to their regions and names
         for (Integer machineId : machineIdsSet) {
             Response responseToRegion = new Response();
-            getRegionAndNameByMachineId(responseToRegion, machineId);
+            iReportsSql.getRegionAndNameByMachineId(responseToRegion, machineId);
             if (responseToRegion.getCode() != ResponseCode.OK) {
                 response.setDescription("failed in getRegionByMachineId");
                 return false;
@@ -2825,34 +2834,21 @@ public class mysqlController {
                 InventoryReport inventoryReport = new InventoryReport(
                         machineName, String.valueOf(getReportsMonth()), String.valueOf(getReportsYear()),
                         dailyInventory, belowThresholdAmount, unavailableAmount);
-
-                byte[] inventoryBytes;
+                
                 Response responseForSaveReport = new Response();
-                try {
-                    inventoryBytes = getSerializedObject(inventoryReport);
-                } catch (Exception e) {
-                    responseForSaveReport.setDescription("There was an error in serializing InventoryReport object");
-                    appendDescription(responseForSaveReport, response);
-                    isReportOfARegionFailed = true;
-                    continue;
-                }
-                saveReportInDB(responseForSaveReport, ReportType.INVENTORY,
-                        Regions.valueOf(machineIdsOfARegion.getKey()), productsOfAMachineId.getKey(), inventoryBytes);
-                if (responseForSaveReport.getCode() != ResponseCode.OK) {
-                    appendDescription(responseForSaveReport, response);
-                    isReportOfARegionFailed = true;
-                }
+                isReportOfARegionFailed = !iReportsSql.saveInventoryReportInDb(responseForSaveReport, inventoryReport,
+                		Regions.valueOf(machineIdsOfARegion.getKey()),productsOfAMachineId.getKey());
             }
         }
         if (!isReportOfARegionFailed) {
             Response responseForCleaning = new Response();
-            deleteLastMonthFromTable(responseForCleaning);
+            iReportsSql.deleteLastMonthFromTable(responseForCleaning);
             if (responseForCleaning.getCode() != ResponseCode.OK) {
                 appendDescription(responseForCleaning, response);
                 isReportOfARegionFailed = true;
             }
 
-            transferDataFromProductInMachineToHistory(responseForCleaning);
+            iReportsSql.transferDataFromProductInMachineToHistory(responseForCleaning);
             if (responseForCleaning.getCode() != ResponseCode.OK) {
                 appendDescription(responseForCleaning, response);
                 isReportOfARegionFailed = true;
@@ -3435,7 +3431,7 @@ public class mysqlController {
         editResponse(response, ResponseCode.OK, "[Report] Successfully inserting all of current month's inventory data to table", null);
     }
 
-    private void insertProductInMachineToHistory(Response response, ProductInMachine productInMachine) {
+    static void insertProductInMachineToHistory(Response response, ProductInMachine productInMachine) {
         PreparedStatement stmt;
         String query = "INSERT INTO product_in_machine_history " +
                 "(productId, machineId, amountInMachine, statusInMachine, updated_month, updated_day)"
@@ -3522,22 +3518,22 @@ public class mysqlController {
         return currentMonth - 1;
     }
 
-    private int getCurrentMonth() {
+    private static int getCurrentMonth() {
         return Calendar.getInstance().get(Calendar.MONTH) + 1;
     }
 
-    private int getCurrentDay() {
+    private static int getCurrentDay() {
         return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
     }
 
-    private void appendDescription(Response fromResponse, Response toResponse) {
+    static void appendDescription(Response fromResponse, Response toResponse) {
         if (toResponse.getDescription() == null)
             toResponse.setDescription(fromResponse.getDescription());
         else
             toResponse.setDescription(toResponse.getDescription() + " | " + fromResponse.getDescription());
     }
 
-    private byte[] getSerializedObject(Object object) {
+    static byte[] getSerializedObject(Object object) {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream objectOutputStream = null;
         try {
