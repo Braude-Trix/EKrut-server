@@ -194,7 +194,11 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
 	}
 
-
+	// Functionality: Test the getReport method when an invalid month is passed
+	// Input data: A SavedReportRequest with the year = 2022, month = 13,
+	// report type = REPORT_TYPE, region = REGION, machineId = 2.
+	// Expected result: The res body = null, the code = ResponseCode.INVALID_DATA,
+	// and the description = REPORT_NOT_FOUND_MSG.
 	@Test
 	void getReportNotFoundInvalidMonth() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 13, REPORT_TYPE, REGION, 2);
@@ -206,6 +210,11 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
 	}
 
+	// Functionality: Test getReport method when an invalid report type is passed.
+	// Input data: A SavedReportRequest with the year = 2022, month = 12,
+	// report type = null, region = REGION, machineId = 2.
+	// Expected result: An exception of type NullPointerException should be thrown,
+	// and the test should pass.
 	@Test
 	void getReportNotFoundInvalidType() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, null, REGION, 2);
@@ -218,6 +227,11 @@ class mysqlControllerReportsTest {
 		}
 	}
 
+	// Functionality: Test getReport method when an invalid region is passed.
+	// Input data: A SavedReportRequest object with the year = 2022, month = 12,
+	// report type = REPORT_TYPE, region = null, machineId = 2.
+	// Expected result: An exception of type NullPointerException should be thrown,
+	// and the test should pass.
 	@Test
 	void getReportNotFoundInvalidRegion() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, null, 2);
@@ -230,6 +244,11 @@ class mysqlControllerReportsTest {
 		}
 	}
 
+	// Functionality: Test getReport method when a request for all regions is passed.
+	// Input data: A SavedReportRequest with the year = 2022, month = 12,
+	// report type = REPORT_TYPE, region = Regions.All, machineId = 2.
+	// Expected result: The res body = null, the code = ResponseCode.INVALID_DATA,
+	// and the description = REPORT_NOT_FOUND_MSG.
 	@Test
 	void getReportNotFoundRegionAll() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, Regions.All, 2);
@@ -241,6 +260,11 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), REPORT_NOT_FOUND_MSG);
 	}
 
+	// Functionality: Test the getReport method when an invalid machineId is passed
+	// Input data: A SavedReportRequest with the year = 2022, month = 12,
+	// report type = REPORT_TYPE, region = REGION, machineId = 99999.
+	// Expected result: The res body = null, the code = ResponseCode.INVALID_DATA,
+	// and the description = REPORT_NOT_FOUND_MSG.
 	@Test
 	void getReportNotFoundInvalidMachine() {
 		SavedReportRequest expectedRequestBody = new SavedReportRequest(2022, 12, REPORT_TYPE, REGION, 99999);
@@ -253,12 +277,12 @@ class mysqlControllerReportsTest {
 	}
 
 	
-	// Functionality: failing in getting a report of a specific Request, when we'll look
-	// in DB with our mock we will throw an SQLException to get another failed response
-	// input data: a request for a report (YEAR 1970, MONTH 1, 
-	// TYPE ReportType.INVENTORY, REGION Regions.North, 1)
-	// expected result: after using our mock we thorw SQLException, thats edit our response
-	// to hold ResponseCode.DB_ERROR, REPORT_ERROR_MSG and null
+	// Functionality: Test the getReport method when an SQL exception is thrown.
+	// Input data: A SavedReportRequest with the year = 1970, month = 1,
+	// report type = REPORT_TYPE, region = REGION, machineId = 1.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = REPORT_ERROR_MSG 
+	// and the method setPrintToConsole() should be called with EXECUTE_UPDATE_ERROR_MSG.
 	@Test
 	void getReportThrowsSqlException() throws SQLException {
 		setMockQueryAsError();
@@ -272,6 +296,11 @@ class mysqlControllerReportsTest {
 		verify(serverGuiMock).setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
 	}
 
+	// Functionality: Test the generateAllReports method when an error occurs 
+	// while checking if reports are already created.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_IN_CHECKING_MSG
 	@Test
 	void generateAllReportsCheckIsCreatedError() throws SQLException {
 		when(reportsSqlMock.checkIfReportsAreAlreadyCreated()).thenReturn(null);
@@ -283,6 +312,10 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), ERROR_IN_CHECKING_MSG);
 	}
 	
+	// Functionality: Test the generateAllReports method when reports are already created.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = REPORTS_ALREADY_EXISTS
 	@Test
 	void generateAllReportsCheckIsCreatedTrue() {
 		when(reportsSqlMock.checkIfReportsAreAlreadyCreated()).thenReturn(true);
@@ -294,6 +327,11 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), REPORTS_ALREADY_EXISTS);
 	}
 
+	// Functionality: Test the generateAllReports method when getAllProductsHistory fails.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_WHILE_INVENTORY_GEN_MSG, 
+	// the method setPrintToConsole() should be called twice.
 	@Test
 	void getAllProductsHistoryFailed() {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(null);
@@ -306,6 +344,10 @@ class mysqlControllerReportsTest {
 		verify(serverGuiMock, times(2)).setPrintToConsole(anyString(), eq(true));
 	}
 
+	// Functionality: Test the generateAllReports method when it fails getNameByProductId.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_WHILE_INVENTORY_GEN_MSG
 	@Test
 	void getNameByProductIdFailed() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_ABOVE);
@@ -319,6 +361,10 @@ class mysqlControllerReportsTest {
 		verify(serverGuiMock, times(2)).setPrintToConsole(anyString(), eq(true));
 	}
 	
+	// Functionality: Test the generateAllReports method when it fails getRegionAndNameByMachineId.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_WHILE_INVENTORY_GEN_MSG
 	@Test
 	void getRegionAndNameByMachineIdFailed() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_ABOVE);
@@ -332,7 +378,10 @@ class mysqlControllerReportsTest {
 		assertEquals(res.getDescription(), ERROR_WHILE_INVENTORY_GEN_MSG);
 		verify(serverGuiMock, times(2)).setPrintToConsole(anyString(), eq(true));
 	}
-	
+	// Functionality: Test the generateAllReports method when it fails saveInventoryReportInDb.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_WHILE_INVENTORY_GEN_MSG
 	@Test
 	void saveInventoryReportInDbFailed() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_ABOVE);
@@ -349,6 +398,10 @@ class mysqlControllerReportsTest {
 		verify(serverGuiMock, times(2)).setPrintToConsole(anyString(), eq(true));
 	}
 	
+	// Functionality: Test the generateAllReports method when it fails deleteLastMonthFromTable.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_WHILE_INVENTORY_GEN_MSG.
 	@Test
 	void deleteLastMonthFromTableFailed() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_ABOVE);
@@ -366,6 +419,10 @@ class mysqlControllerReportsTest {
 		verify(serverGuiMock, times(2)).setPrintToConsole(anyString(), eq(true));
 	}
 	
+	// Functionality: Test the generateAllReports method when it fails transferData.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = ERROR_WHILE_INVENTORY_GEN_MSG.
 	@Test
 	void transferDataFailed() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_ABOVE);
@@ -384,6 +441,11 @@ class mysqlControllerReportsTest {
 		verify(serverGuiMock, times(2)).setPrintToConsole(anyString(), eq(true));
 	}
 	
+	// Functionality: Test the generateAllReports method of products above threshold.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfAbove() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_ABOVE);
@@ -399,6 +461,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 
+	// Functionality: Test the generateAllReports method of products below threshold.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfBelow() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_BELOW);
@@ -414,6 +481,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 
+	// Functionality: Test the generateAllReports method of unavailable products.
+	// Input data: No input data.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfUnavailable() throws SQLException {
 		when(reportsSqlMock.getAllProductsHistory()).thenReturn(FILTERED_BY_DATE_PRODUCTS_UNAVAILABLE);
@@ -429,6 +501,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 	
+	// Functionality: Test the generateAllReports method of same status of products between days.
+	// Input data: Two days of a product with status above.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfSameStatusBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> sameStatusBetweenDays =
@@ -447,6 +524,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 	
+	// Functionality: Test the generateAllReports method of status above to below of products between days.
+	// Input data: Two days of a product with status above and below.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfAboveToBelowBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> diffStatusBetweenDays =
@@ -465,6 +547,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 
+	// Functionality: Test the generateAllReports method of status above to unavailable of products between days.
+	// Input data: Two days of a product with status above to unavailable.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfAboveToUnavailableBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> diffStatusBetweenDays =
@@ -483,6 +570,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 
+	// Functionality: Test the generateAllReports method of status below to unavailable of products between days.
+	// Input data: Two days of a product with status below to unavailable.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfBelowToUnavailableBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> diffStatusBetweenDays =
@@ -501,6 +593,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 
+	// Functionality: Test the generateAllReports method of status below to above of products between days.
+	// Input data: Two days of a product with status below to above.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfBelowToAboveBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> diffStatusBetweenDays =
@@ -519,6 +616,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 
+	// Functionality: Test the generateAllReports method of status unavailable to below of products between days.
+	// Input data: Two days of a product with status unavailable to below.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfUnavailableToBelowBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> diffStatusBetweenDays =
@@ -537,6 +639,11 @@ class mysqlControllerReportsTest {
 		verify(reportsSqlMock).transferDataFromProductInMachineToHistory(any());
 	}
 	
+	// Functionality: Test the generateAllReports method of status unavailable to above of products between days.
+	// Input data: Two days of a product with status unavailable to above.
+	// Expected result: The res body = null, the code = ResponseCode.OK,
+	// the description = NEW_REPORTS_CREATED,
+	// and checking the passed objects to save in db is as expected.
 	@Test
 	void successfulCreateInventoryReportOfUnavailableToAboveBetweenDays() throws SQLException {
 	    List<ProductInMachineHistory> diffStatusBetweenDays =

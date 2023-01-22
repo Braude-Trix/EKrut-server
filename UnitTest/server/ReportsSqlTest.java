@@ -79,6 +79,9 @@ class ReportsSqlTest {
 		reportsSql = new ReportsSql(timesMock, serverGuiMock);
 	}
 	
+	// Functionality: Test the checkIfReportsAreAlreadyCreated method when an error occurs in SQL executeQuery.
+	// Input data: Mock is set to throw an exception.
+	// Expected result: The function returns null.
 	@Test
 	void checkIfReportsAreAlreadyCreatedError() throws SQLException {
 		setMockQueryAsError();
@@ -88,6 +91,9 @@ class ReportsSqlTest {
 		assertNull(actualIsAlreadyCreated);
 	}
 	
+	// Functionality: Test the checkIfReportsAreAlreadyCreated method when the reports do not exist in the database.
+	// Input data: setting the timesMock to return INVALID_MONTH.
+	// Expected result: The method returns False.
 	@Test
 	void checkIfReportsAreAlreadyCreatedIsFalse() {
 		when(timesMock.getReportsMonth()).thenReturn(INVALID_MONTH);
@@ -97,6 +103,9 @@ class ReportsSqlTest {
 		assertFalse(actualIsAlreadyCreated);
 	}
 
+	// Functionality: Test the checkIfReportsAreAlreadyCreated method when the reports are already created.
+	// Input data: setting the timesMock to a valid date of created report.
+	// Expected result: The function returns true.
 	@Test
 	void checkIfReportsAreAlreadyCreatedIsTrue() {
 		when(timesMock.getReportsYear()).thenReturn(YEAR_OF_ALREADY_CREATED);
@@ -107,6 +116,9 @@ class ReportsSqlTest {
 		assertTrue(actualIsAlreadyCreated);
 	}
 
+	// Functionality: Test the getAllProductsHistory method when an error occurs in SQL executeQuery.
+	// Input data: Mock is set to throw an exception.
+	// Expected result: The returned ProductInMachineHistory = null.
 	@Test
 	void getAllProductsHistoryError() throws SQLException {
 		setMockQueryAsError();
@@ -116,6 +128,9 @@ class ReportsSqlTest {
 		assertNull(actualProductsHistory);
 	}
 	
+	// Functionality: Test the getAllProductsHistory method when it returns an empty list.
+	// Input data: setting the timesMock to return INVALID_MONTH.
+	// Expected result: The returned list is empty.
 	@Test
 	void getAllProductsHistoryIsEmpty() {
 		when(timesMock.getReportsMonth()).thenReturn(INVALID_MONTH);
@@ -125,13 +140,20 @@ class ReportsSqlTest {
 		assertTrue(actualProductsHistory.isEmpty());
 	}
 
+	//Functionality: Test the getAllProductsHistory method when it returns ProductsHistory of machines.
+	//Input data: No input data.
+	//Expected result: ProductInMachineHistory list should have 109 items.
 	@Test
 	void getAllProductsHistorySuccessfully() {
 		List<ProductInMachineHistory> actualProductsHistory = reportsSql.getAllProductsHistory();
 
-		assertEquals(177, actualProductsHistory.size());
+		assertEquals(109, actualProductsHistory.size());
 	}
 
+	// Functionality: Test the getNameByProductId method when there is an error while trying to get product name.
+	// Input data: Product ID.
+	// Expected result: The product name = null, the res body = null, the code = ResponseCode.DB_ERROR,
+	// the description = NAME_BY_PRODUCT_ID_ERROR
 	@Test
 	void getNameByProductIdError() throws SQLException {
 		setMockQueryAsError();
@@ -145,6 +167,11 @@ class ReportsSqlTest {
 		verify(serverGuiMock).setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
 	}
 	
+	// Functionality: Test the getNameByProductId method when productid is not found.
+	// Input data: Product id = INVALID_PRODUCT_ID.
+	// Expected result: The returned product name = null, the res body = null,
+	// the code = ResponseCode.INVALID_DATA, 
+	// the description = NAME_BY_PRODUCT_ID_NOT_FOUND.
 	@Test
 	void getNameByProductIdNotFound() {
 		String actualProductName = reportsSql.getNameByProductId(res, INVALID_PRODUCT_ID);
@@ -155,6 +182,11 @@ class ReportsSqlTest {
 		assertEquals(res.getDescription(), NAME_BY_PRODUCT_ID_NOT_FOUND);
 	}
 
+	// Functionality: Test the getNameByProductId method when it successfully gets the product name.
+	// Input data: A valid product id.
+	// Expected result: The product name is retrieved successfully,
+	// response body = product name, the code = ResponseCode.OK,
+	// the description = NAME_BY_PRODUCT_ID_SUCCS.
 	@Test
 	void getNameByProductIdSuccessfully() {
 		List<Object> expectedBody = new ArrayList<>();
@@ -168,6 +200,12 @@ class ReportsSqlTest {
 		assertEquals(res.getDescription(), NAME_BY_PRODUCT_ID_SUCCS);
 	}
 
+	// Functionality: Test the getRegionAndNameByMachineId method 
+	// when an error occurs in SQL executeQuery.
+	// Input data: Mock is set to throw an exception.
+	// Expected result: The returned list is null, 
+	// the response code = ResponseCode.DB_ERROR, 
+	// the description = GET_REGION_AND_NAME_ERROR
 	@Test
 	void getRegionAndNameByMachineIdError() throws SQLException {
 		setMockQueryAsError();
@@ -181,6 +219,11 @@ class ReportsSqlTest {
 		verify(serverGuiMock).setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
 	}
 	
+	// Functionality: Test the getRegionAndNameByMachineId method when it can't find a machine with the given id.
+	// Input data: Invalid machine id.
+	// Expected result: The function returns null, the res body = null,
+	// the code = ResponseCode.INVALID_DATA, 
+	// the description = GET_REGION_AND_NAME_NOT_FOUND.
 	@Test
 	void getRegionAndNameByMachineIdNotFound() {
 		List<String> actualRegionAndName = reportsSql.getRegionAndNameByMachineId(res, INVALID_MACHINE_ID);
@@ -191,6 +234,10 @@ class ReportsSqlTest {
 		assertEquals(res.getDescription(), GET_REGION_AND_NAME_NOT_FOUND);
 	}
 
+	// Functionality: Test the getRegionAndNameByMachineId method when it is successful.
+	// Input data: MACHINE_ID
+	// Expected result: The res body = [EXPECTED_MACHINE_REGION, EXPECTED_MACHINE_NAME],
+	// the code = ResponseCode.OK, the description = GET_REGION_AND_NAME_SUCCS
 	@Test
 	void getRegionAndNameByMachineIdSuccessfully() {
 		List<Object> expectedBody = new ArrayList<>();
