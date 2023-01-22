@@ -438,7 +438,7 @@ public class Server extends AbstractServer {
 		int port = 5555;
 		String dbScheme = "ekrut";
 		String dbUserName = "root";
-		String dbPassword = "1234";
+		String dbPassword = "Aa123456";
 		return new ServerConf(ip, port, dbScheme, dbUserName, dbPassword);
 	}
 }
