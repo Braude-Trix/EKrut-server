@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  */
 public class Server extends AbstractServer {
 	public static Server server_instance;
-	public static mysqlController mysqlController;
+	public static MysqlController mysqlController;
 	private ServerConf currentConf;
 
 	public static String externalDBSchemeName = "ekrut_external_data_scheme";
@@ -71,7 +71,7 @@ public class Server extends AbstractServer {
 		try {
 			response = parseClientRequest(request);
 		} catch (Exception e) {
-			server.mysqlController.editResponse(
+			server.MysqlController.editResponse(
 					response, ResponseCode.SERVER_ERROR, "Failed to parse client request", null);
 			ServerGui.serverGui.printToConsole("Failed to parse client request", true);
 		}
@@ -379,7 +379,7 @@ public class Server extends AbstractServer {
 	 */
 	protected void serverStarted() {
 		ServerGui.serverGui.printToConsole("Server listening for connections on port " + getPort());
-		mysqlController = new mysqlController(currentConf);
+		mysqlController = new MysqlController(currentConf);
 	}
 
 	/**

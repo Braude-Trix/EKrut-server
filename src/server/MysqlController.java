@@ -27,7 +27,7 @@ import static logic.EndOfMonthTask.REPORTS_ALREADY_EXISTS;
  * @author gal
  * This class describes the communication with db including updating, deleting, adding, searching, etc
  */
-public class mysqlController {
+public class MysqlController {
     public static Connection conn;
     public static Connection externalDBSchemeConn = null;
     private final static String EXECUTE_UPDATE_ERROR_MSG = "An error occurred when trying to executeUpdate in SQL, " +
@@ -54,14 +54,14 @@ public class mysqlController {
     	
     }
 
-    public mysqlController(ServerConf serverConf, IServerGui iServerGui) {
+    public MysqlController(ServerConf serverConf, IServerGui iServerGui) {
         this.iServerGui = iServerGui;
         iTime = new ServerTimes();
         this.iReportsSql = new ReportsSql(iTime, iServerGui);
         setServerConf(serverConf);
     }
     
-    public mysqlController(ServerConf serverConf, IServerGui iServerGui, IReportsSql iReportsSql, ITime iTime) {
+    public MysqlController(ServerConf serverConf, IServerGui iServerGui, IReportsSql iReportsSql, ITime iTime) {
         this.iServerGui = iServerGui;
         this.iTime = iTime;
         this.iReportsSql = iReportsSql;
@@ -72,7 +72,7 @@ public class mysqlController {
      * This method connects to the db
      * @param serverConf - Connection data to the server
      */
-    public mysqlController(ServerConf serverConf) {
+    public MysqlController(ServerConf serverConf) {
         iServerGui = new ServerGuiService();
         iTime = new ServerTimes();
         this.iReportsSql = new ReportsSql(iTime, iServerGui);

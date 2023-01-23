@@ -5,7 +5,7 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @SelectClasses({ReportsSqlTest.class, 
-	mysqlControllerReportsTest.class})
+	MysqlControllerReportsTest.class})
 public class ReportsTestSuit {
 
 }

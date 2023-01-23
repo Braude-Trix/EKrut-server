@@ -37,7 +37,7 @@ import serverModels.ServerConf;
 class ServerTest {
 	private static Server server;
 	private static ServerConf conf;
-	private static mysqlController mysqlMock;
+	private static MysqlController mysqlMock;
 	private static final User user = new User("Din", "Til", 111111112, "Din@gmail.com", "0528888887", "customer2", "1234" , false, "2222222222222223");
 	private static final ReportType REPORT_TYPE = ReportType.INVENTORY;
 	private static final Regions REGION = Regions.North;
@@ -50,7 +50,7 @@ class ServerTest {
 	
 	@BeforeEach
 	void setUp() throws Exception {
-		mysqlMock = mock(mysqlController.class);
+		mysqlMock = mock(MysqlController.class);
 		connectionToClientMock = mock(ConnectionToClient.class);
 		ServerGui.serverGui = mock(ServerGUIController.class);
 		server = new Server(conf.getPort());
@@ -316,7 +316,7 @@ class ServerTest {
     	Request expectedRequest = getReportRequest(expectedRequestBody);
     	expectedRequest.setMethod(Method.POST);
     	Response expectedResponse = new Response();
-    	mysqlController.editResponse(expectedResponse, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
+    	MysqlController.editResponse(expectedResponse, ResponseCode.SERVER_ERROR, "Operation doesn't exist", null);
 
 
     	server.handleMessageFromClient(expectedRequest, connectionToClientMock);

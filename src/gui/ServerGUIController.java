@@ -20,7 +20,7 @@ import models.Response;
 import models.ResponseCode;
 import ocsf.server.ConnectionToClient;
 import server.Server;
-import server.mysqlController;
+import server.MysqlController;
 import serverModels.ClientConnectionData;
 import serverModels.ServerConf;
 
@@ -174,7 +174,7 @@ public class ServerGUIController implements Initializable {
 
     private void setAllUsersLoggedOut() {
 		Response response = new Response();
-        mysqlController.disconnectServer(response);
+        MysqlController.disconnectServer(response);
         if (response.getCode() == ResponseCode.OK) {
             setConnected(false);
         } else {
@@ -379,7 +379,7 @@ public class ServerGUIController implements Initializable {
     @FXML
     void importDataClicked(ActionEvent event) {
         if(importDataConfirmationDialog()) {
-            if (mysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName, DBPasswordField.getText())) {
+            if (MysqlController.importUsersDataFromExternalDB(DBField.getText(), Server.externalDBSchemeName, DBPasswordField.getText())) {
                 importDataBtn.setDisable(true);
                 importDataBtn.setOpacity(0.5);
             }

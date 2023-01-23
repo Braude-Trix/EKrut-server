@@ -37,7 +37,7 @@ import models.ResponseCode;
 import serverModels.ProductInMachineHistory;
 import serverModels.ServerConf;
 
-class mysqlControllerReportsTest {
+class MysqlControllerReportsTest {
 	private static final ReportType REPORT_TYPE = ReportType.INVENTORY;
 	private static final Regions REGION = Regions.North;
 	private static ITime timesMock;
@@ -46,7 +46,7 @@ class mysqlControllerReportsTest {
 	private IServerGui serverGuiMock;
 	private IReportsSql reportsSqlMock;
 
-	private mysqlController mySql;
+	private MysqlController mySql;
 	private ServerConf conf;
 	private Response res;
 	
@@ -160,7 +160,7 @@ class mysqlControllerReportsTest {
 
 		//Opening a mysql connection:
 		conf = Server.getDefaultServerConf();
-		mySql = new mysqlController(conf, serverGuiMock, reportsSqlMock, timesMock);
+		mySql = new MysqlController(conf, serverGuiMock, reportsSqlMock, timesMock);
 		res = new Response();
 	}
 

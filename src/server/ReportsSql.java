@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static server.mysqlController.*;
+import static server.MysqlController.*;
 
 public class ReportsSql implements IReportsSql {
     private ITime iTime;
@@ -46,7 +46,7 @@ public class ReportsSql implements IReportsSql {
 
         String query = "SELECT * FROM saved_reports WHERE year_creation = ? AND month_creation = ?";
         try {
-            stmt = mysqlController.conn.prepareStatement(query);
+            stmt = MysqlController.conn.prepareStatement(query);
             stmt.setInt(1, iTime.getReportsYear());
             stmt.setInt(2, iTime.getReportsMonth());
             rs = stmt.executeQuery();
@@ -66,7 +66,7 @@ public class ReportsSql implements IReportsSql {
 
         String query = "SELECT * FROM product_in_machine_history WHERE updated_month = ?";
         try {
-            stmt = mysqlController.conn.prepareStatement(query);
+            stmt = MysqlController.conn.prepareStatement(query);
             stmt.setInt(1, iTime.getReportsMonth());
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -96,19 +96,19 @@ public class ReportsSql implements IReportsSql {
         PreparedStatement stmt;
         String query = "SELECT * FROM products WHERE productId = ?";
         try {
-            stmt = mysqlController.conn.prepareStatement(query);
+            stmt = MysqlController.conn.prepareStatement(query);
             stmt.setInt(1, productId);
             rs = stmt.executeQuery();
             if(rs.next()) {
                 res.add(rs.getString("productName"));
             } else {
-            	mysqlController.editResponse(response, ResponseCode.INVALID_DATA, "Couldn't find name of given product id", null);
+            	MysqlController.editResponse(response, ResponseCode.INVALID_DATA, "Couldn't find name of given product id", null);
             	return null;
             }
-            mysqlController.editResponse(response, ResponseCode.OK, "Successfully get name by product id", res);
+            MysqlController.editResponse(response, ResponseCode.OK, "Successfully get name by product id", res);
             return res.get(0).toString();
         } catch (SQLException e) {
-        	mysqlController.editResponse(response, ResponseCode.DB_ERROR,
+        	MysqlController.editResponse(response, ResponseCode.DB_ERROR,
                     "There was an error while searching for name of product", null);
             e.printStackTrace();
             iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
@@ -123,21 +123,21 @@ public class ReportsSql implements IReportsSql {
         PreparedStatement stmt;
         String query = "SELECT * FROM machine WHERE machineId = ?";
         try {
-            stmt = mysqlController.conn.prepareStatement(query);
+            stmt = MysqlController.conn.prepareStatement(query);
             stmt.setInt(1, machineId);
             rs = stmt.executeQuery();
             if(rs.next()) {
                 res.add(rs.getString("region"));
                 res.add(rs.getString("machineName"));
             } else {
-            	mysqlController.editResponse(response, ResponseCode.INVALID_DATA, 
+            	MysqlController.editResponse(response, ResponseCode.INVALID_DATA, 
             			"Couldn't find region and name of given machine id", null);
             	return null;
             }
-            mysqlController.editResponse(response, ResponseCode.OK, "Successfully get region by machine id", res);
+            MysqlController.editResponse(response, ResponseCode.OK, "Successfully get region by machine id", res);
             return res.stream().map(Object::toString).collect(Collectors.toList());
         } catch (SQLException e) {
-        	mysqlController.editResponse(response, ResponseCode.DB_ERROR, 
+        	MysqlController.editResponse(response, ResponseCode.DB_ERROR, 
         			"There was an error while searching region and name of a machine id", null);
             e.printStackTrace();
             iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
@@ -173,7 +173,7 @@ public class ReportsSql implements IReportsSql {
                  "saved_reports (year_creation, month_creation, report_type, region, machineId, report_data) " +
                  "VALUES (?, ?, ?, ?, ?, ?)";
          try {
-             stmt = mysqlController.conn.prepareStatement(query);
+             stmt = MysqlController.conn.prepareStatement(query);
              stmt.setInt(1, iTime.getReportsYear());
              stmt.setInt(2, iTime.getReportsMonth());
              stmt.setString(3, type.name());
@@ -185,13 +185,13 @@ public class ReportsSql implements IReportsSql {
              String msg = String.format("Successfully saved report %s of region %s", type.name(), region.name());
              if (machineId != -1)
                  msg = String.format("%s of machine %s", msg, machineId);
-             mysqlController.editResponse(response, ResponseCode.OK, msg, null);
+             MysqlController.editResponse(response, ResponseCode.OK, msg, null);
              iServerGui.setPrintToConsole(msg);
          } catch (SQLException e) {
              String msg = String.format("There was an error in saving report %s of region %s", type.name(), region.name());
              if (machineId != -1)
                  msg = String.format("%s of machine %s", msg, machineId);
-             mysqlController.editResponse(response, ResponseCode.DB_ERROR, msg, null);
+             MysqlController.editResponse(response, ResponseCode.DB_ERROR, msg, null);
              iServerGui.setPrintToConsole(msg);
              e.printStackTrace();
              iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
@@ -211,18 +211,18 @@ public class ReportsSql implements IReportsSql {
         PreparedStatement stmt;
         String query = "DELETE FROM product_in_machine_history WHERE updated_month != ?";
         try {
-            stmt = mysqlController.conn.prepareStatement(query);
+            stmt = MysqlController.conn.prepareStatement(query);
             stmt.setInt(1, currentMonth);
             stmt.executeUpdate();
         } catch (SQLException e) {
-        	mysqlController.editResponse(response, ResponseCode.DB_ERROR,
+        	MysqlController.editResponse(response, ResponseCode.DB_ERROR,
                     "[Report] Failed to delete previous month's inventory data", null);
             System.out.println(e.getMessage());
             iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             return false;
         }
 
-        mysqlController.editResponse(response, ResponseCode.OK,
+        MysqlController.editResponse(response, ResponseCode.OK,
                 "[Report] Successfully deleted previous month's inventory data", null);
         return true;
     }
@@ -234,7 +234,7 @@ public class ReportsSql implements IReportsSql {
 
         String query = "SELECT * FROM productinmachine";
         try {
-            stmt = mysqlController.conn.prepareStatement(query);
+            stmt = MysqlController.conn.prepareStatement(query);
             rs = stmt.executeQuery();
             while (rs.next()) {
                 ProductInMachine productInMachine = new ProductInMachine(
@@ -255,7 +255,7 @@ public class ReportsSql implements IReportsSql {
                 iServerGui.setPrintToConsole(EXECUTE_UPDATE_ERROR_MSG, true);
             return false;
         }
-        mysqlController.editResponse(response, ResponseCode.OK, "[Report] Successfully inserting all of current month's inventory data to table", null);
+        MysqlController.editResponse(response, ResponseCode.OK, "[Report] Successfully inserting all of current month's inventory data to table", null);
         return true;
     }
 
@@ -457,7 +457,7 @@ public class ReportsSql implements IReportsSql {
             List<String> top3Names = new LinkedList<>();
             for (String Id : top3UserIdAndAmount.keySet()) {
                 Response userDataResponse = new Response();
-                User currentUser = mysqlController.getUserDataById(userDataResponse, Integer.parseInt(Id));
+                User currentUser = MysqlController.getUserDataById(userDataResponse, Integer.parseInt(Id));
                 if (currentUser == null) {
                     isReportOfARegionFailed = true;
                     break;

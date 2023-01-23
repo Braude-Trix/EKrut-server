@@ -20,8 +20,8 @@ import models.Worker;
 import models.WorkerType;
 import serverModels.ServerConf;
 
-class mysqlControllerTest {
-	private mysqlController mySql;
+class MysqlControllerLoginTest {
+	private MysqlController mySql;
 	private ServerConf conf;
 	private Response res;
 	private User user;
@@ -69,9 +69,9 @@ class mysqlControllerTest {
 		//Opening a mysql connection:
 		serverGuiDummy = new ServerGuiServiceTest();
 		conf = Server.getDefaultServerConf();
-		mySql = new mysqlController(conf,serverGuiDummy);
+		mySql = new MysqlController(conf,serverGuiDummy);
 		res = new Response();
-		mysqlController.disconnectServer(res);
+		MysqlController.disconnectServer(res);
 		msgToConsole = null;
 		isConnectedTest = true;
 		isErrorTest = false;
@@ -91,11 +91,11 @@ class mysqlControllerTest {
 		ceo_customerAndWorker_WorkerSide = new Worker(ceo_customerAndWorker,WorkerType.CEO,null);
 		
 		//allowing access to private method.
-		privateGetWorker = mysqlController.class.getDeclaredMethod("getWorker",Response.class, User.class);
+		privateGetWorker = MysqlController.class.getDeclaredMethod("getWorker",Response.class, User.class);
 		privateGetWorker.setAccessible(true);
 		
 		//allowing access to private method.
-		privateIsLoggedIn = mysqlController.class.getDeclaredMethod("isLoggedIn", User.class);
+		privateIsLoggedIn = MysqlController.class.getDeclaredMethod("isLoggedIn", User.class);
 		privateIsLoggedIn.setAccessible(true);
 	}
 
@@ -356,12 +356,13 @@ class mysqlControllerTest {
 
 		mySql.getSubscribersForFastLogin(res);
 		assertEquals(ResponseCode.OK, res.getCode());
-		assertEquals(5, res.getBody().size());
-		assertEquals(customer.getId(), res.getBody().get(0));
-		assertEquals(211111114, res.getBody().get(1));
-		assertEquals(411111111, res.getBody().get(2));
-		assertEquals(411111113, res.getBody().get(3));
-		assertEquals(611111113, res.getBody().get(4));
+		assertEquals(6, res.getBody().size());
+		assertEquals(111111100, res.getBody().get(0));
+		assertEquals(111111112, res.getBody().get(1));
+		assertEquals(211111114, res.getBody().get(2));
+		assertEquals(411111111, res.getBody().get(3));
+		assertEquals(411111113, res.getBody().get(4));
+		assertEquals(611111113, res.getBody().get(5));
 		assertEquals(expectedDescription, res.getDescription());
 		assertEquals(msgToConsole, null);
 

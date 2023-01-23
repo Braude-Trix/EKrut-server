@@ -51,7 +51,7 @@ class ReportsSqlTest {
 	private PreparedStatement stmtMock;
 	private IServerGui serverGuiMock;
 
-	private mysqlController mySql;
+	private MysqlController mySql;
 	private ReportsSql reportsSql;
 	private ServerConf conf;
 	private Response res;
@@ -74,7 +74,7 @@ class ReportsSqlTest {
 
 		//Opening a mysql connection:
 		conf = Server.getDefaultServerConf();
-		mySql = new mysqlController(conf, serverGuiMock);
+		mySql = new MysqlController(conf, serverGuiMock);
 		res = new Response();
 		reportsSql = new ReportsSql(timesMock, serverGuiMock);
 	}
